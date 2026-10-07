@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Moradias em 3D</title>
+<meta name="description" content="Visitas 3D interactivas de moradias: explore cada casa por dentro e por fora, na planta ou a passear.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600&family=Public+Sans:wght@400;500&display=swap">
+<style>
+:root { --paper: #f3f2ef; --ink: #1d2124; --muted: #5d6468; --rule: #d6d4cf; --card: #ffffff; --accent: #2b4c7e;
+  --display: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif; --body: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif; }
+@media (prefers-color-scheme: dark) { :root { --paper: #15181a; --ink: #e6e8e7; --muted: #a2a9ab; --rule: #2e3437; --card: #1c2023; --accent: #8fb0e6; color-scheme: dark; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 16px/1.6 var(--body); padding-inline: 16px; }
+main { max-width: 1040px; margin: 0 auto; padding-block: 56px 72px; }
+header { border-bottom: 2px solid var(--ink); padding-bottom: 22px; margin-bottom: 32px; }
+.eyebrow { font: 500 12px/1 var(--body); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+h1 { font: 600 clamp(40px, 7vw, 64px)/1 var(--display); margin: 10px 0 12px; letter-spacing: -.01em; }
+.lede { margin: 0; color: var(--muted); max-width: 60ch; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px; }
+a.card { display: flex; flex-direction: column; background: var(--card); border: 1px solid var(--rule); border-radius: 4px; overflow: hidden; color: inherit; text-decoration: none; transition: transform .15s ease, box-shadow .15s ease; }
+a.card:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(0,0,0,.12); }
+a.card:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+a.card img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; display: block; }
+.card .txt { padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 4px; }
+.card h2 { font: 600 26px/1.1 var(--display); margin: 0; }
+.card .place { font-size: 14px; color: var(--muted); }
+.card .go { margin-top: 8px; font: 600 13px/1 var(--body); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+footer { margin-top: 48px; font-size: 13px; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { a.card { transition: none; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="eyebrow">Visitas virtuais</div>
+    <h1>Moradias em 3D</h1>
+    <p class="lede">Explore cada casa por dentro e por fora: rode o modelo, veja a planta com as áreas, passeie pelas divisões e compare com as imagens do projecto.</p>
+  </header>
+  <div class="grid">
+    <a class="card" href="casa-valadares/">
+      <img src="casa-valadares/renders/r05.jpg" alt="Vista aérea da Casa de Valadares" loading="lazy">
+      <div class="txt">
+        <h2>Casa de Valadares</h2>
+        <span class="place">Valadares · Vila Nova de Gaia</span>
+        <span class="go">Abrir visita 3D →</span>
+      </div>
+    </a>
+  </div>
+  <footer>Para uma visita guiada ou mais informações, contacte-nos.</footer>
+</main>
+</body>
+</html>
