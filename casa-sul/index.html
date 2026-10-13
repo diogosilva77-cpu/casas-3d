@@ -2152,6 +2152,7 @@ function buildFurniture(H, M, baseZ) {
   for (const poly of [...H.walls.map((w) => w.pts), ...(H.fin ? [H.fin.pts] : []), ...H.pieces.filter((q) => q.z0 < 0.5).map((q) => q.pts)]) for (let i = 0; i < poly.length; i++) { const a = poly[i], b = poly[(i + 1) % poly.length]; segs.push([a[0], a[1], b[0], b[1]]); }
   // uma peça por entrada de H.furniture; root.userData.rebuild(i) refaz uma peça (editor de mobiliário: mover, rodar, largura)
   const one = (f, i) => {
+    if (f.hidden) return null;       // peça apagada no editor
     const make = K[f.kind]; if (!make) { console.warn('peça desconhecida', f.kind); return null; }
     const g = new THREE.Group();
     // f.front = material das frentes/caixas lacadas (ex.: 'walnut' nos móveis de cozinha e roupeiros)
@@ -2193,15 +2194,16 @@ function buildFurniture(H, M, baseZ) {
         }
       }
     }
-    if (f.sx) g.scale.x = f.sx;      // largura das peças sem parâmetro w (cadeirões, sanitas…): escala em x local
+    if (f.sx) g.scale.x = f.sx;
+    if (f.sz) g.scale.z = f.sz;      // comprimento das peças sem parâmetro d      // largura das peças sem parâmetro w (cadeirões, sanitas…): escala em x local
     g.userData = { kind: f.kind, name: f.name || f.kind, seat: ['chair', 'ropechair', 'stool', 'armchair', 'outchair', 'sofa', 'sofaL', 'patiosofa', 'lounger'].includes(f.kind), wallBacked: !!f.wallBacked || f.face === 'wall', target: f.target, index: i };
     return g;
   };
   const slots = H.furniture.map((f, i) => { const g = one(f, i); if (g) root.add(g); return g; });
   root.userData.rebuild = (i) => {
-    const old = slots[i], g = one(H.furniture[i], i); if (!g) return null;
+    const old = slots[i], g = one(H.furniture[i], i);
     if (old) root.remove(old);   // geometrias podem ser partilhadas entre peças: não se libertam aqui
-    root.add(g);
+    if (g) root.add(g);
     slots[i] = g; return g;
   };
   root.userData.piece = (i) => slots[i];
@@ -2904,6 +2906,9 @@ function initEditor(ctx) {
     if (o.rot != null) f.rot = o.rot;
     if (o.w != null) f.w = o.w;
     if (o.sx != null) f.sx = o.sx;
+    if (o.d != null) f.d = o.d;
+    if (o.sz != null) f.sz = o.sz;
+    if (o.hidden) f.hidden = true;
     if ((o.x != null || o.y != null) && f.bowls) { f.basins = f.bowls.length; delete f.bowls; } // cubas desenhadas ficam na peça
     touched.add(i);
     furniture.userData.rebuild(i);
@@ -2932,7 +2937,7 @@ function initEditor(ctx) {
   .ed-card input{width:100%;box-sizing:border-box;padding:10px 11px;border:1px solid #c9cfcc;border-radius:8px;font:14px system-ui,sans-serif;background:#fff;color:#1d2226}
   .ed-row{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
   .ed-row button,.ed-bar button{font:600 13px/1 system-ui,sans-serif;border:0;border-radius:8px;padding:10px 13px;cursor:pointer;background:#e7e9e8;color:#1d2226}
-  .ed-row button.pri,.ed-bar button.pri{background:#2b50c8;color:#fff}
+  .ed-row button.pri,.ed-bar button.pri{background:#2b50c8;color:#fff}.ed-bar button.dang{color:#b3261e}
   .ed-err{color:#b3261e;font-size:13px;min-height:18px;margin-top:8px}
   .ed-bar{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;z-index:45;background:#fbfaf7;color:#1d2226;border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.28);padding:10px 12px;display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;font:13px/1.3 system-ui,sans-serif;max-width:calc(100vw - 32px)}
   .ed-bar .nm{font-weight:700;min-width:120px}.ed-bar .muted{color:#5d666b}
@@ -3000,32 +3005,38 @@ function initEditor(ctx) {
   const bar = el('div', 'ed-bar'); bar.hidden = true; document.body.appendChild(bar);
   bar.innerHTML = `<span class="nm" id="ed-nm">Mobiliário</span>
     <span class="grp"><span class="muted">Largura</span><button id="ed-wm" title="Reduzir 5 cm">−</button><input id="ed-w" inputmode="decimal"><span class="muted">m</span><button id="ed-wp" title="Aumentar 5 cm">+</button></span>
+    <span class="grp"><span class="muted">Comprimento</span><button id="ed-dm" title="Reduzir 5 cm">−</button><input id="ed-d" inputmode="decimal"><span class="muted">m</span><button id="ed-dp" title="Aumentar 5 cm">+</button></span>
     <span class="grp"><button id="ed-rl" title="Rodar 90° (esquerda)">↺ 90°</button><button id="ed-rr" title="Rodar 90° (direita)">↻ 90°</button><button id="ed-r15" title="Rodar 15°">↻ 15°</button></span>
-    <button id="ed-reset">Repor peça</button>
+    <button id="ed-reset">Repor peça</button><button id="ed-del" class="dang">Apagar peça</button><button id="ed-undel" hidden>Repor apagadas</button>
     <span class="muted" id="ed-st"></span>
     <button class="pri" id="ed-save">Guardar</button><button id="ed-exit">Sair</button>`;
   const q = (s) => bar.querySelector(s);
   const piece = (i) => furniture.userData.piece(i);
-  const baseWidth = (i) => {
-    const f = H.furniture[i]; if (f.w > 0) return null;
-    const g = piece(i); const r = g.rotation.y, sx = g.scale.x; g.rotation.y = 0; g.scale.x = 1; g.updateMatrixWorld(true);
-    const b = new THREE.Box3().setFromObject(g); g.rotation.y = r; g.scale.x = sx; g.updateMatrixWorld(true);
-    return Math.max(0.05, b.max.x - b.min.x);
+  // medida "nua" da peça no eixo local (x = largura, z = comprimento), sem rotação nem escala
+  const baseDim = (i, ax) => {
+    const g = piece(i); const r = g.rotation.y, sx = g.scale.x, sz = g.scale.z; g.rotation.y = 0; g.scale.x = 1; g.scale.z = 1; g.updateMatrixWorld(true);
+    const b = new THREE.Box3().setFromObject(g); g.rotation.y = r; g.scale.x = sx; g.scale.z = sz; g.updateMatrixWorld(true);
+    return Math.max(0.05, ax === 'x' ? b.max.x - b.min.x : b.max.z - b.min.z);
   };
-  const widthOf = (i) => { const f = H.furniture[i]; return f.w > 0 ? f.w : baseWidth(i) * (f.sx || 1); };
+  const baseWidth = (i) => baseDim(i, 'x');
+  const widthOf = (i) => { const f = H.furniture[i]; return f.w > 0 ? f.w : baseDim(i, 'x') * (f.sx || 1); };
+  const depthOf = (i) => { const f = H.furniture[i]; return f.d > 0 ? f.d : baseDim(i, 'z') * (f.sz || 1); };
   const status = (t) => { q('#ed-st').textContent = t != null ? t : (dirty ? `${dirty} alteraç${dirty === 1 ? 'ão' : 'ões'} por guardar` : 'Tudo guardado'); };
   function refresh() {
     const has = sel >= 0;
-    for (const id of ['#ed-wm', '#ed-wp', '#ed-w', '#ed-rl', '#ed-rr', '#ed-r15', '#ed-reset']) q(id).disabled = !has;
+    for (const id of ['#ed-wm', '#ed-wp', '#ed-w', '#ed-dm', '#ed-dp', '#ed-d', '#ed-rl', '#ed-rr', '#ed-r15', '#ed-reset', '#ed-del']) q(id).disabled = !has;
+    const nDel = H.furniture.filter((f) => f.hidden).length;
+    q('#ed-undel').hidden = !nDel; q('#ed-undel').textContent = `Repor apagadas (${nDel})`;
     q('#ed-nm').textContent = has ? (H.furniture[sel].name || H.furniture[sel].kind) : 'Clique numa peça e arraste para mover';
     q('#ed-w').value = has ? widthOf(sel).toFixed(2).replace('.', ',') : '';
+    q('#ed-d').value = has ? depthOf(sel).toFixed(2).replace('.', ',') : '';
     q('#ed-save').disabled = !dirty;
     if (helper) { ctx.scene.remove(helper); helper = null; }
     if (has) { helper = new THREE.BoxHelper(piece(sel), 0x2b50c8); helper.material.depthTest = false; helper.renderOrder = 999; ctx.scene.add(helper); }
     status(); ctx.redraw && ctx.redraw();
   }
   // grava o estado real da peça (posição e rotação já resolvidas pelo construtor) em H.furniture
-  const capture = (i) => { const g = piece(i), f = H.furniture[i]; f.x = +g.position.x.toFixed(3); f.y = +(-g.position.z).toFixed(3); f.rot = +g.rotation.y.toFixed(4); if (f.bowls) { f.basins = f.bowls.length; delete f.bowls; } };
+  const capture = (i) => { const g = piece(i), f = H.furniture[i]; if (!g) return; f.x = +g.position.x.toFixed(3); f.y = +(-g.position.z).toFixed(3); f.rot = +g.rotation.y.toFixed(4); if (f.bowls) { f.basins = f.bowls.length; delete f.bowls; } };
   const changed = (i) => { touched.add(i); dirty++; };
   function setWidth(w) {
     if (sel < 0 || !(w > 0.1)) return;
@@ -3038,6 +3049,23 @@ function initEditor(ctx) {
     const f = H.furniture[sel]; f.rot = +(f.rot + a).toFixed(4);
     furniture.userData.rebuild(sel); changed(sel); refresh();
   }
+  function setDepth(d) {
+    if (sel < 0 || !(d > 0.1)) return;
+    const f = H.furniture[sel]; capture(sel);
+    if (f.d > 0) f.d = +d.toFixed(3); else f.sz = +(d / baseDim(sel, 'z')).toFixed(4);
+    furniture.userData.rebuild(sel); changed(sel); refresh();
+  }
+  q('#ed-dm').onclick = () => setDepth(depthOf(sel) - 0.05);
+  q('#ed-dp').onclick = () => setDepth(depthOf(sel) + 0.05);
+  q('#ed-d').onchange = () => setDepth(parseFloat(q('#ed-d').value.replace(',', '.')));
+  q('#ed-del').onclick = () => {
+    if (sel < 0) return; const i = sel; capture(i); H.furniture[i].hidden = true;
+    furniture.userData.rebuild(i); changed(i); sel = -1; refresh();
+  };
+  q('#ed-undel').onclick = () => {
+    H.furniture.forEach((f, i) => { if (f.hidden) { delete f.hidden; furniture.userData.rebuild(i); changed(i); } });
+    refresh();
+  };
   q('#ed-wm').onclick = () => setWidth(widthOf(sel) - 0.05);
   q('#ed-wp').onclick = () => setWidth(widthOf(sel) + 0.05);
   q('#ed-w').onchange = () => setWidth(parseFloat(q('#ed-w').value.replace(',', '.')));
@@ -3055,7 +3083,7 @@ function initEditor(ctx) {
     for (const i of touched) {
       const f = H.furniture[i], o = ORIG[i];
       if (JSON.stringify(f) === JSON.stringify(o)) continue;          // peça reposta: sai da disposição
-      items[KEYS[i]] = { x: f.x, y: f.y, rot: f.rot, ...(f.w !== o.w ? { w: f.w } : {}), ...(f.sx ? { sx: f.sx } : {}) };
+      items[KEYS[i]] = f.hidden ? { hidden: true } : { x: f.x, y: f.y, rot: f.rot, ...(f.w !== o.w ? { w: f.w } : {}), ...(f.d !== o.d ? { d: f.d } : {}), ...(f.sx ? { sx: f.sx } : {}), ...(f.sz ? { sz: f.sz } : {}) };
     }
     const doc = { version: 1, house: H.meta.slug, saved: new Date().toISOString(), items };
     try {
@@ -3113,6 +3141,7 @@ function initEditor(ctx) {
     const mv = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] }[e.key];
     if (mv) { g.position.x += mv[0]; g.position.z += mv[1]; capture(sel); changed(sel); refresh(); e.preventDefault(); }
     else if (e.key === 'r' || e.key === 'R') rotate(e.shiftKey ? Math.PI / 2 : -Math.PI / 2);
+    else if (e.key === 'Delete' || e.key === 'Backspace') { q('#ed-del').click(); e.preventDefault(); }
     else if (e.key === 'Escape') { sel = -1; refresh(); }
   });
   addEventListener('beforeunload', (e) => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
