@@ -2984,7 +2984,12 @@ function initEditor(ctx) {
           err.textContent = 'A guardar a configuração…';
           await putFile(tk, R, 'editor.json', JSON.stringify(await seal(p1, tk), null, 1) + '\n', 'Editor de mobiliário: configuração (chave cifrada)');
           token = tk; ss.set('casa3d-token', token); close(); startEdit();
-        } catch (e) { err.textContent = 'Não foi possível: ' + e.message; b.disabled = false; }
+        } catch (e) {
+          err.innerHTML = /403|401/.test(e.message)
+            ? `A chave não tem permissão para escrever em <b>${R.repo}</b>. No GitHub, abra a chave (Settings → Developer settings → Fine-grained tokens → a chave → Edit): em <i>Repository access</i> escolha <i>Only select repositories</i> → <b>${R.repo}</b>; em <i>Permissions → Repository permissions</i> ponha <b>Contents: Read and write</b>; guarde e tente de novo com a mesma chave.`
+            : 'Não foi possível: ' + e.message;
+          b.disabled = false;
+        }
       };
     }
   }
@@ -3058,7 +3063,7 @@ function initEditor(ctx) {
       dirty = 0; status('Guardado — visível para todos dentro de 1 a 2 minutos'); q('#ed-save').disabled = true;
     } catch (e) {
       if (/401|403/.test(e.message)) { token = null; ss.set('casa3d-token', ''); }
-      status('Erro ao guardar: ' + e.message); b.disabled = false;
+      status(/403/.test(e.message) ? 'Erro: a chave do GitHub não tem permissão Contents: Read and write no repositório ' + R.repo : 'Erro ao guardar: ' + e.message); b.disabled = false;
     }
   };
   function startEdit() {
