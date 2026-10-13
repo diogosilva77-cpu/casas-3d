@@ -292,6 +292,7 @@ body.photo .titleblock, body.photo .modes, body.photo #panel, body.photo #panel-
 <script type="module">
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { CSS2DObject, CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
@@ -302,7 +303,7 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 // ===== src/house-data.js =====
 const __m_house_data = (() => {
 
-const HOUSE = {"meta": {"units": "m", "axes": "X nascente, Y norte, Z altura; three.js: x=X, y=Z, z=-Y", "name": "Casa Sul", "place": "Madalena · Vila Nova de Gaia", "slug": "casa-sul", "cotaZero": 13.1, "floors": "Piso térreo (moradia térrea)", "lat": 41.1, "northDeg": 0, "origin": "Canto noroeste do alpendre (limite poente do lote)", "tagline": "Moradia térrea com piscina, deck e alpendre no logradouro", "client": true}, "heights": {"floor": 0.0, "ceiling": 2.6, "slabBottom": 2.7, "slabTop": 2.98, "roofFinish": 3.06, "parapetTop": 3.22, "doorHead": 2.3, "garageClear": 2.3}, "walls": [{"id": "W00", "pts": [[0.0, -0.0], [2.354, -14.025], [5.465, -14.025], [5.465, -12.626], [5.264, -12.626], [5.264, -13.824], [3.666, -13.826], [3.666, -12.626], [3.465, -12.626], [3.465, -13.826], [2.523, -13.826], [2.189, -11.826], [3.464, -11.826], [3.465, -11.874], [3.666, -11.874], [3.666, -11.724], [2.172, -11.724], [1.293, -6.5], [1.293, -5.8], [1.177, -5.799], [0.235, -0.2], [5.264, -0.199], [5.264, -0.701], [5.465, -0.701], [5.465, 0.0]], "faces": ["eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite"], "z0": -0.2, "z1": 2.1199999999999997}, {"id": "W01", "pts": [[5.215, -9.563], [5.222, -9.599], [5.241, -9.629], [5.271, -9.652], [5.306, -9.663], [5.323, -9.663], [5.359, -9.652], [5.389, -9.629], [5.408, -9.599], [5.414, -9.58], [5.414, -9.544], [5.4, -9.51], [5.376, -9.483], [5.342, -9.466], [5.306, -9.464], [5.27, -9.472], [5.241, -9.495], [5.222, -9.527]], "faces": ["eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite"], "z0": -0.2, "z1": 2.1199999999999997}, {"id": "W02", "pts": [[5.264, -5.7], [5.264, -6.5], [5.465, -6.5], [5.465, -5.7]], "faces": ["eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite"], "z0": -0.2, "z1": 2.1199999999999997}, {"id": "W03", "pts": [[5.264, -3.099], [5.264, -3.3], [5.465, -3.3], [5.465, -3.099]], "faces": ["eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite"], "z0": -0.2, "z1": 2.1199999999999997}, {"id": "W04", "pts": [[11.066, -5.0], [11.066, -6.5], [14.216, -6.5], [14.216, -6.2], [11.365, -6.2], [11.364, -5.0]], "faces": ["eticsWhite", "eticsWhite", "plaster", "plaster", "plaster", "plaster"], "z0": 0.0, "z1": 2.7}, {"id": "W05", "pts": [[11.066, -2.5], [11.066, -2.999], [11.364, -2.999], [11.365, -2.599], [15.015, -2.599], [15.016, -3.899], [15.115, -3.899], [15.115, -2.6], [15.515, -2.599], [15.515, -1.949], [15.416, -1.949], [15.415, -2.5]], "faces": ["eticsWhite", "plaster", "plaster", "plaster", "plaster", "plaster", "plaster", "plaster", "plaster", "tile", "tile", "tile"], "z0": 0.0, "z1": 2.7}, {"id": "W06", "pts": [[11.066, -0.0], [11.066, -0.301], [15.415, -0.301], [15.416, -1.149], [15.515, -1.149], [15.516, -0.301], [19.215, -0.301], [19.215, -1.149], [19.315, -1.149], [19.315, -0.301], [24.815, -0.301], [24.816, -0.9], [24.915, -0.9], [24.916, -0.301], [31.315, -0.301], [31.316, -0.999], [31.615, -0.999], [31.615, -0.301], [33.415, -0.301], [33.416, -0.999], [33.714, -0.999], [33.715, -0.301], [36.514, -0.301], [36.515, -1.599], [36.466, -1.6], [36.466, -1.7], [36.665, -1.7], [36.665, -1.6], [36.614, -1.599], [36.614, -0.301], [38.015, -0.301], [38.015, -1.101], [38.316, -1.101], [38.316, 0.0]], "faces": ["eticsWhite", "tile", "tile", "tile", "plaster", "plaster", "plaster", "plaster", "plaster", "plaster", "plaster", "plaster", "plaster", "plaster", "plaster", "plaster", "eticsWhite", "eticsWhite", "eticsWhite", "tile", "tile", "tile", "tile", "tile", "tile", "plaster", "tile", "tile", "tile", "tile", "tile", "tile", "eticsWhite", "eticsWhite"], "z0": 0.0, "z1": 2.7}, {"id": "W07", "pts": [[15.016, -4.9], [15.016, -6.5], [15.515, -6.5], [15.515, -6.2], [15.115, -6.199], [15.115, -4.9]], "faces": ["plaster", "eticsWhite", "plaster", "plaster", "plaster", "plaster"], "z0": 0.0, "z1": 2.7}, {"id": "W08", "pts": [[16.715, -2.0], [16.715, -2.1], [17.314, -2.1], [17.314, -6.199], [16.715, -6.2], [16.715, -6.5], [18.716, -6.5], [18.716, -6.2], [17.416, -6.199], [17.416, -2.1], [19.215, -2.1], [19.215, -2.699], [19.315, -2.699], [19.315, -2.1], [19.365, -2.1], [19.365, -2.0], [19.315, -2.0], [19.315, -1.949], [19.215, -1.949], [19.214, -2.0]], "faces": ["plaster", "plaster", "plaster", "plaster", "plaster", "eticsWhite", "plaster", "plaster", "plaster", "plaster", "plaster", "plaster", "plaster", "plaster", "plaster", "plaster", "plaster", "plaster", "plaster", "plaster"], "z0": 0.0, "z1": 2.7}, {"id": "W09", "pts": [[20.165, -2.0], [20.165, -2.1], [20.214, -2.1], [20.214, -5.05], [20.316, -5.05], [20.316, -4.2], [21.916, -4.2], [21.916, -6.199], [20.316, -6.2], [20.316, -5.85], [20.214, -5.85], [20.214, -6.5], [22.015, -6.5], [22.015, -3.249], [21.916, -3.249], [21.916, -4.1], [20.316, -4.1], [20.316, -2.1], [21.915, -2.1], [21.916, -2.449], [22.015, -2.449], [22.015, -2.1], [22.064, -2.1], [22.064, -2.0]], "faces": ["plaster", "plaster", "plaster", "tile", "tile", "tile", "tile", "tile", "tile", "tile", "plaster", "eticsWhite", "plaster", "tile", "tile", "tile", "tile", "tile", "tile", "tile", "plaster", "plaster", "plaster", "plaster"], "z0": 0.0, "z1": 2.7}, {"id": "W10", "pts": [[22.864, -2.0], [22.864, -2.1], [22.915, -2.1], [22.915, -2.699], [23.015, -2.699], [23.015, -2.1], [24.816, -2.1], [24.816, -6.199], [23.514, -6.2], [23.514, -6.5], [24.915, -6.5], [24.915, -2.0]], "faces": ["plaster", "plaster", "plaster", "plaster", "plaster", "plaster", "plaster", "plaster", "plaster", "eticsWhite", "plaster", "plaster"], "z0": 0.0, "z1": 2.7}, {"id": "W11", "pts": [[26.016, -10.7], [26.016, -11.0], [30.014, -11.0], [30.014, -10.7]], "faces": ["eticsWhite", "eticsWhite", "plaster", "plaster"], "z0": 0.0, "z1": 2.7}, {"id": "W12", "pts": [[30.814, -10.7], [30.814, -11.0], [35.615, -11.0], [35.615, -10.799], [31.615, -10.799], [31.615, -4.5], [35.615, -4.5], [35.615, -4.199], [31.316, -4.199], [31.316, -10.699]], "faces": ["plaster", "eticsWhite", "paint_garage", "paint_garage", "paint_garage", "paint_garage", "plaster", "plaster", "plaster", "plaster"], "z0": 0.0, "z1": 2.7}, {"id": "W13", "pts": [[33.416, -2.199], [33.416, -2.9], [33.714, -2.9], [33.715, -2.299], [35.515, -2.299], [35.516, -2.9], [35.615, -2.9], [35.615, -1.7], [35.666, -1.7], [35.666, -1.6], [35.516, -1.6], [35.515, -2.199]], "faces": ["plaster", "plaster", "eticsWhite", "eticsWhite", "eticsWhite", "plaster", "plaster", "plaster", "tile", "tile", "tile", "tile"], "z0": 0.0, "z1": 2.7}, {"id": "W14", "pts": [[33.816, -13.82], [33.816, -14.019], [38.316, -14.019], [38.316, -13.82]], "faces": ["eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite"], "z0": 0.0, "z1": 2.7}, {"id": "W15", "pts": [[36.415, -10.799], [36.415, -11.0], [37.814, -11.0], [37.814, -10.799]], "faces": ["paint_garage", "eticsWhite", "eticsWhite", "paint_garage"], "z0": 0.0, "z1": 2.7}, {"id": "W16", "pts": [[36.415, -4.199], [36.415, -4.5], [37.814, -4.5], [37.814, -4.199]], "faces": ["plaster", "paint_garage", "eticsWhite", "plaster"], "z0": 0.0, "z1": 2.7}, {"id": "W17", "pts": [[37.465, -1.6], [37.465, -1.7], [37.516, -1.7], [37.516, -2.1], [37.816, -2.1], [38.316, -2.1], [38.316, -1.6]], "faces": ["tile", "eticsWhite", "plaster", "plaster", "eticsWhite", "eticsWhite", "tile"], "z0": 0.0, "z1": 2.7}], "fin": null, "glass": [{"o": "h", "c": -6.35, "a": 14.22, "b": 15.02, "sill": 0.0, "head": 2.3, "host": [14.216, 15.02, -6.5, -6.2], "label": null, "approx": "a03"}, {"o": "h", "c": -6.35, "a": 15.52, "b": 16.71, "sill": 0.0, "head": 2.3, "host": [15.515, 16.715, -6.5, -6.2], "label": null, "approx": "a03"}, {"o": "h", "c": -6.35, "a": 18.72, "b": 20.21, "sill": 0.0, "head": 2.3, "host": [18.716, 20.214, -6.5, -6.2], "label": null, "approx": "a03"}, {"o": "h", "c": -6.35, "a": 22.02, "b": 23.51, "sill": 0.0, "head": 2.3, "host": [22.015, 23.514, -6.5, -6.2], "label": null, "approx": "a03"}, {"o": "h", "c": -6.45, "a": 24.91, "b": 26.02, "sill": 0.0, "head": 2.3, "host": [24.91, 26.02, -6.55, -6.35], "label": null, "approx": "a03"}, {"o": "h", "c": -10.85, "a": 30.01, "b": 30.81, "sill": 0.0, "head": 2.3, "host": [30.01, 30.814, -11.0, -10.7], "label": null, "approx": "a03"}, {"o": "h", "c": -2.2, "a": 31.61, "b": 33.42, "sill": 0.0, "head": 2.3, "host": [31.61, 33.42, -2.25, -2.15], "label": null, "approx": "a03"}, {"o": "v", "c": 11.21, "a": -5.0, "b": -3.0, "sill": 0.0, "head": 2.3, "host": [-5.0, -2.999, 11.066, 11.364], "label": null, "approx": "a03"}, {"o": "v", "c": 26.07, "a": -10.7, "b": -6.5, "sill": 0.0, "head": 2.3, "host": [-10.7, -6.5, 26.02, 26.12], "label": null, "approx": "a03"}, {"o": "v", "c": 33.565, "a": -2.2, "b": -1.0, "sill": 0.9, "head": 2.3, "host": [-2.2, -0.999, 33.416, 33.714], "label": "Lavandaria → pátio", "approx": "a03"}, {"o": "v", "c": 38.17, "a": -1.6, "b": -1.1, "sill": 1.5, "head": 2.3, "host": [-1.6, -1.1, 38.015, 38.316], "label": "Janela WC social", "approx": "a03"}, {"o": "v", "c": 37.76, "a": -4.2, "b": -3.29, "sill": 0.0, "head": 2.3, "host": [-4.2, -2.1, 37.71, 37.81], "label": null, "approx": "a03"}], "pieces": [{"kind": "peitoril", "pts": [[38.015, -1.6], [38.316, -1.6], [38.316, -1.101], [38.015, -1.101]], "faces": ["eticsWhite", "eticsWhite", "eticsWhite", "tile"], "z0": 0.0, "z1": 1.5}, {"kind": "lintel", "pts": [[38.015, -1.6], [38.316, -1.6], [38.316, -1.101], [38.015, -1.101]], "faces": ["eticsWhite", "eticsWhite", "eticsWhite", "tile"], "z0": 2.3, "z1": 2.7}, {"kind": "lintel", "pts": [[35.615, -11.0], [36.415, -11.0], [36.415, -10.799], [35.615, -10.799]], "faces": ["eticsWhite", "eticsWhite", "paint_garage", "eticsWhite"], "z0": 2.3, "z1": 2.7}, {"kind": "lintel", "pts": [[35.615, -4.5], [36.415, -4.5], [36.415, -4.199], [35.615, -4.199]], "faces": ["paint_garage", "eticsWhite", "plaster", "eticsWhite"], "z0": 2.3, "z1": 2.7}, {"kind": "lintel", "pts": [[15.416, -1.949], [15.515, -1.949], [15.515, -1.149], [15.416, -1.149]], "faces": ["eticsWhite", "plaster", "eticsWhite", "tile"], "z0": 2.3, "z1": 2.7}, {"kind": "lintel", "pts": [[19.215, -1.949], [19.315, -1.949], [19.315, -1.149], [19.215, -1.149]], "faces": ["eticsWhite", "plaster", "eticsWhite", "plaster"], "z0": 2.3, "z1": 2.7}, {"kind": "lintel", "pts": [[14.216, -6.5], [15.016, -6.5], [15.016, -6.2], [14.216, -6.2]], "faces": ["eticsWhite", "eticsWhite", "plaster", "eticsWhite"], "z0": 2.3, "z1": 2.7}, {"kind": "lintel", "pts": [[19.365, -2.1], [20.165, -2.1], [20.165, -2.0], [19.365, -2.0]], "faces": ["plaster", "eticsWhite", "plaster", "eticsWhite"], "z0": 2.3, "z1": 2.7}, {"kind": "lintel", "pts": [[22.064, -2.1], [22.864, -2.1], [22.864, -2.0], [22.064, -2.0]], "faces": ["plaster", "eticsWhite", "plaster", "eticsWhite"], "z0": 2.3, "z1": 2.7}, {"kind": "lintel", "pts": [[30.014, -11.0], [30.814, -11.0], [30.814, -10.7], [30.014, -10.7]], "faces": ["eticsWhite", "eticsWhite", "plaster", "eticsWhite"], "z0": 2.3, "z1": 2.7}, {"kind": "lintel", "pts": [[35.666, -1.7], [36.466, -1.7], [36.466, -1.6], [35.666, -1.6]], "faces": ["plaster", "eticsWhite", "tile", "eticsWhite"], "z0": 2.3, "z1": 2.7}, {"kind": "lintel", "pts": [[36.665, -1.7], [37.465, -1.7], [37.465, -1.6], [36.665, -1.6]], "faces": ["plaster", "eticsWhite", "tile", "eticsWhite"], "z0": 2.3, "z1": 2.7}, {"kind": "lintel", "pts": [[15.016, -4.9], [15.115, -4.9], [15.115, -3.899], [15.016, -3.899]], "faces": ["eticsWhite", "plaster", "eticsWhite", "plaster"], "z0": 2.3, "z1": 2.7}, {"kind": "lintel", "pts": [[24.816, -2.0], [24.915, -2.0], [24.915, -0.9], [24.816, -0.9]], "faces": ["eticsWhite", "plaster", "eticsWhite", "plaster"], "z0": 2.3, "z1": 2.7}, {"kind": "lintel", "pts": [[15.515, -6.5], [16.715, -6.5], [16.715, -6.2], [15.515, -6.2]], "faces": ["eticsWhite", "eticsWhite", "plaster", "eticsWhite"], "z0": 2.3, "z1": 2.7}, {"kind": "lintel", "pts": [[15.515, -2.1], [16.715, -2.1], [16.715, -2.0], [15.515, -2.0]], "faces": ["plaster", "eticsWhite", "plaster", "eticsWhite"], "z0": 2.3, "z1": 2.7}, {"kind": "peitoril", "pts": [[33.416, -2.199], [33.714, -2.199], [33.714, -0.999], [33.416, -0.999]], "faces": ["eticsWhite", "tile", "eticsWhite", "eticsWhite"], "z0": 0.0, "z1": 0.9}, {"kind": "lintel", "pts": [[33.416, -2.199], [33.714, -2.199], [33.714, -0.999], [33.416, -0.999]], "faces": ["eticsWhite", "tile", "eticsWhite", "eticsWhite"], "z0": 2.3, "z1": 2.7}, {"kind": "lintel", "pts": [[18.716, -6.5], [20.214, -6.5], [20.214, -6.2], [18.716, -6.2]], "faces": ["eticsWhite", "eticsWhite", "plaster", "eticsWhite"], "z0": 2.3, "z1": 2.7}, {"kind": "lintel", "pts": [[22.015, -6.5], [23.514, -6.5], [23.514, -6.2], [22.015, -6.2]], "faces": ["eticsWhite", "eticsWhite", "plaster", "eticsWhite"], "z0": 2.3, "z1": 2.7}, {"kind": "lintel", "pts": [[11.066, -5.0], [11.364, -5.0], [11.364, -2.999], [11.066, -2.999]], "faces": ["eticsWhite", "plaster", "eticsWhite", "eticsWhite"], "z0": 2.3, "z1": 2.7}, {"kind": "lintel", "pts": [[31.316, -4.199], [31.615, -4.199], [31.615, -0.999], [31.316, -0.999]], "faces": ["eticsWhite", "plaster", "eticsWhite", "plaster"], "z0": 2.3, "z1": 2.7}, {"kind": "lintel", "pts": [[21.92, -3.25], [22.02, -3.25], [22.02, -2.45], [21.92, -2.45]], "faces": ["eticsWhite", "plaster", "eticsWhite", "tile"], "z0": 2.3, "z1": 2.7}, {"kind": "lintel", "pts": [[20.21, -5.85], [20.32, -5.85], [20.32, -5.05], [20.21, -5.05]], "faces": ["eticsWhite", "tile", "eticsWhite", "plaster"], "z0": 2.3, "z1": 2.7}, {"kind": "lintel", "pts": [[31.61, -2.25], [33.42, -2.25], [33.42, -2.15], [31.61, -2.15]], "faces": ["plaster", "eticsWhite", "eticsWhite", "eticsWhite"], "z0": 2.3, "z1": 2.7}, {"kind": "lintel", "pts": [[26.02, -10.7], [26.12, -10.7], [26.12, -6.5], [26.02, -6.5]], "faces": ["eticsWhite", "plaster", "plaster", "eticsWhite"], "z0": 2.3, "z1": 2.7}, {"kind": "lintel", "pts": [[37.71, -4.2], [37.81, -4.2], [37.81, -2.1], [37.71, -2.1]], "faces": ["eticsWhite", "eticsWhite", "eticsWhite", "plaster"], "z0": 2.3, "z1": 2.7}, {"kind": "lintel", "pts": [[37.61, -10.8], [37.81, -10.8], [37.81, -4.5], [37.61, -4.5]], "faces": ["eticsWhite", "eticsWhite", "eticsWhite", "paint_garage"], "z0": 2.3, "z1": 2.7}], "garageDoor": {"o": "v", "x": 37.7, "y0": -10.8, "y1": -4.5, "z1": 2.3}, "entrance": null, "screens": [], "extDoors": [{"o": "v", "c": 37.76, "a": -3.25, "b": -2.15, "z1": 2.26, "mat": "walnut"}, {"o": "h", "c": -10.9, "a": 35.66, "b": 36.37, "z1": 2.26, "mat": "garagedoor"}], "pergolas": [{"rect": [23.6, -10.9, 26.0, -6.52], "z": 2.95, "dir": "x", "step": 0.3, "w": 0.06, "h": 0.16, "beam": 0.22, "mat": "blackMetal"}], "extraRoofs": [{"outline": [[0.0, 0.0], [5.46, 0.0], [5.46, -14.03], [2.35, -14.03]], "z0": 2.1199999999999997, "z1": 2.32, "parapet": 0.0, "side": "eticsWhite"}, {"outline": [[24.92, -2.61], [31.31, -2.61], [31.31, -10.99], [24.92, -10.99]], "z0": 3.1, "z1": 3.98, "parapet": 0.0, "side": "eticsWhite"}], "roof": {"outline": [[11.07, 0.0], [38.32, 0.0], [38.32, -4.2], [37.81, -4.2], [37.81, -11.0], [26.02, -11.0], [26.02, -6.5], [11.07, -6.5]], "parapet": 0.25, "side": "eticsWhite", "holes": [{"name": "Pátio interior", "open": true, "glass": false, "rect": [31.61, -2.2, 33.42, -0.3], "up": [31.36, -2.45, 33.67, -0.2]}, {"name": "Clarabóia WC suite", "open": false, "glass": true, "rect": [13.2, -1.55, 13.8, -1.15], "up": [13.05, -1.7, 13.95, -1.0]}, {"name": "Clarabóia WC quarto 2", "open": false, "glass": true, "rect": [20.8, -2.9, 21.4, -2.6], "up": [20.65, -3.05, 21.55, -2.45]}, {"name": "Clarabóia WC quarto 1", "open": false, "glass": true, "rect": [20.8, -5.6, 21.4, -5.3], "up": [20.65, -5.75, 21.55, -5.15]}], "chimney": [], "solar": []}, "rooms": [{"id": 1, "name": "Sala e cozinha", "short": "Sala/cozinha", "official": 58.4, "area": 61.58, "bbox": [24.91, -10.7, 31.32, -0.3], "dims": [6.41, 10.4], "poly": [[24.91, -0.3], [31.32, -0.3], [31.32, -10.7], [26.12, -10.7], [26.12, -6.5], [24.91, -6.5]], "floor": "oak", "exterior": false, "note": null, "finishes": [["Pavimento sala e quartos", "Tábua de madeira", "generico"], ["Paredes", "Gesso cartonado pintado a tinta plástica branca", "generico"], ["Tectos", "Tecto falso em gesso cartonado, tinta plástica", "generico"], ["Móveis de cozinha", "MDF, bancada em granito", "generico"], ["Rodapés", "Madeira (excepto WC, cozinha e lavandaria)", "generico"]]}, {"id": 2, "name": "Suite", "short": "Suite", "official": 13.0, "area": 13.14, "bbox": [11.37, -6.2, 15.02, -2.6], "dims": [3.65, 3.6], "poly": [[11.37, -2.6], [15.02, -2.6], [15.02, -6.2], [11.37, -6.2]], "floor": "oak", "exterior": false, "note": null, "finishes": [["Pavimento sala e quartos", "Tábua de madeira", "generico"], ["Paredes", "Gesso cartonado pintado a tinta plástica branca", "generico"], ["Tectos", "Tecto falso em gesso cartonado, tinta plástica", "generico"], ["Portas interiores", "Madeira maciça com aros e guarnições em madeira", "generico"], ["Rodapés", "Madeira (excepto WC, cozinha e lavandaria)", "generico"], ["Roupeiros", "Embutidos em madeira, portas em madeira maciça", "generico"]]}, {"id": 3, "name": "WC da suite", "short": "WC da suite", "official": null, "area": 8.91, "bbox": [11.37, -2.5, 15.42, -0.3], "dims": [4.05, 2.2], "poly": [[11.37, -0.3], [15.42, -0.3], [15.42, -2.5], [11.37, -2.5]], "floor": "ceramicFloor", "exterior": false, "note": null, "finishes": [["Pavimento cozinha, WC e lavandaria", "Tijoleira cerâmica", "generico"], ["Paredes cozinha, WC e lavandaria", "Revestimento cerâmico até ao tecto", "generico"], ["Tectos", "Tecto falso em gesso cartonado, tinta plástica", "generico"], ["Louças sanitárias", "Porcelana vidrada de fabrico nacional", "generico"], ["Portas interiores", "Madeira maciça com aros e guarnições em madeira", "generico"]]}, {"id": 4, "name": "Closet da suite", "short": "Closet", "official": null, "area": 8.98, "bbox": [15.12, -6.2, 17.31, -2.1], "dims": [2.19, 4.1], "poly": [[15.12, -2.1], [17.31, -2.1], [17.31, -6.2], [15.12, -6.2]], "floor": "oak", "exterior": false, "note": null, "finishes": [["Pavimento sala e quartos", "Tábua de madeira", "generico"], ["Paredes", "Gesso cartonado pintado a tinta plástica branca", "generico"], ["Tectos", "Tecto falso em gesso cartonado, tinta plástica", "generico"], ["Portas interiores", "Madeira maciça com aros e guarnições em madeira", "generico"], ["Rodapés", "Madeira (excepto WC, cozinha e lavandaria)", "generico"], ["Roupeiros", "Embutidos em madeira, portas em madeira maciça", "generico"]]}, {"id": 5, "name": "Corredor da suite", "short": "Corredor", "official": null, "area": 6.27, "bbox": [15.52, -2.0, 19.21, -0.3], "dims": [3.69, 1.7], "poly": [[15.52, -0.3], [19.21, -0.3], [19.21, -2.0], [15.52, -2.0]], "floor": "oak", "exterior": false, "note": null, "finishes": [["Pavimento sala e quartos", "Tábua de madeira", "generico"], ["Paredes", "Gesso cartonado pintado a tinta plástica branca", "generico"], ["Tectos", "Tecto falso em gesso cartonado, tinta plástica", "generico"], ["Portas interiores", "Madeira maciça com aros e guarnições em madeira", "generico"], ["Rodapés", "Madeira (excepto WC, cozinha e lavandaria)", "generico"], ["Roupeiros", "Embutidos em madeira, portas em madeira maciça", "generico"]]}, {"id": 6, "name": "Corredor", "short": "Corredor", "official": null, "area": 9.35, "bbox": [19.32, -2.0, 24.82, -0.3], "dims": [5.5, 1.7], "poly": [[19.32, -0.3], [24.82, -0.3], [24.82, -2.0], [19.32, -2.0]], "floor": "oak", "exterior": false, "note": null, "finishes": [["Pavimento sala e quartos", "Tábua de madeira", "generico"], ["Paredes", "Gesso cartonado pintado a tinta plástica branca", "generico"], ["Tectos", "Tecto falso em gesso cartonado, tinta plástica", "generico"], ["Rodapés", "Madeira (excepto WC, cozinha e lavandaria)", "generico"]]}, {"id": 7, "name": "Quarto 1", "short": "Quarto 1", "official": 11.8, "area": 11.44, "bbox": [17.42, -6.2, 20.21, -2.1], "dims": [2.79, 4.1], "poly": [[17.42, -2.1], [20.21, -2.1], [20.21, -6.2], [17.42, -6.2]], "floor": "oak", "exterior": false, "note": null, "finishes": [["Pavimento sala e quartos", "Tábua de madeira", "generico"], ["Paredes", "Gesso cartonado pintado a tinta plástica branca", "generico"], ["Tectos", "Tecto falso em gesso cartonado, tinta plástica", "generico"], ["Portas interiores", "Madeira maciça com aros e guarnições em madeira", "generico"], ["Rodapés", "Madeira (excepto WC, cozinha e lavandaria)", "generico"], ["Roupeiros", "Embutidos em madeira, portas em madeira maciça", "generico"]]}, {"id": 8, "name": "WC do quarto 2", "short": "WC do quarto 2", "official": null, "area": 3.2, "bbox": [20.32, -4.1, 21.92, -2.1], "dims": [1.6, 2.0], "poly": [[20.32, -2.1], [21.92, -2.1], [21.92, -4.1], [20.32, -4.1]], "floor": "ceramicFloor", "exterior": false, "note": null, "finishes": [["Pavimento cozinha, WC e lavandaria", "Tijoleira cerâmica", "generico"], ["Paredes cozinha, WC e lavandaria", "Revestimento cerâmico até ao tecto", "generico"], ["Tectos", "Tecto falso em gesso cartonado, tinta plástica", "generico"], ["Louças sanitárias", "Porcelana vidrada de fabrico nacional", "generico"], ["Portas interiores", "Madeira maciça com aros e guarnições em madeira", "generico"]]}, {"id": 9, "name": "WC do quarto 1", "short": "WC do quarto 1", "official": null, "area": 3.2, "bbox": [20.32, -6.2, 21.92, -4.2], "dims": [1.6, 2.0], "poly": [[20.32, -4.2], [21.92, -4.2], [21.92, -6.2], [20.32, -6.2]], "floor": "ceramicFloor", "exterior": false, "note": null, "finishes": [["Pavimento cozinha, WC e lavandaria", "Tijoleira cerâmica", "generico"], ["Paredes cozinha, WC e lavandaria", "Revestimento cerâmico até ao tecto", "generico"], ["Tectos", "Tecto falso em gesso cartonado, tinta plástica", "generico"], ["Louças sanitárias", "Porcelana vidrada de fabrico nacional", "generico"], ["Portas interiores", "Madeira maciça com aros e guarnições em madeira", "generico"]]}, {"id": 10, "name": "Quarto 2", "short": "Quarto 2", "official": 11.8, "area": 11.48, "bbox": [22.02, -6.2, 24.82, -2.1], "dims": [2.8, 4.1], "poly": [[22.02, -2.1], [24.82, -2.1], [24.82, -6.2], [22.02, -6.2]], "floor": "oak", "exterior": false, "note": null, "finishes": [["Pavimento sala e quartos", "Tábua de madeira", "generico"], ["Paredes", "Gesso cartonado pintado a tinta plástica branca", "generico"], ["Tectos", "Tecto falso em gesso cartonado, tinta plástica", "generico"], ["Portas interiores", "Madeira maciça com aros e guarnições em madeira", "generico"], ["Rodapés", "Madeira (excepto WC, cozinha e lavandaria)", "generico"], ["Roupeiros", "Embutidos em madeira, portas em madeira maciça", "generico"]]}, {"id": 11, "name": "Hall de entrada", "short": "Hall de entrada", "official": null, "area": 11.61, "bbox": [31.61, -4.2, 37.71, -1.7], "dims": [6.1, 2.5], "poly": [[31.61, -2.2], [33.42, -2.2], [33.42, -2.9], [35.62, -2.9], [35.62, -1.7], [37.47, -1.7], [37.47, -2.1], [37.71, -2.1], [37.71, -4.2], [31.61, -4.2]], "floor": "oak", "exterior": false, "note": null, "finishes": [["Pavimento sala e quartos", "Tábua de madeira", "generico"], ["Paredes", "Gesso cartonado pintado a tinta plástica branca", "generico"], ["Tectos", "Tecto falso em gesso cartonado, tinta plástica", "generico"], ["Rodapés", "Madeira (excepto WC, cozinha e lavandaria)", "generico"]]}, {"id": 12, "name": "Lavandaria", "short": "Lavandaria", "official": null, "area": 4.73, "bbox": [33.71, -2.2, 36.51, -0.3], "dims": [2.8, 1.9], "poly": [[33.71, -0.3], [36.51, -0.3], [36.51, -1.6], [35.52, -1.6], [35.52, -2.2], [33.71, -2.2]], "floor": "ceramicFloor", "exterior": false, "note": null, "finishes": [["Pavimento cozinha, WC e lavandaria", "Tijoleira cerâmica", "generico"], ["Paredes cozinha, WC e lavandaria", "Revestimento cerâmico até ao tecto", "generico"], ["Tectos", "Tecto falso em gesso cartonado, tinta plástica", "generico"], ["Louças sanitárias", "Porcelana vidrada de fabrico nacional", "generico"], ["Portas interiores", "Madeira maciça com aros e guarnições em madeira", "generico"]]}, {"id": 13, "name": "WC social", "short": "WC social", "official": null, "area": 1.83, "bbox": [36.61, -1.6, 38.02, -0.3], "dims": [1.41, 1.3], "poly": [[36.61, -0.3], [38.02, -0.3], [38.02, -1.6], [36.61, -1.6]], "floor": "ceramicFloor", "exterior": false, "note": null, "finishes": [["Pavimento cozinha, WC e lavandaria", "Tijoleira cerâmica", "generico"], ["Paredes cozinha, WC e lavandaria", "Revestimento cerâmico até ao tecto", "generico"], ["Tectos", "Tecto falso em gesso cartonado, tinta plástica", "generico"], ["Louças sanitárias", "Porcelana vidrada de fabrico nacional", "generico"], ["Portas interiores", "Madeira maciça com aros e guarnições em madeira", "generico"]]}, {"id": 14, "name": "Garagem", "short": "Garagem", "official": 35.0, "area": 37.8, "bbox": [31.61, -10.8, 37.61, -4.5], "dims": [6.0, 6.3], "poly": [[31.61, -4.5], [37.61, -4.5], [37.61, -10.8], [31.61, -10.8]], "floor": "concrete_floor", "exterior": false, "note": null, "finishes": [["Portão da garagem", "Seccionado em alumínio, cor cinza", "generico"], ["Paredes", "Gesso cartonado pintado a tinta plástica branca", "generico"], ["Tectos", "Tecto falso em gesso cartonado, tinta plástica", "generico"]]}, {"id": 15, "name": "Pátio interior", "short": "Pátio interior", "official": null, "area": 3.44, "bbox": [31.61, -2.2, 33.42, -0.3], "dims": [1.81, 1.9], "poly": [[31.61, -0.3], [33.42, -0.3], [33.42, -2.2], [31.61, -2.2]], "floor": "grass", "exterior": true, "note": null, "finishes": [["Fachada", "Capoto (ETICS) com XPS 6 cm, acabamento branco (Weber Flex ou equivalente)", "marca"], ["Caixilharia", "Alumínio anodizado com corte térmico, cor cinza", "generico"], ["Pérgola", "Estrutura metálica", "generico"]]}, {"id": 16, "name": "Alpendre do logradouro", "short": "Alpendre", "official": null, "area": 46.77, "bbox": [0.23, -11.72, 5.26, -0.2], "dims": [5.03, 11.52], "poly": [[0.23, -0.2], [5.26, -0.2], [5.26, -11.72], [2.17, -11.72]], "floor": "porcelain", "exterior": true, "note": null, "finishes": [["Fachada", "Capoto (ETICS) com XPS 6 cm, acabamento branco (Weber Flex ou equivalente)", "marca"], ["Caixilharia", "Alumínio anodizado com corte térmico, cor cinza", "generico"], ["Pérgola", "Estrutura metálica", "generico"]]}, {"id": 17, "name": "Deck da piscina", "short": "Deck da piscina", "official": null, "area": 57.09, "bbox": [11.07, -13.1, 26.02, -6.5], "dims": [14.95, 6.6], "poly": [[11.07, -6.5], [26.02, -6.5], [26.02, -13.1], [20.97, -13.1], [20.97, -8.9], [11.07, -8.9]], "floor": "deckWood", "exterior": true, "note": null, "finishes": [["Fachada", "Capoto (ETICS) com XPS 6 cm, acabamento branco (Weber Flex ou equivalente)", "marca"], ["Caixilharia", "Alumínio anodizado com corte térmico, cor cinza", "generico"], ["Pérgola", "Estrutura metálica", "generico"]]}], "floors": [{"mat": "oak", "poly": [[24.91, -0.3], [31.32, -0.3], [31.32, -10.7], [26.12, -10.7], [26.12, -6.5], [24.91, -6.5]], "holes": []}, {"mat": "oak", "poly": [[15.02, -2.6], [15.02, -6.2], [11.37, -6.2], [11.37, -2.6]], "holes": []}, {"mat": "ceramicFloor", "poly": [[15.42, -0.3], [15.42, -2.5], [11.37, -2.5], [11.37, -0.3]], "holes": []}, {"mat": "oak", "poly": [[17.31, -2.1], [17.31, -6.2], [15.12, -6.2], [15.12, -2.5], [15.42, -2.5], [15.42, -2.1]], "holes": []}, {"mat": "oak", "poly": [[19.21, -0.3], [19.21, -2.0], [15.52, -2.0], [15.52, -0.3]], "holes": []}, {"mat": "oak", "poly": [[24.82, -0.3], [24.82, -2.0], [19.32, -2.0], [19.32, -0.3]], "holes": []}, {"mat": "oak", "poly": [[20.21, -2.1], [20.21, -6.2], [17.42, -6.2], [17.42, -2.1]], "holes": []}, {"mat": "ceramicFloor", "poly": [[21.92, -2.1], [21.92, -4.1], [20.32, -4.1], [20.32, -2.1]], "holes": []}, {"mat": "ceramicFloor", "poly": [[21.92, -4.2], [21.92, -6.2], [20.32, -6.2], [20.32, -4.2]], "holes": []}, {"mat": "oak", "poly": [[24.82, -2.1], [24.82, -6.2], [22.02, -6.2], [22.02, -2.1]], "holes": []}, {"mat": "oak", "poly": [[33.42, -2.2], [33.42, -2.9], [35.62, -2.9], [35.62, -1.7], [37.47, -1.7], [37.47, -2.1], [37.71, -2.1], [37.71, -4.2], [31.61, -4.2], [31.61, -2.2]], "holes": []}, {"mat": "ceramicFloor", "poly": [[36.51, -0.3], [36.51, -1.6], [35.52, -1.6], [35.52, -2.2], [33.71, -2.2], [33.71, -0.3]], "holes": []}, {"mat": "ceramicFloor", "poly": [[38.02, -0.3], [38.02, -1.6], [36.61, -1.6], [36.61, -0.3]], "holes": []}, {"mat": "concrete_floor", "poly": [[37.61, -4.5], [37.61, -10.8], [31.61, -10.8], [31.61, -4.5]], "holes": []}], "foundation": [[[11.071, -6.495], [11.071, -2.505], [11.375, -2.505], [11.375, -0.296], [11.071, -0.296], [11.071, -0.005], [38.311, -0.005], [38.311, -2.095], [37.805, -2.095], [37.809, -10.995], [26.021, -10.995], [26.025, -6.495]], [[38.311, -14.014], [33.821, -14.014], [33.821, -13.825], [38.311, -13.825]]], "doors": [{"room": "Hall de entrada", "type": "hinge", "hinge": [36.395, -4.203], "u": [-1, 0], "n": [0, 1], "L": 0.77, "t": 0.04, "z1": 2.6, "width": 0.8, "pts": [[36.395, -4.203], [36.395, -3.433], [36.355, -3.433], [36.355, -4.203]], "closed": [[36.395, -4.203], [35.625, -4.203], [35.625, -4.243], [36.395, -4.243]], "handle": [36.375, -3.503], "axis": "y", "drawn": false}, {"room": "Corredor da suite", "type": "hinge", "hinge": [15.511, -1.169], "u": [0, -1], "n": [1, 0], "L": 0.77, "t": 0.04, "z1": 2.6, "width": 0.8, "pts": [[15.511, -1.169], [16.281, -1.169], [16.281, -1.209], [15.511, -1.209]], "closed": [[15.511, -1.169], [15.511, -1.939], [15.471, -1.939], [15.471, -1.169]], "handle": [16.211, -1.189], "axis": "x", "drawn": false}, {"room": "Corredor da suite", "type": "hinge", "hinge": [19.219, -1.929], "u": [0, 1], "n": [-1, 0], "L": 0.77, "t": 0.04, "z1": 2.6, "width": 0.8, "pts": [[19.219, -1.929], [18.449, -1.929], [18.449, -1.889], [19.219, -1.889]], "closed": [[19.219, -1.929], [19.219, -1.159], [19.259, -1.159], [19.259, -1.929]], "handle": [18.519, -1.909], "axis": "x", "drawn": false}, {"room": "Quarto 1", "type": "hinge", "hinge": [20.145, -2.096], "u": [-1, 0], "n": [0, -1], "L": 0.77, "t": 0.04, "z1": 2.6, "width": 0.8, "pts": [[20.145, -2.096], [20.145, -2.866], [20.105, -2.866], [20.105, -2.096]], "closed": [[20.145, -2.096], [19.375, -2.096], [19.375, -2.056], [20.145, -2.056]], "handle": [20.125, -2.796], "axis": "y", "drawn": false}, {"room": "Quarto 2", "type": "hinge", "hinge": [22.844, -2.096], "u": [-1, 0], "n": [0, -1], "L": 0.77, "t": 0.04, "z1": 2.6, "width": 0.8, "pts": [[22.844, -2.096], [22.844, -2.866], [22.804, -2.866], [22.804, -2.096]], "closed": [[22.844, -2.096], [22.074, -2.096], [22.074, -2.056], [22.844, -2.056]], "handle": [22.824, -2.796], "axis": "y", "drawn": false}, {"room": "Lavandaria", "type": "hinge", "hinge": [36.446, -1.604], "u": [-1, 0], "n": [0, 1], "L": 0.77, "t": 0.04, "z1": 2.6, "width": 0.8, "pts": [[36.446, -1.604], [36.446, -0.834], [36.406, -0.834], [36.406, -1.604]], "closed": [[36.446, -1.604], [35.676, -1.604], [35.676, -1.644], [36.446, -1.644]], "handle": [36.426, -0.904], "axis": "y", "drawn": false}, {"room": "WC social", "type": "hinge", "hinge": [36.685, -1.604], "u": [1, 0], "n": [0, 1], "L": 0.77, "t": 0.04, "z1": 2.6, "width": 0.8, "pts": [[36.685, -1.604], [36.685, -0.834], [36.725, -0.834], [36.725, -1.604]], "closed": [[36.685, -1.604], [37.455, -1.604], [37.455, -1.644], [36.685, -1.644]], "handle": [36.705, -0.904], "axis": "y", "drawn": false}, {"room": "Closet da suite", "type": "hinge", "hinge": [15.111, -4.88], "u": [0, 1], "n": [1, 0], "L": 0.971, "t": 0.04, "z1": 2.6, "width": 1.001, "pts": [[15.111, -4.88], [16.082, -4.88], [16.082, -4.84], [15.111, -4.84]], "closed": [[15.111, -4.88], [15.111, -3.909], [15.071, -3.909], [15.071, -4.88]], "handle": [16.012, -4.86], "axis": "x", "drawn": false}, {"room": "Closet da suite", "type": "hinge", "hinge": [16.695, -2.096], "u": [-1, 0], "n": [0, -1], "L": 1.17, "t": 0.04, "z1": 2.6, "width": 1.2, "pts": [[16.695, -2.096], [16.695, -3.266], [16.655, -3.266], [16.655, -2.096]], "closed": [[16.695, -2.096], [15.525, -2.096], [15.525, -2.056], [16.695, -2.056]], "handle": [16.675, -3.196], "axis": "y", "drawn": false}, {"room": "WC do quarto 2", "type": "hinge", "hinge": [21.924, -3.23], "u": [0, 1], "n": [-1, 0], "L": 0.77, "t": 0.04, "z1": 2.6, "width": 0.8, "pts": [[21.924, -3.23], [21.154, -3.23], [21.154, -3.19], [21.924, -3.19]], "closed": [[21.924, -3.23], [21.924, -2.46], [21.964, -2.46], [21.964, -3.23]], "handle": [21.224, -3.21], "axis": "x", "drawn": false}, {"room": "Quarto 1", "type": "hinge", "hinge": [20.214, -5.83], "u": [0, 1], "n": [-1, 0], "L": 0.77, "t": 0.04, "z1": 2.6, "width": 0.8, "pts": [[20.214, -5.83], [19.444, -5.83], [19.444, -5.79], [20.214, -5.79]], "closed": [[20.214, -5.83], [20.214, -5.06], [20.254, -5.06], [20.254, -5.83]], "handle": [19.514, -5.81], "axis": "x", "drawn": false}], "blinds": [], "finishes": {"status": {"exato": "Modelo exacto indicado", "serie": "Série indicada", "parcial": "Parcialmente definido", "marca": "Marca indicada (ou equivalente)", "generico": "Tipo indicado; referência por definir", "ambiguo": "Referência a confirmar"}, "groups": [{"title": "Fachada e exterior", "items": [["Fachada", "Capoto (ETICS) com XPS 6 cm, acabamento branco (Weber Flex ou equivalente)", "marca"], ["Caixilharia", "Alumínio anodizado com corte térmico, cor cinza", "generico"], ["Portão da garagem", "Seccionado em alumínio, cor cinza", "generico"], ["Portões", "Estrutura metálica chapeada, cor cinza", "generico"], ["Muros", "Muro de vedação pintado a branco RAL 9001", "parcial"], ["Pérgola", "Estrutura metálica", "generico"], ["Cobertura", "Plana invertida (Impervap 5, Pirmate B, Polyplas 30 + Polyster 40 T) com godo; rufos em zinco", "marca"]]}, {"title": "Interior", "items": [["Pavimento sala e quartos", "Tábua de madeira", "generico"], ["Pavimento cozinha, WC e lavandaria", "Tijoleira cerâmica", "generico"], ["Paredes", "Gesso cartonado pintado a tinta plástica branca", "generico"], ["Paredes cozinha, WC e lavandaria", "Revestimento cerâmico até ao tecto", "generico"], ["Tectos", "Tecto falso em gesso cartonado, tinta plástica", "generico"], ["Portas interiores", "Madeira maciça com aros e guarnições em madeira", "generico"], ["Rodapés", "Madeira (excepto WC, cozinha e lavandaria)", "generico"]]}, {"title": "Cozinha e WC", "items": [["Móveis de cozinha", "MDF, bancada em granito", "generico"], ["Louças sanitárias", "Porcelana vidrada de fabrico nacional", "generico"], ["Roupeiros", "Embutidos em madeira, portas em madeira maciça", "generico"]]}]}, "pavings": [{"name": "Deck da piscina", "z": -0.05, "mat": "deckWood", "poly": [[11.07, -6.5], [26.02, -6.5], [26.02, -13.1], [20.97, -13.1], [20.97, -8.9], [11.07, -8.9]]}, {"name": "Alpendre do logradouro", "z": -0.2, "mat": "limestonePave", "poly": [[0.23, -0.2], [5.26, -0.2], [5.26, -11.72], [2.17, -11.72]]}, {"name": "Acesso automóvel", "z": -0.05, "mat": "driveway", "poly": [[37.81, -4.5], [43.2, -4.5], [43.2, -10.8], [37.81, -10.8]]}, {"name": "Entrada", "z": -0.05, "mat": "limestonePave", "poly": [[38.32, -1.2], [43.2, -1.2], [43.2, -4.5], [37.81, -4.5], [37.81, -4.2], [38.32, -4.2]]}, {"name": "Passeio sul", "z": -0.05, "mat": "limestonePave", "poly": [[30.0, -11.0], [37.81, -11.0], [37.81, -12.2], [30.0, -12.2]]}], "stepping": [[26.6, -11.4, 27.400000000000002, -12.0], [27.8, -11.4, 28.6, -12.0], [29.0, -11.4, 29.8, -12.0]], "stairsExt": [], "pool": {"water": [11.1, -12.4, 20.95, -8.92], "basin": [11.3, -12.2, 20.75, -9.12], "gutter": 0.2, "wall": 0.2, "level": -0.05, "stepsBand": 1.0, "steps": [[0.35, 0.3], [0.7, 0.6], [1.05, 0.9]], "floor": [[0.0, 1.5], [9.85, 1.5]], "maxDepth": 1.5, "approx": "a04"}, "site": {"outline": [[0.0, 0.02], [11.07, 0.02], [38.32, 0.02], [43.4, 0.02], [43.4, -14.03], [38.32, -14.03], [33.82, -14.03], [2.35, -14.03]], "areaOfficial": 594.0, "areaModel": 593.26, "retaining": []}, "terrain": {"flat": [[8.0, 0.0, 43.4, -14.03, -0.05]], "ramps": [[0.0, 0.0, 8.0, -14.03, -0.2, -0.05]], "points": [[-3, -16, 11.45], [6, -16, 11.92], [12, -16, 12.15], [20, -16, 12.39], [28, -16, 12.62], [40, -16, 12.85], [46, -2, 12.96], [46, -10, 12.9], [-3, 2, 12.04]], "approx": "a06"}, "fence": {"height": 1.4, "streetHeight": 1.4, "thick": 0.2, "approx": "a06", "mat": "eticsWhite", "capMat": "coping", "skip": [[10.9, -0.3, 38.5, 0.3], [-0.5, -14.3, 5.6, 0.3], [33.6, -14.3, 38.5, -13.7]], "street": [[43.0, -30, 50, 10]], "gates": [{"name": "Portão automóvel", "a": [43.4, -4.7], "b": [43.4, -10.6], "h": 1.4}, {"name": "Portão pedonal", "a": [43.4, -2.2], "b": [43.4, -3.4], "h": 1.4}]}, "furniture": [{"kind": "tallunits", "x": 26.03, "y": -0.61, "w": 2.2, "d": 0.62, "face": "wall", "fridge": "int", "ovens": 2, "front": "walnut", "name": "Armários altos"}, {"kind": "counter", "x": 28.6, "y": -0.6, "w": 2.9, "d": 0.6, "face": "wall", "sink": 0.0, "top": "marble", "front": "walnut", "name": "Bancada norte"}, {"kind": "island", "x": 28.6, "y": -2.5, "w": 0.9, "d": 3.0, "face": "E", "cooktop": [0.0, 0.0], "top": "marble", "hob": "vent", "front": "walnut", "name": "Ilha"}, {"kind": "pendants", "x": 28.6, "y": -2.5, "w": 2.4, "d": 0, "face": "E", "n": 3, "name": "Candeeiros da ilha"}, {"kind": "stool", "x": 27.6, "y": -3.35, "w": 0, "d": 0, "face": "S", "faceTo": [27.6, -2.5], "name": "Banco", "target": "island"}, {"kind": "stool", "x": 28.3, "y": -3.35, "w": 0, "d": 0, "face": "S", "faceTo": [28.3, -2.5], "name": "Banco", "target": "island"}, {"kind": "stool", "x": 29.0, "y": -3.35, "w": 0, "d": 0, "face": "S", "faceTo": [29.0, -2.5], "name": "Banco", "target": "island"}, {"kind": "stool", "x": 29.7, "y": -3.35, "w": 0, "d": 0, "face": "S", "faceTo": [29.7, -2.5], "name": "Banco", "target": "island"}, {"kind": "dining", "x": 28.4, "y": -5.65, "w": 2.4, "d": 1.0, "face": "E", "side": 3, "ends": true, "name": "Mesa de jantar"}, {"kind": "pendants", "x": 28.4, "y": -5.65, "w": 2.0, "d": 0, "face": "E", "n": 3, "name": "Candeeiros da mesa"}, {"kind": "tvwall", "x": 31.1, "y": -8.85, "w": 3.0, "d": 0.42, "face": "wall", "name": "Móvel TV"}, {"kind": "rug", "x": 29.2, "y": -8.85, "w": 2.6, "d": 3.2, "face": "E", "name": "Tapete sala"}, {"kind": "coffee", "x": 29.4, "y": -8.85, "w": 1.0, "d": 1.0, "face": "E", "name": "Mesa de centro"}, {"kind": "sofa", "x": 27.55, "y": -8.85, "w": 2.8, "d": 0.95, "face": "E", "name": "Sofá", "target": "tv"}, {"kind": "armchair", "x": 29.4, "y": -10.2, "w": 0, "d": 0, "face": "S", "faceTo": [29.4, -8.85], "name": "Cadeirão", "target": "coffee"}, {"kind": "curtain", "x": 26.17, "y": -7.55, "w": 2.0, "d": 0, "face": "E"}, {"kind": "curtain", "x": 26.17, "y": -9.75, "w": 1.8, "d": 0, "face": "E"}, {"kind": "plant", "x": 30.95, "y": -6.9, "w": 0.5, "d": 0.5, "face": "S"}, {"kind": "bed", "x": 13.2, "y": -3.6, "w": 1.8, "d": 2.0, "face": "wall", "name": "Cama suite"}, {"kind": "curtain", "x": 11.42, "y": -4.0, "w": 2.0, "d": 0, "face": "E"}, {"kind": "wardrobe", "x": 17.0, "y": -4.15, "w": 3.6, "d": 0.5, "face": "W", "front": "walnut", "name": "Roupeiro do closet"}, {"kind": "bathtub", "x": 11.95, "y": -1.4, "w": 0.75, "d": 1.65, "face": "S", "mixer": 1, "name": "Banheira"}, {"kind": "vanity", "x": 13.95, "y": -2.22, "w": 1.6, "d": 0.48, "face": "wall", "basins": 2, "name": "Lavatório duplo"}, {"kind": "toilet", "x": 13.1, "y": -0.55, "w": 0, "d": 0, "face": "wall", "hygienic": true, "name": "Sanita suite"}, {"kind": "shower", "x": 14.75, "y": -0.8, "w": 1.2, "d": 0.9, "face": "S", "glass": "front", "glassLen": 0.8, "glassOff": 0.0, "tray": "resin", "name": "Duche suite"}, {"kind": "bed", "x": 18.45, "y": -4.15, "w": 1.6, "d": 2.0, "face": "wall", "name": "Cama Q1"}, {"kind": "toilet", "x": 21.65, "y": -5.8, "w": 0, "d": 0, "face": "wall", "hygienic": true, "name": "Sanita WC Q1"}, {"kind": "basin", "x": 20.75, "y": -5.95, "w": 0.5, "d": 0.42, "face": "wall", "name": "Lavatório WC Q1"}, {"kind": "shower", "x": 21.12, "y": -4.6, "w": 1.55, "d": 0.75, "face": "S", "glass": "front", "glassLen": 0.8, "glassOff": 0.0, "tray": "resin", "name": "Duche WC Q1"}, {"kind": "bed", "x": 23.85, "y": -4.6, "w": 1.6, "d": 2.0, "face": "wall", "name": "Cama Q2"}, {"kind": "wardrobe", "x": 23.93, "y": -2.42, "w": 1.74, "d": 0.6, "face": "S", "front": "walnut", "name": "Roupeiro Q2"}, {"kind": "toilet", "x": 20.55, "y": -2.55, "w": 0, "d": 0, "face": "wall", "hygienic": true, "name": "Sanita WC Q2"}, {"kind": "basin", "x": 21.2, "y": -2.32, "w": 0.5, "d": 0.42, "face": "wall", "name": "Lavatório WC Q2"}, {"kind": "shower", "x": 21.12, "y": -3.7, "w": 1.55, "d": 0.75, "face": "N", "glass": "front", "glassLen": 0.8, "glassOff": 0.0, "tray": "resin", "name": "Duche WC Q2"}, {"kind": "washer", "x": 34.1, "y": -1.87, "w": 0.6, "d": 0.6, "face": "N", "name": "Máquina de lavar"}, {"kind": "washer", "x": 34.75, "y": -1.87, "w": 0.6, "d": 0.6, "face": "N", "name": "Máquina de secar"}, {"kind": "cabinet", "x": 34.55, "y": -0.6, "w": 1.6, "d": 0.55, "face": "wall", "h": 2.38, "name": "Arrumação"}, {"kind": "toilet", "x": 37.6, "y": -0.56, "w": 0, "d": 0, "face": "wall", "hygienic": true, "name": "Sanita WC social"}, {"kind": "basin", "x": 36.95, "y": -0.52, "w": 0.45, "d": 0.4, "face": "wall", "name": "Lavatório WC social"}, {"kind": "wardrobe", "x": 34.615, "y": -2.6, "w": 1.75, "d": 0.55, "face": "S", "front": "walnut", "name": "Roupeiro do hall"}, {"kind": "car", "x": 34.6, "y": -6.1, "w": 1.9, "d": 4.6, "face": "E", "name": "Carro 1"}, {"kind": "car", "x": 34.6, "y": -9.0, "w": 1.9, "d": 4.6, "face": "W", "paint": "carPaintB", "name": "Carro 2"}, {"kind": "dining", "x": 24.8, "y": -8.7, "w": 2.4, "d": 0.95, "face": "S", "side": 3, "ends": false, "chair": "rope", "name": "Mesa exterior"}, {"kind": "lounger", "x": 11.6, "y": -7.65, "w": 0.7, "d": 1.9, "face": "S"}, {"kind": "lounger", "x": 12.5, "y": -7.65, "w": 0.7, "d": 1.9, "face": "S"}, {"kind": "lounger", "x": 14.6, "y": -7.65, "w": 0.7, "d": 1.9, "face": "S"}, {"kind": "lounger", "x": 15.5, "y": -7.65, "w": 0.7, "d": 1.9, "face": "S"}, {"kind": "outchair", "x": 18.0, "y": -7.2, "w": 0, "d": 0, "face": "S", "name": "Cadeirão exterior 1"}, {"kind": "outchair", "x": 19.2, "y": -7.2, "w": 0, "d": 0, "face": "S", "name": "Cadeirão exterior 2"}, {"kind": "sidetable", "x": 18.6, "y": -7.9, "w": 0, "d": 0, "face": "S"}, {"kind": "outkitchen", "x": 2.15, "y": -6.15, "w": 1.7, "d": 0.55, "face": "S", "name": "Cozinha do alpendre"}, {"kind": "dining", "x": 3.6, "y": -9.0, "w": 2.4, "d": 1.0, "face": "S", "side": 3, "ends": false, "chair": "rope", "name": "Mesa do alpendre"}, {"kind": "patiosofa", "x": 3.8, "y": -2.6, "w": 2.0, "d": 0.85, "face": "S", "name": "Sofá do alpendre"}, {"kind": "coffee", "x": 3.8, "y": -3.9, "w": 1.0, "d": 0.7, "face": "S"}, {"kind": "pot", "x": 10.6, "y": -6.7, "w": 0.5, "d": 0, "face": "S"}, {"kind": "pot", "x": 26.4, "y": -12.8, "w": 0.5, "d": 0, "face": "S"}], "decor": {"slats": [], "planters": [], "gravel": [], "ceilings": [], "ledStrips": []}, "planting": [{"type": "tree", "x": 32.5, "y": -1.25, "z": 0.02, "h": 3.2, "crown": 0.7}, {"type": "tree", "x": 7.5, "y": -3.0, "h": 4.6, "crown": 1.6}, {"type": "tree", "x": 6.4, "y": -12.9, "h": 4.2, "crown": 1.5}, {"type": "tree", "x": 41.6, "y": -12.6, "h": 3.8, "crown": 1.2}, {"type": "tree", "x": 42.3, "y": -1.0, "h": 3.2, "crown": 1.0}, {"type": "bed", "rect": [5.7, -12.6, 10.9, -13.7], "n": 24, "h": [0.5, 0.9]}, {"type": "bed", "rect": [21.2, -13.3, 37.5, -13.8], "n": 50, "h": [0.5, 0.9]}, {"type": "bed", "rect": [5.7, -0.3, 10.9, -1.0], "n": 22, "h": [0.5, 0.9]}, {"type": "tropical", "x": 10.7, "y": -8.8, "h": 1.3}, {"type": "tropical", "x": 26.6, "y": -11.6, "h": 1.2}, {"type": "hedges", "h": 1.75, "depth": 0.6}], "context": {"streets": [{"line": [[43.43, 20], [43.43, -40]], "z": -0.05, "sidewalk": 1.6, "width": 6.5, "side": 1}], "buildings": [{"rect": [11.07, 0.3, 38.32, 12.0], "z0": -0.1, "eave": 3.2, "note": "Casa Norte (geminada)"}], "trees": []}, "views": [{"id": "piscina", "label": "Piscina e deck", "pos": [8.0, -13.4, 3.4], "target": [20.0, -6.5, 1.0]}, {"id": "entrada", "label": "Entrada e garagem", "pos": [48.0, -14.0, 3.0], "target": [36.0, -6.0, 1.2]}, {"id": "aerea", "label": "Aérea", "pos": [16, -36, 30], "target": [22, -7, 0]}, {"id": "sala", "label": "Sala e cozinha", "pos": [26.6, -10.2, 1.6], "target": [29.5, -1.5, 1.0]}, {"id": "suite", "label": "Suite", "pos": [14.6, -5.9, 1.6], "target": [12.6, -3.0, 0.9]}], "walkStart": [42.0, -3.2, 90], "renders": [{"id": "r01", "title": "Fachada e acesso", "place": "Exterior · nascente", "pos": [49.0, -7.5, 1.6], "target": [37.8, -6.5, 1.6], "fov": 55, "hour": 10}, {"id": "r02", "title": "Piscina e deck", "place": "Jardim", "pos": [9.5, -12.6, 1.5], "target": [22.0, -6.5, 1.3], "fov": 62, "hour": 17}, {"id": "r03", "title": "Mesa exterior e pérgola", "place": "Deck", "pos": [20.0, -12.0, 1.6], "target": [25.5, -8.0, 1.2], "fov": 62, "hour": 17}, {"id": "r04", "title": "Alpendre do logradouro", "place": "Alpendre", "pos": [9.0, -6.5, 1.6], "target": [2.5, -6.0, 1.3], "fov": 64, "hour": 16}, {"id": "r05", "title": "Cozinha", "place": "Cozinha", "pos": [28.6, -6.6, 1.6], "target": [28.6, -0.4, 1.1], "fov": 62, "hour": 11}, {"id": "r06", "title": "Sala de estar", "place": "Sala", "pos": [26.6, -6.9, 1.6], "target": [31.0, -9.2, 1.0], "fov": 64, "hour": 16}, {"id": "r07", "title": "Hall de entrada", "place": "Hall", "pos": [32.2, -3.3, 1.6], "target": [37.8, -3.0, 1.3], "fov": 62, "hour": 10}, {"id": "r08", "title": "Suite", "place": "Suite", "pos": [14.7, -5.9, 1.6], "target": [12.4, -3.0, 0.9], "fov": 66, "hour": 10}, {"id": "r09", "title": "Casa de banho da suite", "place": "Suite", "pos": [15.1, -1.6, 1.6], "target": [12.0, -1.2, 1.0], "fov": 72, "hour": 12}, {"id": "r10", "title": "Quarto 1", "place": "Quarto 1", "pos": [19.9, -5.9, 1.6], "target": [17.6, -3.4, 0.9], "fov": 66, "hour": 10}, {"id": "r11", "title": "Quarto 2", "place": "Quarto 2", "pos": [22.3, -5.9, 1.6], "target": [24.6, -3.6, 0.9], "fov": 66, "hour": 10}]};
+const HOUSE = {"meta": {"units": "m", "axes": "X nascente, Y norte, Z altura; three.js: x=X, y=Z, z=-Y", "name": "Casa Sul", "place": "Madalena · Vila Nova de Gaia", "slug": "casa-sul", "cotaZero": 13.1, "floors": "Piso térreo (moradia térrea)", "lat": 41.1, "northDeg": 0, "origin": "Canto noroeste do alpendre (limite poente do lote)", "tagline": "Moradia térrea com piscina, deck e alpendre no logradouro", "client": true}, "heights": {"floor": 0.0, "ceiling": 2.6, "slabBottom": 2.7, "slabTop": 2.98, "roofFinish": 3.06, "parapetTop": 3.22, "doorHead": 2.3, "garageClear": 2.3}, "walls": [{"id": "W00", "pts": [[0.0, -0.0], [2.354, -14.025], [5.465, -14.025], [5.465, -12.626], [5.264, -12.626], [5.264, -13.824], [3.666, -13.826], [3.666, -12.626], [3.465, -12.626], [3.465, -13.826], [2.523, -13.826], [2.189, -11.826], [3.464, -11.826], [3.465, -11.874], [3.666, -11.874], [3.666, -11.724], [2.172, -11.724], [1.293, -6.5], [1.293, -5.8], [1.177, -5.799], [0.235, -0.2], [5.264, -0.199], [5.264, -0.701], [5.465, -0.701], [5.465, 0.0]], "faces": ["eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite"], "z0": -0.2, "z1": 2.1199999999999997}, {"id": "W01", "pts": [[5.215, -9.563], [5.222, -9.599], [5.241, -9.629], [5.271, -9.652], [5.306, -9.663], [5.323, -9.663], [5.359, -9.652], [5.389, -9.629], [5.408, -9.599], [5.414, -9.58], [5.414, -9.544], [5.4, -9.51], [5.376, -9.483], [5.342, -9.466], [5.306, -9.464], [5.27, -9.472], [5.241, -9.495], [5.222, -9.527]], "faces": ["eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite"], "z0": -0.2, "z1": 2.1199999999999997}, {"id": "W02", "pts": [[5.264, -5.7], [5.264, -6.5], [5.465, -6.5], [5.465, -5.7]], "faces": ["eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite"], "z0": -0.2, "z1": 2.1199999999999997}, {"id": "W03", "pts": [[5.264, -3.099], [5.264, -3.3], [5.465, -3.3], [5.465, -3.099]], "faces": ["eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite"], "z0": -0.2, "z1": 2.1199999999999997}, {"id": "W04", "pts": [[11.066, -5.0], [11.066, -6.5], [14.216, -6.5], [14.216, -6.2], [11.365, -6.2], [11.364, -5.0]], "faces": ["eticsWhite", "eticsWhite", "plaster", "plaster", "plaster", "plaster"], "z0": 0.0, "z1": 2.7}, {"id": "W05", "pts": [[11.066, -2.5], [11.066, -2.999], [11.364, -2.999], [11.365, -2.599], [15.015, -2.599], [15.016, -3.899], [15.115, -3.899], [15.115, -2.6], [15.515, -2.599], [15.515, -1.949], [15.416, -1.949], [15.415, -2.5]], "faces": ["eticsWhite", "plaster", "plaster", "plaster", "plaster", "plaster", "plaster", "plaster", "plaster", "tile", "tile", "tile"], "z0": 0.0, "z1": 2.7}, {"id": "W06", "pts": [[11.066, -0.0], [11.066, -0.301], [15.415, -0.301], [15.416, -1.149], [15.515, -1.149], [15.516, -0.301], [19.215, -0.301], [19.215, -1.149], [19.315, -1.149], [19.315, -0.301], [24.815, -0.301], [24.816, -0.9], [24.915, -0.9], [24.916, -0.301], [31.315, -0.301], [31.316, -0.999], [31.615, -0.999], [31.615, -0.301], [33.415, -0.301], [33.416, -0.999], [33.714, -0.999], [33.715, -0.301], [36.514, -0.301], [36.515, -1.599], [36.466, -1.6], [36.466, -1.7], [36.665, -1.7], [36.665, -1.6], [36.614, -1.599], [36.614, -0.301], [38.015, -0.301], [38.015, -1.101], [38.316, -1.101], [38.316, 0.0]], "faces": ["eticsWhite", "tile", "tile", "tile", "plaster", "plaster", "plaster", "plaster", "plaster", "plaster", "plaster", "plaster", "plaster", "plaster", "plaster", "plaster", "eticsWhite", "eticsWhite", "eticsWhite", "tile", "tile", "tile", "tile", "tile", "tile", "plaster", "tile", "tile", "tile", "tile", "tile", "tile", "eticsWhite", "eticsWhite"], "z0": 0.0, "z1": 2.7}, {"id": "W07", "pts": [[15.016, -4.9], [15.016, -6.5], [15.515, -6.5], [15.515, -6.2], [15.115, -6.199], [15.115, -4.9]], "faces": ["plaster", "eticsWhite", "plaster", "plaster", "plaster", "plaster"], "z0": 0.0, "z1": 2.7}, {"id": "W08", "pts": [[16.715, -2.0], [16.715, -2.1], [17.314, -2.1], [17.314, -6.199], [16.715, -6.2], [16.715, -6.5], [18.716, -6.5], [18.716, -6.2], [17.416, -6.199], [17.416, -2.1], [19.215, -2.1], [19.215, -2.699], [19.315, -2.699], [19.315, -2.1], [19.365, -2.1], [19.365, -2.0], [19.315, -2.0], [19.315, -1.949], [19.215, -1.949], [19.214, -2.0]], "faces": ["plaster", "plaster", "plaster", "plaster", "plaster", "eticsWhite", "plaster", "plaster", "plaster", "plaster", "plaster", "plaster", "plaster", "plaster", "plaster", "plaster", "plaster", "plaster", "plaster", "plaster"], "z0": 0.0, "z1": 2.7}, {"id": "W09", "pts": [[20.165, -2.0], [20.165, -2.1], [20.214, -2.1], [20.214, -5.05], [20.316, -5.05], [20.316, -4.2], [21.916, -4.2], [21.916, -6.199], [20.316, -6.2], [20.316, -5.85], [20.214, -5.85], [20.214, -6.5], [22.015, -6.5], [22.015, -3.249], [21.916, -3.249], [21.916, -4.1], [20.316, -4.1], [20.316, -2.1], [21.915, -2.1], [21.916, -2.449], [22.015, -2.449], [22.015, -2.1], [22.064, -2.1], [22.064, -2.0]], "faces": ["plaster", "plaster", "plaster", "tile", "tile", "tile", "tile", "tile", "tile", "tile", "plaster", "eticsWhite", "plaster", "tile", "tile", "tile", "tile", "tile", "tile", "tile", "plaster", "plaster", "plaster", "plaster"], "z0": 0.0, "z1": 2.7}, {"id": "W10", "pts": [[22.864, -2.0], [22.864, -2.1], [22.915, -2.1], [22.915, -2.699], [23.015, -2.699], [23.015, -2.1], [24.816, -2.1], [24.816, -6.199], [23.514, -6.2], [23.514, -6.5], [24.915, -6.5], [24.915, -2.0]], "faces": ["plaster", "plaster", "plaster", "plaster", "plaster", "plaster", "plaster", "plaster", "plaster", "eticsWhite", "plaster", "plaster"], "z0": 0.0, "z1": 2.7}, {"id": "W11", "pts": [[26.016, -10.7], [26.016, -11.0], [30.014, -11.0], [30.014, -10.7]], "faces": ["eticsWhite", "eticsWhite", "plaster", "plaster"], "z0": 0.0, "z1": 2.7}, {"id": "W12", "pts": [[30.814, -10.7], [30.814, -11.0], [35.615, -11.0], [35.615, -10.799], [31.615, -10.799], [31.615, -4.5], [35.615, -4.5], [35.615, -4.199], [31.316, -4.199], [31.316, -10.699]], "faces": ["plaster", "eticsWhite", "paint_garage", "paint_garage", "paint_garage", "paint_garage", "plaster", "plaster", "plaster", "plaster"], "z0": 0.0, "z1": 2.7}, {"id": "W13", "pts": [[33.416, -2.199], [33.416, -2.9], [33.714, -2.9], [33.715, -2.299], [35.515, -2.299], [35.516, -2.9], [35.615, -2.9], [35.615, -1.7], [35.666, -1.7], [35.666, -1.6], [35.516, -1.6], [35.515, -2.199]], "faces": ["plaster", "plaster", "eticsWhite", "eticsWhite", "eticsWhite", "plaster", "plaster", "plaster", "tile", "tile", "tile", "tile"], "z0": 0.0, "z1": 2.7}, {"id": "W14", "pts": [[33.816, -13.82], [33.816, -14.019], [38.316, -14.019], [38.316, -13.82]], "faces": ["eticsWhite", "eticsWhite", "eticsWhite", "eticsWhite"], "z0": 0.0, "z1": 2.7}, {"id": "W15", "pts": [[36.415, -10.799], [36.415, -11.0], [37.814, -11.0], [37.814, -10.799]], "faces": ["paint_garage", "eticsWhite", "eticsWhite", "paint_garage"], "z0": 0.0, "z1": 2.7}, {"id": "W16", "pts": [[36.415, -4.199], [36.415, -4.5], [37.814, -4.5], [37.814, -4.199]], "faces": ["plaster", "paint_garage", "eticsWhite", "plaster"], "z0": 0.0, "z1": 2.7}, {"id": "W17", "pts": [[37.465, -1.6], [37.465, -1.7], [37.516, -1.7], [37.516, -2.1], [37.816, -2.1], [38.316, -2.1], [38.316, -1.6]], "faces": ["tile", "eticsWhite", "plaster", "plaster", "eticsWhite", "eticsWhite", "tile"], "z0": 0.0, "z1": 2.7}], "fin": null, "glass": [{"o": "h", "c": -6.35, "a": 14.22, "b": 15.02, "sill": 0.0, "head": 2.3, "host": [14.216, 15.02, -6.5, -6.2], "label": null, "approx": "a03"}, {"o": "h", "c": -6.35, "a": 15.52, "b": 16.71, "sill": 0.0, "head": 2.3, "host": [15.515, 16.715, -6.5, -6.2], "label": null, "approx": "a03"}, {"o": "h", "c": -6.35, "a": 18.72, "b": 20.21, "sill": 0.0, "head": 2.3, "host": [18.716, 20.214, -6.5, -6.2], "label": null, "approx": "a03"}, {"o": "h", "c": -6.35, "a": 22.02, "b": 23.51, "sill": 0.0, "head": 2.3, "host": [22.015, 23.514, -6.5, -6.2], "label": null, "approx": "a03"}, {"o": "h", "c": -6.45, "a": 24.91, "b": 26.02, "sill": 0.0, "head": 2.3, "host": [24.91, 26.02, -6.55, -6.35], "label": null, "approx": "a03"}, {"o": "h", "c": -10.85, "a": 30.01, "b": 30.81, "sill": 0.0, "head": 2.3, "host": [30.01, 30.814, -11.0, -10.7], "label": null, "approx": "a03"}, {"o": "h", "c": -2.2, "a": 31.61, "b": 33.42, "sill": 0.0, "head": 2.3, "host": [31.61, 33.42, -2.25, -2.15], "label": null, "approx": "a03"}, {"o": "v", "c": 11.21, "a": -5.0, "b": -3.0, "sill": 0.0, "head": 2.3, "host": [-5.0, -2.999, 11.066, 11.364], "label": null, "approx": "a03"}, {"o": "v", "c": 26.07, "a": -10.7, "b": -6.5, "sill": 0.0, "head": 2.3, "host": [-10.7, -6.5, 26.02, 26.12], "label": null, "approx": "a03"}, {"o": "v", "c": 33.565, "a": -2.2, "b": -1.0, "sill": 0.9, "head": 2.3, "host": [-2.2, -0.999, 33.416, 33.714], "label": "Lavandaria → pátio", "approx": "a03"}, {"o": "v", "c": 38.17, "a": -1.6, "b": -1.1, "sill": 1.5, "head": 2.3, "host": [-1.6, -1.1, 38.015, 38.316], "label": "Janela WC social", "approx": "a03"}, {"o": "v", "c": 37.76, "a": -4.2, "b": -3.29, "sill": 0.0, "head": 2.3, "host": [-4.2, -2.1, 37.71, 37.81], "label": null, "approx": "a03"}], "pieces": [{"kind": "peitoril", "pts": [[38.015, -1.6], [38.316, -1.6], [38.316, -1.101], [38.015, -1.101]], "faces": ["eticsWhite", "eticsWhite", "eticsWhite", "tile"], "z0": 0.0, "z1": 1.5}, {"kind": "lintel", "pts": [[38.015, -1.6], [38.316, -1.6], [38.316, -1.101], [38.015, -1.101]], "faces": ["eticsWhite", "eticsWhite", "eticsWhite", "tile"], "z0": 2.3, "z1": 2.7}, {"kind": "lintel", "pts": [[35.615, -11.0], [36.415, -11.0], [36.415, -10.799], [35.615, -10.799]], "faces": ["eticsWhite", "eticsWhite", "paint_garage", "eticsWhite"], "z0": 2.3, "z1": 2.7}, {"kind": "lintel", "pts": [[35.615, -4.5], [36.415, -4.5], [36.415, -4.199], [35.615, -4.199]], "faces": ["paint_garage", "eticsWhite", "plaster", "eticsWhite"], "z0": 2.3, "z1": 2.7}, {"kind": "lintel", "pts": [[15.416, -1.949], [15.515, -1.949], [15.515, -1.149], [15.416, -1.149]], "faces": ["eticsWhite", "plaster", "eticsWhite", "tile"], "z0": 2.3, "z1": 2.7}, {"kind": "lintel", "pts": [[19.215, -1.949], [19.315, -1.949], [19.315, -1.149], [19.215, -1.149]], "faces": ["eticsWhite", "plaster", "eticsWhite", "plaster"], "z0": 2.3, "z1": 2.7}, {"kind": "lintel", "pts": [[14.216, -6.5], [15.016, -6.5], [15.016, -6.2], [14.216, -6.2]], "faces": ["eticsWhite", "eticsWhite", "plaster", "eticsWhite"], "z0": 2.3, "z1": 2.7}, {"kind": "lintel", "pts": [[19.365, -2.1], [20.165, -2.1], [20.165, -2.0], [19.365, -2.0]], "faces": ["plaster", "eticsWhite", "plaster", "eticsWhite"], "z0": 2.3, "z1": 2.7}, {"kind": "lintel", "pts": [[22.064, -2.1], [22.864, -2.1], [22.864, -2.0], [22.064, -2.0]], "faces": ["plaster", "eticsWhite", "plaster", "eticsWhite"], "z0": 2.3, "z1": 2.7}, {"kind": "lintel", "pts": [[30.014, -11.0], [30.814, -11.0], [30.814, -10.7], [30.014, -10.7]], "faces": ["eticsWhite", "eticsWhite", "plaster", "eticsWhite"], "z0": 2.3, "z1": 2.7}, {"kind": "lintel", "pts": [[35.666, -1.7], [36.466, -1.7], [36.466, -1.6], [35.666, -1.6]], "faces": ["plaster", "eticsWhite", "tile", "eticsWhite"], "z0": 2.3, "z1": 2.7}, {"kind": "lintel", "pts": [[36.665, -1.7], [37.465, -1.7], [37.465, -1.6], [36.665, -1.6]], "faces": ["plaster", "eticsWhite", "tile", "eticsWhite"], "z0": 2.3, "z1": 2.7}, {"kind": "lintel", "pts": [[15.016, -4.9], [15.115, -4.9], [15.115, -3.899], [15.016, -3.899]], "faces": ["eticsWhite", "plaster", "eticsWhite", "plaster"], "z0": 2.3, "z1": 2.7}, {"kind": "lintel", "pts": [[24.816, -2.0], [24.915, -2.0], [24.915, -0.9], [24.816, -0.9]], "faces": ["eticsWhite", "plaster", "eticsWhite", "plaster"], "z0": 2.3, "z1": 2.7}, {"kind": "lintel", "pts": [[15.515, -6.5], [16.715, -6.5], [16.715, -6.2], [15.515, -6.2]], "faces": ["eticsWhite", "eticsWhite", "plaster", "eticsWhite"], "z0": 2.3, "z1": 2.7}, {"kind": "lintel", "pts": [[15.515, -2.1], [16.715, -2.1], [16.715, -2.0], [15.515, -2.0]], "faces": ["plaster", "eticsWhite", "plaster", "eticsWhite"], "z0": 2.3, "z1": 2.7}, {"kind": "peitoril", "pts": [[33.416, -2.199], [33.714, -2.199], [33.714, -0.999], [33.416, -0.999]], "faces": ["eticsWhite", "tile", "eticsWhite", "eticsWhite"], "z0": 0.0, "z1": 0.9}, {"kind": "lintel", "pts": [[33.416, -2.199], [33.714, -2.199], [33.714, -0.999], [33.416, -0.999]], "faces": ["eticsWhite", "tile", "eticsWhite", "eticsWhite"], "z0": 2.3, "z1": 2.7}, {"kind": "lintel", "pts": [[18.716, -6.5], [20.214, -6.5], [20.214, -6.2], [18.716, -6.2]], "faces": ["eticsWhite", "eticsWhite", "plaster", "eticsWhite"], "z0": 2.3, "z1": 2.7}, {"kind": "lintel", "pts": [[22.015, -6.5], [23.514, -6.5], [23.514, -6.2], [22.015, -6.2]], "faces": ["eticsWhite", "eticsWhite", "plaster", "eticsWhite"], "z0": 2.3, "z1": 2.7}, {"kind": "lintel", "pts": [[11.066, -5.0], [11.364, -5.0], [11.364, -2.999], [11.066, -2.999]], "faces": ["eticsWhite", "plaster", "eticsWhite", "eticsWhite"], "z0": 2.3, "z1": 2.7}, {"kind": "lintel", "pts": [[31.316, -4.199], [31.615, -4.199], [31.615, -0.999], [31.316, -0.999]], "faces": ["eticsWhite", "plaster", "eticsWhite", "plaster"], "z0": 2.3, "z1": 2.7}, {"kind": "lintel", "pts": [[21.92, -3.25], [22.02, -3.25], [22.02, -2.45], [21.92, -2.45]], "faces": ["eticsWhite", "plaster", "eticsWhite", "tile"], "z0": 2.3, "z1": 2.7}, {"kind": "lintel", "pts": [[20.21, -5.85], [20.32, -5.85], [20.32, -5.05], [20.21, -5.05]], "faces": ["eticsWhite", "tile", "eticsWhite", "plaster"], "z0": 2.3, "z1": 2.7}, {"kind": "lintel", "pts": [[31.61, -2.25], [33.42, -2.25], [33.42, -2.15], [31.61, -2.15]], "faces": ["plaster", "eticsWhite", "eticsWhite", "eticsWhite"], "z0": 2.3, "z1": 2.7}, {"kind": "lintel", "pts": [[26.02, -10.7], [26.12, -10.7], [26.12, -6.5], [26.02, -6.5]], "faces": ["eticsWhite", "plaster", "plaster", "eticsWhite"], "z0": 2.3, "z1": 2.7}, {"kind": "lintel", "pts": [[37.71, -4.2], [37.81, -4.2], [37.81, -2.1], [37.71, -2.1]], "faces": ["eticsWhite", "eticsWhite", "eticsWhite", "plaster"], "z0": 2.3, "z1": 2.7}, {"kind": "lintel", "pts": [[37.61, -10.8], [37.81, -10.8], [37.81, -4.5], [37.61, -4.5]], "faces": ["eticsWhite", "eticsWhite", "eticsWhite", "paint_garage"], "z0": 2.3, "z1": 2.7}], "garageDoor": {"o": "v", "x": 37.7, "y0": -10.8, "y1": -4.5, "z1": 2.3}, "entrance": null, "screens": [], "extDoors": [{"o": "v", "c": 37.76, "a": -3.25, "b": -2.15, "z1": 2.26, "mat": "walnut", "name": "Porta de entrada", "swing": {"hinge": "a", "into": "W"}}, {"o": "h", "c": -10.9, "a": 35.66, "b": 36.37, "z1": 2.26, "mat": "garagedoor"}], "pergolas": [{"rect": [23.6, -10.9, 26.0, -6.52], "z": 2.95, "dir": "x", "step": 0.3, "w": 0.06, "h": 0.16, "beam": 0.22, "mat": "blackMetal"}], "extraRoofs": [{"outline": [[0.0, 0.0], [5.46, 0.0], [5.46, -14.03], [2.35, -14.03]], "z0": 2.1199999999999997, "z1": 2.32, "parapet": 0.0, "side": "eticsWhite"}, {"outline": [[24.92, -2.61], [31.31, -2.61], [31.31, -10.99], [24.92, -10.99]], "z0": 3.1, "z1": 3.98, "parapet": 0.0, "side": "eticsWhite"}], "roof": {"outline": [[11.07, 0.0], [38.32, 0.0], [38.32, -4.2], [37.81, -4.2], [37.81, -11.0], [26.02, -11.0], [26.02, -6.5], [11.07, -6.5]], "parapet": 0.25, "side": "eticsWhite", "holes": [{"name": "Pátio interior", "open": true, "glass": false, "rect": [31.61, -2.2, 33.42, -0.3], "up": [31.36, -2.45, 33.67, -0.2]}, {"name": "Clarabóia WC suite", "open": false, "glass": true, "rect": [13.2, -1.55, 13.8, -1.15], "up": [13.05, -1.7, 13.95, -1.0]}, {"name": "Clarabóia WC quarto 2", "open": false, "glass": true, "rect": [20.8, -2.9, 21.4, -2.6], "up": [20.65, -3.05, 21.55, -2.45]}, {"name": "Clarabóia WC quarto 1", "open": false, "glass": true, "rect": [20.8, -5.6, 21.4, -5.3], "up": [20.65, -5.75, 21.55, -5.15]}], "chimney": [], "solar": []}, "rooms": [{"id": 1, "name": "Sala e cozinha", "short": "Sala/cozinha", "official": 58.4, "area": 61.58, "bbox": [24.91, -10.7, 31.32, -0.3], "dims": [6.41, 10.4], "poly": [[24.91, -0.3], [31.32, -0.3], [31.32, -10.7], [26.12, -10.7], [26.12, -6.5], [24.91, -6.5]], "floor": "oak", "exterior": false, "note": null, "finishes": [["Pavimento sala e quartos", "Tábua de madeira", "generico"], ["Paredes", "Gesso cartonado pintado a tinta plástica branca", "generico"], ["Tectos", "Tecto falso em gesso cartonado, tinta plástica", "generico"], ["Móveis de cozinha", "MDF, bancada em granito", "generico"], ["Rodapés", "Madeira (excepto WC, cozinha e lavandaria)", "generico"]]}, {"id": 2, "name": "Suite", "short": "Suite", "official": 13.0, "area": 13.14, "bbox": [11.37, -6.2, 15.02, -2.6], "dims": [3.65, 3.6], "poly": [[11.37, -2.6], [15.02, -2.6], [15.02, -6.2], [11.37, -6.2]], "floor": "oak", "exterior": false, "note": null, "finishes": [["Pavimento sala e quartos", "Tábua de madeira", "generico"], ["Paredes", "Gesso cartonado pintado a tinta plástica branca", "generico"], ["Tectos", "Tecto falso em gesso cartonado, tinta plástica", "generico"], ["Portas interiores", "Madeira maciça com aros e guarnições em madeira", "generico"], ["Rodapés", "Madeira (excepto WC, cozinha e lavandaria)", "generico"], ["Roupeiros", "Embutidos em madeira, portas em madeira maciça", "generico"]]}, {"id": 3, "name": "WC da suite", "short": "WC da suite", "official": null, "area": 8.91, "bbox": [11.37, -2.5, 15.42, -0.3], "dims": [4.05, 2.2], "poly": [[11.37, -0.3], [15.42, -0.3], [15.42, -2.5], [11.37, -2.5]], "floor": "ceramicFloor", "exterior": false, "note": null, "finishes": [["Pavimento cozinha, WC e lavandaria", "Tijoleira cerâmica", "generico"], ["Paredes cozinha, WC e lavandaria", "Revestimento cerâmico até ao tecto", "generico"], ["Tectos", "Tecto falso em gesso cartonado, tinta plástica", "generico"], ["Louças sanitárias", "Porcelana vidrada de fabrico nacional", "generico"], ["Portas interiores", "Madeira maciça com aros e guarnições em madeira", "generico"]]}, {"id": 4, "name": "Closet da suite", "short": "Closet", "official": null, "area": 8.98, "bbox": [15.12, -6.2, 17.31, -2.1], "dims": [2.19, 4.1], "poly": [[15.12, -2.1], [17.31, -2.1], [17.31, -6.2], [15.12, -6.2]], "floor": "oak", "exterior": false, "note": null, "finishes": [["Pavimento sala e quartos", "Tábua de madeira", "generico"], ["Paredes", "Gesso cartonado pintado a tinta plástica branca", "generico"], ["Tectos", "Tecto falso em gesso cartonado, tinta plástica", "generico"], ["Portas interiores", "Madeira maciça com aros e guarnições em madeira", "generico"], ["Rodapés", "Madeira (excepto WC, cozinha e lavandaria)", "generico"], ["Roupeiros", "Embutidos em madeira, portas em madeira maciça", "generico"]]}, {"id": 5, "name": "Corredor da suite", "short": "Corredor", "official": null, "area": 6.27, "bbox": [15.52, -2.0, 19.21, -0.3], "dims": [3.69, 1.7], "poly": [[15.52, -0.3], [19.21, -0.3], [19.21, -2.0], [15.52, -2.0]], "floor": "oak", "exterior": false, "note": null, "finishes": [["Pavimento sala e quartos", "Tábua de madeira", "generico"], ["Paredes", "Gesso cartonado pintado a tinta plástica branca", "generico"], ["Tectos", "Tecto falso em gesso cartonado, tinta plástica", "generico"], ["Portas interiores", "Madeira maciça com aros e guarnições em madeira", "generico"], ["Rodapés", "Madeira (excepto WC, cozinha e lavandaria)", "generico"], ["Roupeiros", "Embutidos em madeira, portas em madeira maciça", "generico"]]}, {"id": 6, "name": "Corredor", "short": "Corredor", "official": null, "area": 9.35, "bbox": [19.32, -2.0, 24.82, -0.3], "dims": [5.5, 1.7], "poly": [[19.32, -0.3], [24.82, -0.3], [24.82, -2.0], [19.32, -2.0]], "floor": "oak", "exterior": false, "note": null, "finishes": [["Pavimento sala e quartos", "Tábua de madeira", "generico"], ["Paredes", "Gesso cartonado pintado a tinta plástica branca", "generico"], ["Tectos", "Tecto falso em gesso cartonado, tinta plástica", "generico"], ["Rodapés", "Madeira (excepto WC, cozinha e lavandaria)", "generico"]]}, {"id": 7, "name": "Quarto 1", "short": "Quarto 1", "official": 11.8, "area": 11.44, "bbox": [17.42, -6.2, 20.21, -2.1], "dims": [2.79, 4.1], "poly": [[17.42, -2.1], [20.21, -2.1], [20.21, -6.2], [17.42, -6.2]], "floor": "oak", "exterior": false, "note": null, "finishes": [["Pavimento sala e quartos", "Tábua de madeira", "generico"], ["Paredes", "Gesso cartonado pintado a tinta plástica branca", "generico"], ["Tectos", "Tecto falso em gesso cartonado, tinta plástica", "generico"], ["Portas interiores", "Madeira maciça com aros e guarnições em madeira", "generico"], ["Rodapés", "Madeira (excepto WC, cozinha e lavandaria)", "generico"], ["Roupeiros", "Embutidos em madeira, portas em madeira maciça", "generico"]]}, {"id": 8, "name": "WC do quarto 2", "short": "WC do quarto 2", "official": null, "area": 3.2, "bbox": [20.32, -4.1, 21.92, -2.1], "dims": [1.6, 2.0], "poly": [[20.32, -2.1], [21.92, -2.1], [21.92, -4.1], [20.32, -4.1]], "floor": "ceramicFloor", "exterior": false, "note": null, "finishes": [["Pavimento cozinha, WC e lavandaria", "Tijoleira cerâmica", "generico"], ["Paredes cozinha, WC e lavandaria", "Revestimento cerâmico até ao tecto", "generico"], ["Tectos", "Tecto falso em gesso cartonado, tinta plástica", "generico"], ["Louças sanitárias", "Porcelana vidrada de fabrico nacional", "generico"], ["Portas interiores", "Madeira maciça com aros e guarnições em madeira", "generico"]]}, {"id": 9, "name": "WC do quarto 1", "short": "WC do quarto 1", "official": null, "area": 3.2, "bbox": [20.32, -6.2, 21.92, -4.2], "dims": [1.6, 2.0], "poly": [[20.32, -4.2], [21.92, -4.2], [21.92, -6.2], [20.32, -6.2]], "floor": "ceramicFloor", "exterior": false, "note": null, "finishes": [["Pavimento cozinha, WC e lavandaria", "Tijoleira cerâmica", "generico"], ["Paredes cozinha, WC e lavandaria", "Revestimento cerâmico até ao tecto", "generico"], ["Tectos", "Tecto falso em gesso cartonado, tinta plástica", "generico"], ["Louças sanitárias", "Porcelana vidrada de fabrico nacional", "generico"], ["Portas interiores", "Madeira maciça com aros e guarnições em madeira", "generico"]]}, {"id": 10, "name": "Quarto 2", "short": "Quarto 2", "official": 11.8, "area": 11.48, "bbox": [22.02, -6.2, 24.82, -2.1], "dims": [2.8, 4.1], "poly": [[22.02, -2.1], [24.82, -2.1], [24.82, -6.2], [22.02, -6.2]], "floor": "oak", "exterior": false, "note": null, "finishes": [["Pavimento sala e quartos", "Tábua de madeira", "generico"], ["Paredes", "Gesso cartonado pintado a tinta plástica branca", "generico"], ["Tectos", "Tecto falso em gesso cartonado, tinta plástica", "generico"], ["Portas interiores", "Madeira maciça com aros e guarnições em madeira", "generico"], ["Rodapés", "Madeira (excepto WC, cozinha e lavandaria)", "generico"], ["Roupeiros", "Embutidos em madeira, portas em madeira maciça", "generico"]]}, {"id": 11, "name": "Hall de entrada", "short": "Hall de entrada", "official": null, "area": 11.61, "bbox": [31.61, -4.2, 37.71, -1.7], "dims": [6.1, 2.5], "poly": [[31.61, -2.2], [33.42, -2.2], [33.42, -2.9], [35.62, -2.9], [35.62, -1.7], [37.47, -1.7], [37.47, -2.1], [37.71, -2.1], [37.71, -4.2], [31.61, -4.2]], "floor": "oak", "exterior": false, "note": null, "finishes": [["Pavimento sala e quartos", "Tábua de madeira", "generico"], ["Paredes", "Gesso cartonado pintado a tinta plástica branca", "generico"], ["Tectos", "Tecto falso em gesso cartonado, tinta plástica", "generico"], ["Rodapés", "Madeira (excepto WC, cozinha e lavandaria)", "generico"]]}, {"id": 12, "name": "Lavandaria", "short": "Lavandaria", "official": null, "area": 4.73, "bbox": [33.71, -2.2, 36.51, -0.3], "dims": [2.8, 1.9], "poly": [[33.71, -0.3], [36.51, -0.3], [36.51, -1.6], [35.52, -1.6], [35.52, -2.2], [33.71, -2.2]], "floor": "ceramicFloor", "exterior": false, "note": null, "finishes": [["Pavimento cozinha, WC e lavandaria", "Tijoleira cerâmica", "generico"], ["Paredes cozinha, WC e lavandaria", "Revestimento cerâmico até ao tecto", "generico"], ["Tectos", "Tecto falso em gesso cartonado, tinta plástica", "generico"], ["Louças sanitárias", "Porcelana vidrada de fabrico nacional", "generico"], ["Portas interiores", "Madeira maciça com aros e guarnições em madeira", "generico"]]}, {"id": 13, "name": "WC social", "short": "WC social", "official": null, "area": 1.83, "bbox": [36.61, -1.6, 38.02, -0.3], "dims": [1.41, 1.3], "poly": [[36.61, -0.3], [38.02, -0.3], [38.02, -1.6], [36.61, -1.6]], "floor": "ceramicFloor", "exterior": false, "note": null, "finishes": [["Pavimento cozinha, WC e lavandaria", "Tijoleira cerâmica", "generico"], ["Paredes cozinha, WC e lavandaria", "Revestimento cerâmico até ao tecto", "generico"], ["Tectos", "Tecto falso em gesso cartonado, tinta plástica", "generico"], ["Louças sanitárias", "Porcelana vidrada de fabrico nacional", "generico"], ["Portas interiores", "Madeira maciça com aros e guarnições em madeira", "generico"]]}, {"id": 14, "name": "Garagem", "short": "Garagem", "official": 35.0, "area": 37.8, "bbox": [31.61, -10.8, 37.61, -4.5], "dims": [6.0, 6.3], "poly": [[31.61, -4.5], [37.61, -4.5], [37.61, -10.8], [31.61, -10.8]], "floor": "concrete_floor", "exterior": false, "note": null, "finishes": [["Portão da garagem", "Seccionado em alumínio, cor cinza", "generico"], ["Paredes", "Gesso cartonado pintado a tinta plástica branca", "generico"], ["Tectos", "Tecto falso em gesso cartonado, tinta plástica", "generico"]]}, {"id": 15, "name": "Pátio interior", "short": "Pátio interior", "official": null, "area": 3.44, "bbox": [31.61, -2.2, 33.42, -0.3], "dims": [1.81, 1.9], "poly": [[31.61, -0.3], [33.42, -0.3], [33.42, -2.2], [31.61, -2.2]], "floor": "grass", "exterior": true, "note": null, "finishes": [["Fachada", "Capoto (ETICS) com XPS 6 cm, acabamento branco (Weber Flex ou equivalente)", "marca"], ["Caixilharia", "Alumínio anodizado com corte térmico, cor cinza", "generico"], ["Pérgola", "Estrutura metálica", "generico"]]}, {"id": 16, "name": "Alpendre do logradouro", "short": "Alpendre", "official": null, "area": 46.77, "bbox": [0.23, -11.72, 5.26, -0.2], "dims": [5.03, 11.52], "poly": [[0.23, -0.2], [5.26, -0.2], [5.26, -11.72], [2.17, -11.72]], "floor": "porcelain", "exterior": true, "note": null, "finishes": [["Fachada", "Capoto (ETICS) com XPS 6 cm, acabamento branco (Weber Flex ou equivalente)", "marca"], ["Caixilharia", "Alumínio anodizado com corte térmico, cor cinza", "generico"], ["Pérgola", "Estrutura metálica", "generico"]]}, {"id": 17, "name": "Deck da piscina", "short": "Deck da piscina", "official": null, "area": 57.09, "bbox": [11.07, -13.1, 26.02, -6.5], "dims": [14.95, 6.6], "poly": [[11.07, -6.5], [26.02, -6.5], [26.02, -13.1], [20.97, -13.1], [20.97, -8.9], [11.07, -8.9]], "floor": "deckWood", "exterior": true, "note": null, "finishes": [["Fachada", "Capoto (ETICS) com XPS 6 cm, acabamento branco (Weber Flex ou equivalente)", "marca"], ["Caixilharia", "Alumínio anodizado com corte térmico, cor cinza", "generico"], ["Pérgola", "Estrutura metálica", "generico"]]}], "floors": [{"mat": "oak", "room": 1, "poly": [[24.91, -0.3], [31.32, -0.3], [31.32, -10.7], [26.12, -10.7], [26.12, -6.5], [24.91, -6.5]], "holes": []}, {"mat": "oak", "room": 2, "poly": [[15.02, -2.6], [15.02, -6.2], [11.37, -6.2], [11.37, -2.6]], "holes": []}, {"mat": "ceramicFloor", "room": 3, "poly": [[15.42, -0.3], [15.42, -2.5], [11.37, -2.5], [11.37, -0.3]], "holes": []}, {"mat": "oak", "room": 4, "poly": [[17.31, -2.1], [17.31, -6.2], [15.12, -6.2], [15.12, -2.5], [15.42, -2.5], [15.42, -2.1]], "holes": []}, {"mat": "oak", "room": 5, "poly": [[19.21, -0.3], [19.21, -2.0], [15.52, -2.0], [15.52, -0.3]], "holes": []}, {"mat": "oak", "room": 6, "poly": [[24.82, -0.3], [24.82, -2.0], [19.32, -2.0], [19.32, -0.3]], "holes": []}, {"mat": "oak", "room": 7, "poly": [[20.21, -2.1], [20.21, -6.2], [17.42, -6.2], [17.42, -2.1]], "holes": []}, {"mat": "ceramicFloor", "room": 8, "poly": [[21.92, -2.1], [21.92, -4.1], [20.32, -4.1], [20.32, -2.1]], "holes": []}, {"mat": "ceramicFloor", "room": 9, "poly": [[21.92, -4.2], [21.92, -6.2], [20.32, -6.2], [20.32, -4.2]], "holes": []}, {"mat": "oak", "room": 10, "poly": [[24.82, -2.1], [24.82, -6.2], [22.02, -6.2], [22.02, -2.1]], "holes": []}, {"mat": "oak", "room": 11, "poly": [[33.42, -2.2], [33.42, -2.9], [35.62, -2.9], [35.62, -1.7], [37.47, -1.7], [37.47, -2.1], [37.71, -2.1], [37.71, -4.2], [31.61, -4.2], [31.61, -2.2]], "holes": []}, {"mat": "ceramicFloor", "room": 12, "poly": [[36.51, -0.3], [36.51, -1.6], [35.52, -1.6], [35.52, -2.2], [33.71, -2.2], [33.71, -0.3]], "holes": []}, {"mat": "ceramicFloor", "room": 13, "poly": [[38.02, -0.3], [38.02, -1.6], [36.61, -1.6], [36.61, -0.3]], "holes": []}, {"mat": "concrete_floor", "room": 14, "poly": [[37.61, -4.5], [37.61, -10.8], [31.61, -10.8], [31.61, -4.5]], "holes": []}], "foundation": [[[11.071, -6.495], [11.071, -2.505], [11.375, -2.505], [11.375, -0.296], [11.071, -0.296], [11.071, -0.005], [38.311, -0.005], [38.311, -2.095], [37.805, -2.095], [37.809, -10.995], [26.021, -10.995], [26.025, -6.495]], [[38.311, -14.014], [33.821, -14.014], [33.821, -13.825], [38.311, -13.825]]], "doors": [{"room": "Hall de entrada", "type": "hinge", "hinge": [36.395, -4.203], "u": [-1, 0], "n": [0, 1], "L": 0.77, "t": 0.04, "z1": 2.6, "width": 0.8, "pts": [[36.395, -4.203], [36.395, -3.433], [36.355, -3.433], [36.355, -4.203]], "closed": [[36.395, -4.203], [35.625, -4.203], [35.625, -4.243], [36.395, -4.243]], "handle": [36.375, -3.503], "axis": "y", "drawn": false}, {"room": "Corredor da suite", "type": "hinge", "hinge": [15.511, -1.169], "u": [0, -1], "n": [1, 0], "L": 0.77, "t": 0.04, "z1": 2.6, "width": 0.8, "pts": [[15.511, -1.169], [16.281, -1.169], [16.281, -1.209], [15.511, -1.209]], "closed": [[15.511, -1.169], [15.511, -1.939], [15.471, -1.939], [15.471, -1.169]], "handle": [16.211, -1.189], "axis": "x", "drawn": false}, {"room": "Corredor da suite", "type": "hinge", "hinge": [19.219, -1.929], "u": [0, 1], "n": [-1, 0], "L": 0.77, "t": 0.04, "z1": 2.6, "width": 0.8, "pts": [[19.219, -1.929], [18.449, -1.929], [18.449, -1.889], [19.219, -1.889]], "closed": [[19.219, -1.929], [19.219, -1.159], [19.259, -1.159], [19.259, -1.929]], "handle": [18.519, -1.909], "axis": "x", "drawn": false}, {"room": "Quarto 1", "type": "hinge", "hinge": [20.145, -2.096], "u": [-1, 0], "n": [0, -1], "L": 0.77, "t": 0.04, "z1": 2.6, "width": 0.8, "pts": [[20.145, -2.096], [20.145, -2.866], [20.105, -2.866], [20.105, -2.096]], "closed": [[20.145, -2.096], [19.375, -2.096], [19.375, -2.056], [20.145, -2.056]], "handle": [20.125, -2.796], "axis": "y", "drawn": false}, {"room": "Quarto 2", "type": "hinge", "hinge": [22.844, -2.096], "u": [-1, 0], "n": [0, -1], "L": 0.77, "t": 0.04, "z1": 2.6, "width": 0.8, "pts": [[22.844, -2.096], [22.844, -2.866], [22.804, -2.866], [22.804, -2.096]], "closed": [[22.844, -2.096], [22.074, -2.096], [22.074, -2.056], [22.844, -2.056]], "handle": [22.824, -2.796], "axis": "y", "drawn": false}, {"room": "Lavandaria", "type": "hinge", "hinge": [36.446, -1.604], "u": [-1, 0], "n": [0, 1], "L": 0.77, "t": 0.04, "z1": 2.6, "width": 0.8, "pts": [[36.446, -1.604], [36.446, -0.834], [36.406, -0.834], [36.406, -1.604]], "closed": [[36.446, -1.604], [35.676, -1.604], [35.676, -1.644], [36.446, -1.644]], "handle": [36.426, -0.904], "axis": "y", "drawn": false}, {"room": "WC social", "type": "hinge", "hinge": [36.685, -1.604], "u": [1, 0], "n": [0, 1], "L": 0.77, "t": 0.04, "z1": 2.6, "width": 0.8, "pts": [[36.685, -1.604], [36.685, -0.834], [36.725, -0.834], [36.725, -1.604]], "closed": [[36.685, -1.604], [37.455, -1.604], [37.455, -1.644], [36.685, -1.644]], "handle": [36.705, -0.904], "axis": "y", "drawn": false}, {"room": "Closet da suite", "type": "hinge", "hinge": [15.111, -4.88], "u": [0, 1], "n": [1, 0], "L": 0.971, "t": 0.04, "z1": 2.6, "width": 1.001, "pts": [[15.111, -4.88], [16.082, -4.88], [16.082, -4.84], [15.111, -4.84]], "closed": [[15.111, -4.88], [15.111, -3.909], [15.071, -3.909], [15.071, -4.88]], "handle": [16.012, -4.86], "axis": "x", "drawn": false}, {"room": "Closet da suite", "type": "hinge", "hinge": [16.695, -2.096], "u": [-1, 0], "n": [0, -1], "L": 1.17, "t": 0.04, "z1": 2.6, "width": 1.2, "pts": [[16.695, -2.096], [16.695, -3.266], [16.655, -3.266], [16.655, -2.096]], "closed": [[16.695, -2.096], [15.525, -2.096], [15.525, -2.056], [16.695, -2.056]], "handle": [16.675, -3.196], "axis": "y", "drawn": false}, {"room": "WC do quarto 2", "type": "hinge", "hinge": [21.924, -3.23], "u": [0, 1], "n": [-1, 0], "L": 0.77, "t": 0.04, "z1": 2.6, "width": 0.8, "pts": [[21.924, -3.23], [21.154, -3.23], [21.154, -3.19], [21.924, -3.19]], "closed": [[21.924, -3.23], [21.924, -2.46], [21.964, -2.46], [21.964, -3.23]], "handle": [21.224, -3.21], "axis": "x", "drawn": false}, {"room": "Quarto 1", "type": "hinge", "hinge": [20.214, -5.83], "u": [0, 1], "n": [-1, 0], "L": 0.77, "t": 0.04, "z1": 2.6, "width": 0.8, "pts": [[20.214, -5.83], [19.444, -5.83], [19.444, -5.79], [20.214, -5.79]], "closed": [[20.214, -5.83], [20.214, -5.06], [20.254, -5.06], [20.254, -5.83]], "handle": [19.514, -5.81], "axis": "x", "drawn": false}, {"room": "Porta de entrada", "type": "hinge", "hinge": [37.73, -3.245], "u": [0, 1], "n": [-1, 0], "L": 1.09, "t": 0.06, "z1": 2.26, "width": 1.09, "pts": [[37.73, -3.245], [36.64, -3.245], [36.64, -3.185], [37.73, -3.185]], "closed": [[37.73, -3.245], [37.73, -2.155], [37.79, -2.155], [37.79, -3.245]], "handle": [37.76, -2.275], "axis": "x", "drawn": true, "ext": true, "mat": "walnut", "startOpen": false}], "blinds": [], "finishes": {"status": {"exato": "Modelo exacto indicado", "serie": "Série indicada", "parcial": "Parcialmente definido", "marca": "Marca indicada (ou equivalente)", "generico": "Tipo indicado; referência por definir", "ambiguo": "Referência a confirmar"}, "groups": [{"title": "Fachada e exterior", "items": [["Fachada", "Capoto (ETICS) com XPS 6 cm, acabamento branco (Weber Flex ou equivalente)", "marca"], ["Caixilharia", "Alumínio anodizado com corte térmico, cor cinza", "generico"], ["Portão da garagem", "Seccionado em alumínio, cor cinza", "generico"], ["Portões", "Estrutura metálica chapeada, cor cinza", "generico"], ["Muros", "Muro de vedação pintado a branco RAL 9001", "parcial"], ["Pérgola", "Estrutura metálica", "generico"], ["Cobertura", "Plana invertida (Impervap 5, Pirmate B, Polyplas 30 + Polyster 40 T) com godo; rufos em zinco", "marca"]]}, {"title": "Interior", "items": [["Pavimento sala e quartos", "Tábua de madeira", "generico"], ["Pavimento cozinha, WC e lavandaria", "Tijoleira cerâmica", "generico"], ["Paredes", "Gesso cartonado pintado a tinta plástica branca", "generico"], ["Paredes cozinha, WC e lavandaria", "Revestimento cerâmico até ao tecto", "generico"], ["Tectos", "Tecto falso em gesso cartonado, tinta plástica", "generico"], ["Portas interiores", "Madeira maciça com aros e guarnições em madeira", "generico"], ["Rodapés", "Madeira (excepto WC, cozinha e lavandaria)", "generico"]]}, {"title": "Cozinha e WC", "items": [["Móveis de cozinha", "MDF, bancada em granito", "generico"], ["Louças sanitárias", "Porcelana vidrada de fabrico nacional", "generico"], ["Roupeiros", "Embutidos em madeira, portas em madeira maciça", "generico"]]}]}, "pavings": [{"name": "Deck da piscina", "z": -0.05, "mat": "deckWood", "poly": [[11.07, -6.5], [26.02, -6.5], [26.02, -13.1], [20.97, -13.1], [20.97, -8.9], [11.07, -8.9]]}, {"name": "Alpendre do logradouro", "z": -0.2, "mat": "limestonePave", "poly": [[0.23, -0.2], [5.26, -0.2], [5.26, -11.72], [2.17, -11.72]]}, {"name": "Acesso automóvel", "z": -0.05, "mat": "driveway", "poly": [[37.81, -4.5], [43.2, -4.5], [43.2, -10.8], [37.81, -10.8]]}, {"name": "Entrada", "z": -0.05, "mat": "limestonePave", "poly": [[38.32, -1.2], [43.2, -1.2], [43.2, -4.5], [37.81, -4.5], [37.81, -4.2], [38.32, -4.2]]}, {"name": "Passeio sul", "z": -0.05, "mat": "limestonePave", "poly": [[30.0, -11.0], [37.81, -11.0], [37.81, -12.2], [30.0, -12.2]]}], "stepping": [[26.6, -11.4, 27.400000000000002, -12.0], [27.8, -11.4, 28.6, -12.0], [29.0, -11.4, 29.8, -12.0]], "stairsExt": [], "pool": {"water": [11.1, -12.4, 20.95, -8.92], "basin": [11.3, -12.2, 20.75, -9.12], "gutter": 0.2, "wall": 0.2, "level": -0.05, "stepsBand": 1.0, "steps": [[0.35, 0.3], [0.7, 0.6], [1.05, 0.9]], "floor": [[0.0, 1.5], [9.85, 1.5]], "maxDepth": 1.5, "approx": "a04"}, "site": {"outline": [[0.0, 0.02], [11.07, 0.02], [38.32, 0.02], [43.4, 0.02], [43.4, -14.03], [38.32, -14.03], [33.82, -14.03], [2.35, -14.03]], "areaOfficial": 594.0, "areaModel": 593.26, "retaining": []}, "terrain": {"flat": [[8.0, 0.0, 43.4, -14.03, -0.05]], "ramps": [[0.0, 0.0, 8.0, -14.03, -0.2, -0.05]], "points": [[-3, -16, 11.45], [6, -16, 11.92], [12, -16, 12.15], [20, -16, 12.39], [28, -16, 12.62], [40, -16, 12.85], [46, -2, 12.96], [46, -10, 12.9], [-3, 2, 12.04]], "approx": "a06"}, "fence": {"height": 1.4, "streetHeight": 1.4, "thick": 0.2, "approx": "a06", "mat": "eticsWhite", "capMat": "coping", "skip": [[10.9, -0.3, 38.5, 0.3], [-0.5, -14.3, 5.6, 0.3], [33.6, -14.3, 38.5, -13.7]], "street": [[43.0, -30, 50, 10]], "gates": [{"name": "Portão automóvel", "a": [43.4, -4.7], "b": [43.4, -10.6], "h": 1.4}, {"name": "Portão pedonal", "a": [43.4, -2.2], "b": [43.4, -3.4], "h": 1.4}]}, "furniture": [{"kind": "tallunits", "x": 26.33, "y": -0.616, "w": 1.6, "d": 0.62, "face": "wall", "fridge": "none", "ovens": 0, "front": "walnut", "name": "Armários altos", "rot": 0.0}, {"kind": "counter", "x": 28.1, "y": -0.62, "w": 6.3, "d": 0.6, "face": "wall", "sink": 0.0, "top": "marble", "front": "walnut", "name": "Bancada norte", "rot": 0}, {"kind": "island", "x": 27.93, "y": -2.67, "w": 0.9, "d": 3.0, "face": "E", "cooktop": [0.0, 0.0], "top": "marble", "hob": "none", "front": "walnut", "name": "Ilha", "rot": 1.5708}, {"kind": "pendants", "x": 28.6, "y": -2.5, "w": 2.4, "d": 0, "face": "E", "n": 3, "name": "Candeeiros da ilha", "hidden": true}, {"kind": "stool", "x": 27.12, "y": -2.96, "w": 0, "d": 0, "face": "S", "faceTo": [27.6, -2.5], "name": "Banco", "target": "island", "rot": 3.1416}, {"kind": "stool", "x": 27.74, "y": -2.91, "w": 0, "d": 0, "face": "S", "faceTo": [28.3, -2.5], "name": "Banco", "target": "island", "rot": 3.1416}, {"kind": "stool", "x": 28.49, "y": -2.91, "w": 0, "d": 0, "face": "S", "faceTo": [29.0, -2.5], "name": "Banco", "target": "island", "rot": 3.1416}, {"kind": "stool", "x": 29.12, "y": -2.89, "w": 0, "d": 0, "face": "S", "faceTo": [29.7, -2.5], "name": "Banco", "target": "island", "rot": 3.1416}, {"kind": "dining", "x": 28.09, "y": -4.87, "w": 2.4, "d": 1.0, "face": "E", "side": 3, "ends": true, "name": "Mesa de jantar", "rot": 0}, {"kind": "pendants", "x": 28.4, "y": -5.65, "w": 2.0, "d": 0, "face": "E", "n": 3, "name": "Candeeiros da mesa", "rot": 3.1416}, {"kind": "tvwall", "x": 28.27, "y": -10.48, "w": 3.5, "d": 0.42, "face": "wall", "name": "Móvel TV", "rot": 3.1416, "tv": false}, {"kind": "rug", "x": 28.63, "y": -8.89, "w": 2.6, "d": 4.2, "face": "E", "name": "Tapete sala", "rot": 1.5708}, {"kind": "coffee", "x": 28.55, "y": -8.9, "w": 1.0, "d": 1.0, "face": "E", "name": "Mesa de centro", "rot": 1.5708}, {"kind": "sofa", "x": 28.54, "y": -7.58, "w": 2.8, "d": 0.95, "face": "E", "name": "Sofá", "target": "tv", "rot": 0}, {"kind": "armchair", "x": 30.79, "y": -8.5, "w": 0, "d": 0, "face": "S", "faceTo": [29.4, -8.85], "name": "Cadeirão", "target": "coffee", "rot": 4.7124}, {"kind": "curtain", "x": 26.17, "y": -7.55, "w": 2.0, "d": 0, "face": "E", "hidden": true}, {"kind": "curtain", "x": 26.17, "y": -9.75, "w": 1.8, "d": 0, "face": "E", "hidden": true}, {"kind": "plant", "x": 30.95, "y": -6.9, "w": 0.5, "d": 0.5, "face": "S"}, {"kind": "bed", "x": 13.2, "y": -3.6, "w": 1.8, "d": 2.0, "face": "wall", "name": "Cama suite"}, {"kind": "curtain", "x": 11.42, "y": -4.0, "w": 2.0, "d": 0, "face": "E"}, {"kind": "wardrobe", "x": 17.0, "y": -4.15, "w": 3.6, "d": 0.5, "face": "W", "front": "walnut", "name": "Roupeiro do closet"}, {"kind": "bathtub", "x": 11.95, "y": -1.4, "w": 0.75, "d": 1.65, "face": "S", "mixer": 1, "name": "Banheira"}, {"kind": "vanity", "x": 13.95, "y": -2.22, "w": 1.6, "d": 0.48, "face": "wall", "basins": 2, "name": "Lavatório duplo"}, {"kind": "toilet", "x": 13.1, "y": -0.55, "w": 0, "d": 0, "face": "wall", "hygienic": true, "name": "Sanita suite"}, {"kind": "shower", "x": 14.75, "y": -0.8, "w": 1.2, "d": 0.9, "face": "S", "glass": "front", "glassLen": 0.8, "glassOff": 0.0, "tray": "resin", "name": "Duche suite"}, {"kind": "bed", "x": 18.45, "y": -4.15, "w": 1.6, "d": 2.0, "face": "wall", "name": "Cama Q1"}, {"kind": "toilet", "x": 21.65, "y": -5.8, "w": 0, "d": 0, "face": "wall", "hygienic": true, "name": "Sanita WC Q1"}, {"kind": "basin", "x": 20.75, "y": -5.95, "w": 0.5, "d": 0.42, "face": "wall", "name": "Lavatório WC Q1"}, {"kind": "shower", "x": 21.12, "y": -4.6, "w": 1.55, "d": 0.75, "face": "S", "glass": "front", "glassLen": 0.8, "glassOff": 0.0, "tray": "resin", "name": "Duche WC Q1"}, {"kind": "bed", "x": 23.85, "y": -4.6, "w": 1.6, "d": 2.0, "face": "wall", "name": "Cama Q2"}, {"kind": "wardrobe", "x": 23.93, "y": -2.42, "w": 1.74, "d": 0.6, "face": "S", "front": "walnut", "name": "Roupeiro Q2"}, {"kind": "toilet", "x": 20.55, "y": -2.55, "w": 0, "d": 0, "face": "wall", "hygienic": true, "name": "Sanita WC Q2"}, {"kind": "basin", "x": 21.2, "y": -2.32, "w": 0.5, "d": 0.42, "face": "wall", "name": "Lavatório WC Q2"}, {"kind": "shower", "x": 21.12, "y": -3.7, "w": 1.55, "d": 0.75, "face": "N", "glass": "front", "glassLen": 0.8, "glassOff": 0.0, "tray": "resin", "name": "Duche WC Q2"}, {"kind": "washer", "x": 34.1, "y": -1.87, "w": 0.6, "d": 0.6, "face": "N", "name": "Máquina de lavar"}, {"kind": "washer", "x": 34.75, "y": -1.87, "w": 0.6, "d": 0.6, "face": "N", "name": "Máquina de secar"}, {"kind": "cabinet", "x": 34.55, "y": -0.6, "w": 1.6, "d": 0.55, "face": "wall", "h": 2.38, "name": "Arrumação"}, {"kind": "toilet", "x": 37.6, "y": -0.56, "w": 0, "d": 0, "face": "wall", "hygienic": true, "name": "Sanita WC social"}, {"kind": "basin", "x": 36.95, "y": -0.52, "w": 0.45, "d": 0.4, "face": "wall", "name": "Lavatório WC social"}, {"kind": "wardrobe", "x": 34.615, "y": -2.6, "w": 1.75, "d": 0.55, "face": "S", "front": "walnut", "name": "Roupeiro do hall"}, {"kind": "car", "x": 34.6, "y": -6.1, "w": 1.9, "d": 4.6, "face": "E", "name": "Carro 1"}, {"kind": "car", "x": 34.6, "y": -9.0, "w": 1.9, "d": 4.6, "face": "W", "paint": "carPaintB", "name": "Carro 2"}, {"kind": "dining", "x": 24.3, "y": -11.05, "w": 2.4, "d": 0.95, "face": "S", "side": 3, "ends": false, "chair": "rope", "name": "Mesa exterior", "rot": 1.5708}, {"kind": "lounger", "x": 11.6, "y": -7.65, "w": 0.7, "d": 1.9, "face": "S"}, {"kind": "lounger", "x": 12.5, "y": -7.65, "w": 0.7, "d": 1.9, "face": "S"}, {"kind": "lounger", "x": 14.6, "y": -7.65, "w": 0.7, "d": 1.9, "face": "S"}, {"kind": "lounger", "x": 15.5, "y": -7.65, "w": 0.7, "d": 1.9, "face": "S"}, {"kind": "outchair", "x": 18.0, "y": -7.2, "w": 0, "d": 0, "face": "S", "name": "Cadeirão exterior 1"}, {"kind": "outchair", "x": 19.2, "y": -7.2, "w": 0, "d": 0, "face": "S", "name": "Cadeirão exterior 2"}, {"kind": "sidetable", "x": 18.6, "y": -7.9, "w": 0, "d": 0, "face": "S"}, {"kind": "outkitchen", "x": 2.15, "y": -6.15, "w": 1.7, "d": 0.55, "face": "S", "name": "Cozinha do alpendre"}, {"kind": "dining", "x": 3.42, "y": -8.46, "w": 2.4, "d": 1.0, "face": "S", "side": 3, "ends": false, "chair": "rope", "name": "Mesa do alpendre", "rot": -1.5708}, {"kind": "patiosofa", "x": 2.88, "y": -3.23, "w": 3, "d": 0.85, "face": "S", "name": "Sofá do alpendre", "rot": -3.1416}, {"kind": "coffee", "x": 2.9, "y": -2.11, "w": 1.0, "d": 0.7, "face": "S", "rot": 0}, {"kind": "pot", "x": 10.6, "y": -6.7, "w": 0.5, "d": 0, "face": "S"}, {"kind": "pot", "x": 26.4, "y": -12.8, "w": 0.5, "d": 0, "face": "S"}, {"kind": "fridge", "x": 25.2285, "y": -0.616, "w": 0.597, "d": 0.62, "face": "S", "rot": 0.0, "h": 2.4, "front": "walnut", "name": "Frigorífico combinado (integrado)"}, {"kind": "oven", "x": 26.33, "y": -0.937, "w": 0.594, "d": 0.03, "face": "S", "rot": 0.0, "z": 0.82, "embedded": true, "name": "Forno"}, {"kind": "oven", "x": 26.33, "y": -0.937, "w": 0.594, "d": 0.03, "face": "S", "rot": 0.0, "z": 1.5, "h": 0.455, "embedded": true, "name": "Forno compacto"}, {"kind": "hob", "x": 27.93, "y": -2.67, "w": 0.52, "d": 0.81, "face": "E", "rot": 1.5708, "z": 0.9, "vent": true, "embedded": true, "name": "Placa com exaustor"}, {"kind": "tv", "x": 28.27, "y": -10.66, "w": 1.45, "d": 0.03, "face": "N", "rot": 3.1416, "z": 0.95, "embedded": true, "name": "Televisor"}], "decor": {"slats": [], "planters": [], "gravel": [], "ceilings": [], "ledStrips": []}, "planting": [{"type": "tree", "x": 32.5, "y": -1.25, "z": 0.02, "h": 3.2, "crown": 0.7}, {"type": "tree", "x": 7.5, "y": -3.0, "h": 4.6, "crown": 1.6}, {"type": "tree", "x": 6.4, "y": -12.9, "h": 4.2, "crown": 1.5}, {"type": "tree", "x": 41.6, "y": -12.6, "h": 3.8, "crown": 1.2}, {"type": "tree", "x": 42.3, "y": -1.0, "h": 3.2, "crown": 1.0}, {"type": "bed", "rect": [5.7, -12.6, 10.9, -13.7], "n": 24, "h": [0.5, 0.9]}, {"type": "bed", "rect": [21.2, -13.3, 37.5, -13.8], "n": 50, "h": [0.5, 0.9]}, {"type": "bed", "rect": [5.7, -0.3, 10.9, -1.0], "n": 22, "h": [0.5, 0.9]}, {"type": "tropical", "x": 10.7, "y": -8.8, "h": 1.3}, {"type": "tropical", "x": 26.6, "y": -11.6, "h": 1.2}, {"type": "hedges", "h": 1.75, "depth": 0.6}], "context": {"streets": [{"line": [[43.43, 20], [43.43, -40]], "z": -0.05, "sidewalk": 1.6, "width": 6.5, "side": 1}], "buildings": [{"rect": [11.07, 0.3, 38.32, 12.0], "z0": -0.1, "eave": 3.2, "note": "Casa Norte (geminada)"}], "trees": []}, "views": [{"id": "piscina", "label": "Piscina e deck", "pos": [8.0, -13.4, 3.4], "target": [20.0, -6.5, 1.0]}, {"id": "entrada", "label": "Entrada e garagem", "pos": [48.0, -14.0, 3.0], "target": [36.0, -6.0, 1.2]}, {"id": "aerea", "label": "Aérea", "pos": [16, -36, 30], "target": [22, -7, 0]}, {"id": "sala", "label": "Sala e cozinha", "pos": [26.6, -10.2, 1.6], "target": [29.5, -1.5, 1.0]}, {"id": "suite", "label": "Suite", "pos": [14.6, -5.9, 1.6], "target": [12.6, -3.0, 0.9]}], "walkStart": [42.0, -3.2, 90], "renders": [{"id": "r01", "title": "Fachada e acesso", "place": "Exterior · nascente", "pos": [49.0, -7.5, 1.6], "target": [37.8, -6.5, 1.6], "fov": 55, "hour": 10}, {"id": "r02", "title": "Piscina e deck", "place": "Jardim", "pos": [9.5, -12.6, 1.5], "target": [22.0, -6.5, 1.3], "fov": 62, "hour": 17}, {"id": "r03", "title": "Mesa exterior e pérgola", "place": "Deck", "pos": [20.0, -12.0, 1.6], "target": [25.5, -8.0, 1.2], "fov": 62, "hour": 17}, {"id": "r04", "title": "Alpendre do logradouro", "place": "Alpendre", "pos": [9.0, -6.5, 1.6], "target": [2.5, -6.0, 1.3], "fov": 64, "hour": 16}, {"id": "r05", "title": "Cozinha", "place": "Cozinha", "pos": [28.6, -6.6, 1.6], "target": [28.6, -0.4, 1.1], "fov": 62, "hour": 11}, {"id": "r06", "title": "Sala de estar", "place": "Sala", "pos": [26.6, -6.9, 1.6], "target": [31.0, -9.2, 1.0], "fov": 64, "hour": 16}, {"id": "r07", "title": "Hall de entrada", "place": "Hall", "pos": [32.2, -3.3, 1.6], "target": [37.8, -3.0, 1.3], "fov": 62, "hour": 10}, {"id": "r08", "title": "Suite", "place": "Suite", "pos": [14.7, -5.9, 1.6], "target": [12.4, -3.0, 0.9], "fov": 66, "hour": 10}, {"id": "r09", "title": "Casa de banho da suite", "place": "Suite", "pos": [15.1, -1.6, 1.6], "target": [12.0, -1.2, 1.0], "fov": 72, "hour": 12}, {"id": "r10", "title": "Quarto 1", "place": "Quarto 1", "pos": [19.9, -5.9, 1.6], "target": [17.6, -3.4, 0.9], "fov": 66, "hour": 10}, {"id": "r11", "title": "Quarto 2", "place": "Quarto 2", "pos": [22.3, -5.9, 1.6], "target": [24.6, -3.6, 0.9], "fov": 66, "hour": 10}]};
 return { HOUSE };
 })();
 
@@ -655,6 +656,38 @@ function artwork() {
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
 }
 
+
+// pedra em lascas empilhadas (xisto riscado / "stacked stone"): fiadas finas e compridas, juntas secas recuadas, relevo forte
+function stackedStone({ base = '#4a4541', tones = ['#5a524b', '#433e3a', '#6b6158', '#38342f', '#5f5852', '#776b5e', '#4d4741'], size = [1.2, 1.2], seed = 61 } = {}) {
+  const n = 1024; const [c, x] = canvas(n); const [hc, hx] = canvas(n); const r = rng(seed);
+  x.fillStyle = '#141312'; x.fillRect(0, 0, n, n);
+  hx.fillStyle = '#101010'; hx.fillRect(0, 0, n, n);
+  const px = n / size[0];                         // píxeis por metro
+  let y = 0;
+  while (y < n) {
+    const h = Math.max(6, (0.018 + r() * 0.05) * px);
+    let xx = -r() * 0.3 * px;
+    while (xx < n) {
+      const w = (0.12 + r() * 0.45) * px, gap = 1 + r() * 2.5;
+      const col = tones[Math.floor(r() * tones.length)];
+      const yy = y + r() * 2, hh = h - 1.5 - r() * 2.5;
+      for (const ox of [0, n, -n]) for (const oy of [0, n, -n]) {
+        if (yy + oy + hh < 0 || yy + oy > n) continue;
+        x.fillStyle = col; x.fillRect(xx + ox, yy + oy, w - gap, hh);
+        const lv = 120 + Math.floor(r() * 110);
+        hx.fillStyle = `rgb(${lv},${lv},${lv})`; hx.fillRect(xx + ox, yy + oy, w - gap, hh);
+        // riscas e lascas (superfície clivada)
+        x.fillStyle = `rgba(255,240,220,${0.05 + r() * 0.08})`; x.fillRect(xx + ox + w * r() * 0.5, yy + oy + hh * r(), w * (0.2 + r() * 0.5), 1);
+      }
+      xx += w;
+    }
+    y += h;
+  }
+  cloudLayer(x, n, seed + 4, 14, 3, [40, 30, 20]);
+  noise(x, n, n, 14, seed + 1); noise(hx, n, n, 30, seed + 2);
+  return { map: tex(c, size), normal: tex(normalFromHeight(hc, 4.5), size, { srgb: false }) };
+}
+
 function makeMaterials() {
   const conc = boardConcrete();
   const std = (o) => new THREE.MeshStandardMaterial(o);
@@ -687,6 +720,7 @@ function makeMaterials() {
   const rugT = stripedRug();
   const sett = setts();
   const drive = driveway();
+  const xis = stackedStone();
 
   const M = {
     concrete: std({ map: conc.map, ...nrm(conc, 0.9), roughness: 0.9 }),
@@ -701,6 +735,8 @@ function makeMaterials() {
     paint_garage: std({ map: plaster.map, color: 0xe6e3dc, roughness: 0.92 }),
     tile: std({ map: micro.map, ...nrm(micro, 0.4), roughness: 0.62 }),
     stone: std({ map: microFloor.map, ...nrm(microFloor, 0.4), roughness: 0.55 }),
+    xisto: std({ map: xis.map, ...nrm(xis, 1.6), roughness: 0.86 }),                 // xisto riscado preto (pedra em lascas)
+    shutter: std({ color: 0x2f3236, roughness: 0.55, metalness: 0.35 }),              // caixa/estore de alumínio RAL 7016
     wallcap: std({ color: 0xd6d3cc, roughness: 0.9 }),
     oak: std({ map: ok.map, ...nrm(ok, 0.6), roughness: 0.55 }),
     slate: std({ map: slate.map, ...nrm(slate, 0.6), roughness: 0.75 }),
@@ -951,7 +987,19 @@ function segDist(px, py, ax, ay, bx, by) {
   const cx = ax + dx * t, cy = ay + dy * t;
   return [Math.hypot(px - cx, py - cy), cx, cy];
 }
-return { v3, signedArea, ccw, cw, rectPts, pointInPoly, centroid, Buckets, cap, sides, prism, box, insetOrtho, segDist };
+
+// Referencial local de um vão numa parede oblíqua: rot = {o: [X, Y], ang: graus (anti-horário)} → planta.
+function rotFwd(rot, x, y) {
+  if (!rot) return [x, y];
+  const a = (rot.ang * Math.PI) / 180, c = Math.cos(a), s = Math.sin(a);
+  return [rot.o[0] + c * x - s * y, rot.o[1] + s * x + c * y];
+}
+// Matriz three.js equivalente (x = X, y = Z, z = −Y): rotação em torno do eixo vertical + translação.
+function rotMatrix(rot) {
+  const a = (rot.ang * Math.PI) / 180;
+  return new THREE.Matrix4().makeRotationY(a).setPosition(rot.o[0], 0, -rot.o[1]);
+}
+return { v3, signedArea, ccw, cw, rectPts, pointInPoly, centroid, Buckets, cap, sides, prism, box, insetOrtho, segDist, rotFwd, rotMatrix };
 })();
 
 // ===== src/sun.js =====
@@ -1088,7 +1136,7 @@ return { cloudDensity, makeSky };
 
 // ===== src/build-house.js =====
 const __m_build_house = (() => {
-const { Buckets, prism, box, cap, sides, rectPts, insetOrtho, v3 } = __m_geom;
+const { Buckets, prism, box, cap, sides, rectPts, insetOrtho, v3, rotFwd, rotMatrix } = __m_geom;
 // Constrói a casa a partir de HOUSE (paredes vectoriais, vãos, cobertura).
 const put = (g, ...ms) => { if (ms.length) g.add(...ms); }; // Object3D.add() sem argumentos dá erro
 
@@ -1100,13 +1148,27 @@ function buildHouse(H, M) {
   };
   for (const [k, g] of Object.entries(groups)) g.name = k;
 
+  // ---------------------------------------------------------------- acabamentos por compartimento (editáveis no site)
+  // cada face interior de parede e cada pavimento ganha a chave "<material>@<id do compartimento>" (o material é partilhado até
+  // alguém o trocar no editor); as faces exteriores ficam com a chave do material (trocável para a casa toda)
+  const inRooms = H.rooms.filter((r) => !r.exterior);
+  const pip = (x, y, P) => { let c = false; for (let i = 0, j = P.length - 1; i < P.length; j = i++) { const [xi, yi] = P[i], [xj, yj] = P[j]; if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) c = !c; } return c; };
+  const roomAt = (x, y) => inRooms.find((r) => pip(x, y, r.poly));
+  const alias = (base, rid) => { const k = `${base}@${rid}`;   // rid = 'w<id>' (paredes) ou 'f<id>' (pavimento)
+  if (!M[k]) M[k] = M[base]; return k; };
+  const roomFaces = (pts, faces) => (Array.isArray(faces) ? faces.map((key, i) => {
+    const [ax, ay] = pts[i], [bx, by] = pts[(i + 1) % pts.length], L = Math.hypot(bx - ax, by - ay);
+    if (!key || L < 1e-4) return key;
+    const r = roomAt((ax + bx) / 2 + ((by - ay) / L) * 0.06, (ay + by) / 2 - ((bx - ax) / L) * 0.06);
+    return r ? alias(key, 'w' + r.id) : key;
+  }) : faces);
   // ---------------------------------------------------------------- paredes (faces com acabamento próprio)
   const W = new Buckets();
-  for (const w of H.walls) prism(W, w.pts, w.z0, w.z1, { side: w.faces, top: 'wallcap', bottom: null });
+  for (const w of H.walls) prism(W, w.pts, w.z0, w.z1, { side: roomFaces(w.pts, w.faces), top: 'wallcap', bottom: null });
   // lintéis: se a face inferior coincide com o tecto falso, sobe 4 mm (duas faces complanares cintilam)
   for (const p of H.pieces) {
     const z0 = p.kind === 'lintel' && Math.abs(p.z0 - Z.ceiling) < 0.004 ? Z.ceiling + 0.004 : p.z0;
-    prism(W, p.pts, z0, p.z1, { side: p.faces, top: 'wallcap', bottom: 'wallcap' });
+    prism(W, p.pts, z0, p.z1, { side: roomFaces(p.pts, p.faces), top: 'wallcap', bottom: 'wallcap' });
   }
   const D = H.decor || {};
   const zOf = (z) => (z === 'slab' ? Z.slabBottom : z === 'ceiling' ? Z.ceiling : z === 'fin' ? (H.fin ? H.fin.z1 : Z.parapetTop) : z === 'parapet' ? Z.parapetTop : z);
@@ -1143,7 +1205,16 @@ function buildHouse(H, M) {
   for (const d of H.doors || []) groups.doors.add(buildDoor(d, M));
   // porta pivotante num plano em ripado (opcional: H.entrance)
   const en = H.entrance;
-  if (en) {
+  if (en && en.open) {               // a folha é uma porta que abre (H.extDoors com swing + clad): aqui só o plano fixo à volta
+    for (const sx of [1, -1]) {
+      if (en.door[0] - en.y0 > 0.05) slats(en.x + sx * 0.05, en.y0, en.x + sx * 0.05, en.door[0], 0, Z.slabBottom, sx, 0);
+      if (en.y1 - en.door[1] > 0.05) slats(en.x + sx * 0.05, en.door[1], en.x + sx * 0.05, en.y1, 0, Z.slabBottom, sx, 0);
+      slats(en.x + sx * 0.05, en.door[0], en.x + sx * 0.05, en.door[1], en.z1 + 0.01, Z.slabBottom, sx, 0);
+    }
+    if (en.door[0] - en.y0 > 0.005) box(W, 'ripado', en.x - 0.05, en.y0, en.x + 0.05, en.door[0], 0, Z.slabBottom);
+    if (en.y1 - en.door[1] > 0.005) box(W, 'ripado', en.x - 0.05, en.door[1], en.x + 0.05, en.y1, 0, Z.slabBottom);
+    box(W, 'ripado', en.x - 0.05, en.door[0], en.x + 0.05, en.door[1], en.z1 + 0.01, Z.slabBottom);
+  } else if (en) {
   slats(en.x + 0.05, en.y0, en.x + 0.05, en.y1, 0, Z.slabBottom, 1, 0);
   slats(en.x - 0.05, en.y0, en.x - 0.05, en.y1, 0, Z.slabBottom, -1, 0);
   box(W, 'ripado', en.x - 0.05, en.y0, en.x + 0.05, en.door[0], 0, Z.slabBottom);
@@ -1165,6 +1236,12 @@ function buildHouse(H, M) {
   // portas exteriores maciças (H.extDoors = [{o:'h'|'v', c, a, b, z1, mat}]): folha 6 cm + puxador vertical nas duas faces
   for (const d of H.extDoors || []) {
     const t = 0.03, m = d.mat || 'garagedoor', z1 = d.z1 || Z.doorHead, hx = d.b - 0.12;
+    if (d.swing) {                    // de batente: só o aro aqui; a folha é uma porta que abre (H.doors, ext); frame=false: sem aro (plano contínuo)
+      if (d.frame === false) continue;
+      if (d.o === 'h') { box(W, 'frame', d.a - 0.03, d.c - t - 0.005, d.a, d.c + t + 0.005, 0, z1 + 0.03); box(W, 'frame', d.b, d.c - t - 0.005, d.b + 0.03, d.c + t + 0.005, 0, z1 + 0.03); box(W, 'frame', d.a, d.c - t - 0.005, d.b, d.c + t + 0.005, z1, z1 + 0.03); }
+      else { box(W, 'frame', d.c - t - 0.005, d.a - 0.03, d.c + t + 0.005, d.a, 0, z1 + 0.03); box(W, 'frame', d.c - t - 0.005, d.b, d.c + t + 0.005, d.b + 0.03, 0, z1 + 0.03); box(W, 'frame', d.c - t - 0.005, d.a, d.c + t + 0.005, d.b, z1, z1 + 0.03); }
+      continue;
+    }
     if (d.o === 'h') {
       box(W, m, d.a, d.c - t, d.b, d.c + t, 0.005, z1);
       box(W, 'frame', d.a - 0.03, d.c - t - 0.005, d.a, d.c + t + 0.005, 0, z1 + 0.03); box(W, 'frame', d.b, d.c - t - 0.005, d.b + 0.03, d.c + t + 0.005, 0, z1 + 0.03);
@@ -1199,9 +1276,12 @@ function buildHouse(H, M) {
   put(groups.walls, ...W.meshes(M, { name: 'paredes' }));
 
   // ---------------------------------------------------------------- vidros e caixilharia
-  const G = new Buckets(), F = new Buckets();
+  const G0 = new Buckets(), F0 = new Buckets();
   const prof = 0.05, depth = 0.07;
+  const rotated = [];   // vidros em paredes oblíquas: construídos no referencial local e rodados (geometria já transformada)
   for (const g of H.glass) {
+    const G = g.rot ? new Buckets() : G0, F = g.rot ? new Buckets() : F0;
+    if (g.rot) rotated.push([g.rot, F, G]);
     const len = g.b - g.a, n = Math.max(1, Math.round(len / 1.6));
     const z0 = g.sill, z1 = g.head;
     const along = (s0, s1, t0, t1, za, zb) => (g.o === 'h' ? box(F, 'frame', s0, t0, s1, t1, za, zb) : box(F, 'frame', t0, s0, t1, s1, za, zb));
@@ -1219,12 +1299,18 @@ function buildHouse(H, M) {
       G.quad('glass', v3(c, g.a, z0), v3(c, g.b, z0), v3(c, g.b, z1), v3(c, g.a, z1), nrm, [[0, 0], [1, 0], [1, 1], [0, 1]]);
     }
   }
-  put(groups.glass, ...F.meshes(M, { name: 'caixilhos' }), ...G.meshes(M, { name: 'vidro', cast: false }));
+  put(groups.glass, ...F0.meshes(M, { name: 'caixilhos' }), ...G0.meshes(M, { name: 'vidro', cast: false }));
+  for (const [rot, F, G] of rotated) {
+    const T = rotMatrix(rot);
+    for (const m of [...F.meshes(M, { name: 'caixilhos' }), ...G.meshes(M, { name: 'vidro', cast: false })]) {
+      m.geometry.applyMatrix4(T); m.geometry.computeBoundingSphere(); groups.glass.add(m);
+    }
+  }
 
   // ---------------------------------------------------------------- pavimentos interiores e fundação
   const FL = new Buckets();
   for (const poly of H.foundation || [H.roof.outline]) prism(FL, poly, -0.45, -0.012, { side: 'concrete', top: 'concrete_floor' });
-  for (const f of H.floors) cap(FL, f.mat, f.pts || f.poly, f.holes || [], 0.0, true);
+  for (const f of H.floors) cap(FL, f.room != null ? alias(f.mat, 'f' + f.room) : f.mat, f.pts || f.poly, f.holes || [], 0.0, true);
   put(groups.floors, ...FL.meshes(M, { name: 'pavimentos', cast: false }));
 
   // ---------------------------------------------------------------- tectos falsos (interior) – parte do grupo cobertura
@@ -1300,7 +1386,8 @@ function buildHouse(H, M) {
   put(groups.plan, ...P.meshes(M, { name: 'poche', cast: false, receive: false }));
   const segs = [];
   for (const g of H.glass) {
-    if (g.o === 'h') segs.push(v3(g.a, g.c, zc + 0.01), v3(g.b, g.c, zc + 0.01));
+    if (g.rot) segs.push(v3(...rotFwd(g.rot, g.a, g.c), zc + 0.01), v3(...rotFwd(g.rot, g.b, g.c), zc + 0.01));
+    else if (g.o === 'h') segs.push(v3(g.a, g.c, zc + 0.01), v3(g.b, g.c, zc + 0.01));
     else segs.push(v3(g.c, g.a, zc + 0.01), v3(g.c, g.b, zc + 0.01));
   }
   groups.plan.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(segs), M.planLine));
@@ -1309,9 +1396,11 @@ function buildHouse(H, M) {
   for (const d of H.doors || []) {
     const [px, py] = d.hinge, [ux, uy] = d.u, [nx, ny] = d.n, L = d.L, z = zc + 0.01;
     if (d.type === 'slide') { ds.push(v3(...d.closed[0], z), v3(...d.closed[1], z), v3(...d.closed[2], z), v3(...d.closed[3], z)); continue; }
-    ds.push(v3(px, py, z), v3(px + nx * L, py + ny * L, z));
+    const off = d.off || 0, R1 = L - off;                // pivotante: a parte curta (off) roda para o outro lado
+    ds.push(v3(px - nx * off, py - ny * off, z), v3(px + nx * R1, py + ny * R1, z));
     const a0 = Math.atan2(uy, ux), da = Math.atan2(ux * ny - uy * nx, ux * nx + uy * ny);
-    for (let k = 0; k < 16; k++) for (const kk of [k, k + 1]) { const a = a0 + (da * kk) / 16; ds.push(v3(px + Math.cos(a) * L, py + Math.sin(a) * L, z)); }
+    for (const [R, b0] of [[R1, a0], ...(off ? [[off, a0 + Math.PI]] : [])])
+      for (let k = 0; k < 16; k++) for (const kk of [k, k + 1]) { const a = b0 + (da * kk) / 16; ds.push(v3(px + Math.cos(a) * R, py + Math.sin(a) * R, z)); }
   }
   if (ds.length) groups.plan.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(ds), M.planDoor || M.planLine));
   groups.plan.visible = false;
@@ -1334,8 +1423,21 @@ function buildDoor(d, M) {
     add(new THREE.BoxGeometry(L, h, t), M.doorWhite, L / 2, z0 + h / 2, zc);
     add(new THREE.BoxGeometry(0.03, 0.2, t + 0.006), M.blackMetal, L - 0.07, 1.0, zc);   // puxador embutido (concha) nas duas faces
   } else {
-    // fechada: espessura do lado −n (dentro do vão); faces em z = 0 (lado n) e z = s·t
-    add(new THREE.BoxGeometry(L, h, t), M.doorWhite, L / 2, z0 + h / 2, (s * t) / 2);
+    // fechada: espessura do lado −n (dentro do vão); faces em z = 0 (lado n) e z = s·t. d.off = eixo pivotante a off m da ombreira
+    const o0 = -(d.off || 0), xm = o0 + L / 2;
+    add(new THREE.BoxGeometry(L, h, t), (d.mat && M[d.mat]) || M.doorWhite, xm, z0 + h / 2, (s * t) / 2);
+    let pull = 0;                     // saliência do revestimento (o puxador fica à frente)
+    if (d.clad === 'ripado') {        // folha revestida com réguas verticais nas duas faces (plano em ripado contínuo)
+      const sg = new THREE.BoxGeometry(0.04, h, 0.035); pull = 0.035;
+      for (let x = o0 + 0.03; x < o0 + L - 0.02; x += 0.06) for (const [face, out] of [[0, -s], [s * t, s]]) add(sg, M.ripadoSlat || M.ripado, x, z0 + h / 2, face + out * 0.0175);
+    }
+    if (d.ext) {                      // porta exterior: puxador vertical nas duas faces (inox, ou d.handleMat)
+      const hx = o0 + L - 0.12, HM = (d.handleMat && M[d.handleMat]) || M.steel, bar = new THREE.CylinderGeometry(0.014, 0.014, 1.2, 16), leg = new THREE.CylinderGeometry(0.008, 0.008, 0.06 + pull, 10).rotateX(Math.PI / 2);
+      for (const [face, out] of [[0, -s], [s * t, s]]) {
+        add(bar, HM, hx, 1.1, face + out * (0.06 + pull));
+        for (const y of [0.55, 1.65]) add(leg, HM, hx, y, face + out * (0.03 + pull / 2));
+      }
+    } else {
     const hx = L - 0.065, rose = new THREE.CylinderGeometry(0.026, 0.026, 0.012, 24).rotateX(Math.PI / 2);
     const neck = new THREE.CylinderGeometry(0.009, 0.009, 0.05, 12).rotateX(Math.PI / 2), lever = new THREE.BoxGeometry(0.135, 0.017, 0.02);
     for (const [face, out] of [[0, -s], [s * t, s]]) {
@@ -1343,15 +1445,17 @@ function buildDoor(d, M) {
       add(neck, M.blackMetal, hx, 1.0, face + out * 0.03);
       add(lever, M.blackMetal, hx - 0.058, 1.0, face + out * 0.055);
     }
+    }
   }
   g.position.set(px, 0, -py);
   g.rotation.y = th;
-  const D = { d, g, k: 1, target: 1 };
+  const k0 = d.ext && !d.startOpen ? 0 : 1;   // portas exteriores começam fechadas
+  const D = { d, g, k: k0, target: k0 };
   D.apply = (e) => {
     if (d.type === 'slide') g.position.set(px + d.shift[0] * e, 0, -(py + d.shift[1] * e));
     else g.rotation.y = th + (s * Math.PI * e) / 2;
   };
-  D.apply(1);
+  D.apply(k0);
   g.userData.door = D;
   for (const m of g.children) m.userData.door = D;
   return g;
@@ -1376,9 +1480,17 @@ function makeGround(H) {
       edge.push([x0 + (x1 - x0) * t, y0, z], [x0 + (x1 - x0) * t, y1, z], [x0, y0 + (y1 - y0) * t, z], [x1, y0 + (y1 - y0) * t, z]);
     }
   }
+  // plataformas poligonais (zonas oblíquas): T.polys = [[[[x, y], …], Z], …]
+  for (const [poly, z] of (T.polys = T.polys || [])) {
+    for (let i = 0; i < poly.length; i++) {
+      const [ax, ay] = poly[i], [bx, by] = poly[(i + 1) % poly.length];
+      for (let t = 0; t < 1; t += 0.2) edge.push([ax + (bx - ax) * t, ay + (by - ay) * t, z]);
+    }
+  }
   const samples = pts.concat(edge);
   const inRect = (x, y, x0, y0, x1, y1) => x >= Math.min(x0, x1) && x <= Math.max(x0, x1) && y >= Math.min(y0, y1) && y <= Math.max(y0, y1);
   return function ground(x, y) {
+    for (const [poly, z] of T.polys) if (pointInPoly(x, y, poly)) return z;
     for (const [x0, y0, x1, y1, z] of T.flat) if (inRect(x, y, x0, y0, x1, y1)) return z;
     for (const [x0, y0, x1, y1, za, zb] of (T.ramps || [])) if (inRect(x, y, x0, y0, x1, y1)) return za + ((x - x0) / (x1 - x0)) * (zb - za);
     let sw = 0, sz = 0;
@@ -1410,7 +1522,21 @@ function buildSite(H, M, ground) {
     const gy = uniq([...lin(y0, y1), ...holes.flatMap((h) => [Math.min(h[1], h[3]), Math.max(h[1], h[3])])]);
     const nx = gx.length - 1, ny = gy.length - 1;
     const inHole = (x, y) => holes.some((h) => x > Math.min(h[0], h[2]) && x < Math.max(h[0], h[2]) && y > Math.min(h[1], h[3]) && y < Math.max(h[1], h[3]));
-    const pos = [], uv = [], inIdx = [], outIdx = [];
+    const pos = [], posIn = [], uv = [], inIdx = [], outIdx = [];
+    // vértices fora do lote mas usados por células interiores: cota do ponto mais próximo do limite (evita "dentes" de relva
+    // por fora dos muros quando o exterior está muito mais baixo/alto, ex.: rua junto a um muro de suporte)
+    const cxs = xs.reduce((a, b) => a + b, 0) / xs.length, cys = ys.reduce((a, b) => a + b, 0) / ys.length;
+    const nearestIn = (x, y) => {
+      let best = null;
+      for (let k = 0; k < site.length; k++) {
+        const [ax, ay] = site[k], [bx, by] = site[(k + 1) % site.length], dx = bx - ax, dy = by - ay, L2 = dx * dx + dy * dy;
+        const t = Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / L2)), px = ax + dx * t, py = ay + dy * t, d2 = (x - px) ** 2 + (y - py) ** 2;
+        if (!best || d2 < best[2]) best = [px, py, d2];
+      }
+      const L = Math.hypot(cxs - best[0], cys - best[1]) || 1;
+      return [best[0] + ((cxs - best[0]) / L) * 0.12, best[1] + ((cys - best[1]) / L) * 0.12, best[0] - ((cxs - best[0]) / L) * 0.12, best[1] - ((cys - best[1]) / L) * 0.12];
+    };
+    const posOut = [];
     const sx0 = Math.min(...xs) - 1, sx1 = Math.max(...xs) + 1, sy0 = Math.min(...ys) - 1, sy1 = Math.max(...ys) + 1;
     for (let j = 0; j <= ny; j++) for (let i = 0; i <= nx; i++) {
       const x = gx[i], y = gy[j];
@@ -1418,6 +1544,8 @@ function buildSite(H, M, ground) {
       const near = x > sx0 && x < sx1 && y > sy0 && y < sy1;
       const z = near ? ground(x, y) - (inside ? 0.05 : 0.25) : ground(Math.max(sx0, Math.min(sx1, x)), Math.max(sy0, Math.min(sy1, y))) - 0.25;
       pos.push(x, z, -y); uv.push(x, y);
+      if (inside) { posIn.push(x, z, -y); const q = nearestIn(x, y); posOut.push(x, near ? ground(q[2], q[3]) - 0.25 : z, -y); }
+      else { const [qx, qy] = nearestIn(x, y); posIn.push(x, ground(qx, qy) - 0.05, -y); posOut.push(x, z, -y); }
     }
     const id = (i, j) => j * (nx + 1) + i;
     for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
@@ -1425,19 +1553,19 @@ function buildSite(H, M, ground) {
       if (inHole(cx, cy)) continue;
       (pointInPoly(cx, cy, site) ? inIdx : outIdx).push(id(i, j), id(i + 1, j), id(i + 1, j + 1), id(i, j), id(i + 1, j + 1), id(i, j + 1));
     }
-    const geo = (idx) => {
+    const geo = (idx, P = pos) => {
       const g = new THREE.BufferGeometry();
-      g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+      g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3));
       g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
       g.setIndex(idx); g.computeVertexNormals();
       const n = g.attributes.normal; // normais para cima (Y→-z inverte a orientação dos índices)
       for (let k = 0; k < n.count; k++) if (n.getY(k) < 0) n.setXYZ(k, -n.getX(k), -n.getY(k), -n.getZ(k));
       return g;
     };
-    const mesh = new THREE.Mesh(geo(inIdx), M.grass);
+    const mesh = new THREE.Mesh(geo(inIdx, posIn), M.grass);
     mesh.material.side = THREE.DoubleSide; mesh.receiveShadow = true; mesh.name = 'terreno';
     groups.terrain.add(mesh);
-    const outer = new THREE.Mesh(geo(outIdx), M.contextGround);
+    const outer = new THREE.Mesh(geo(outIdx, posOut), M.contextGround);
     outer.receiveShadow = true; outer.name = 'terreno envolvente';
     groups.context.add(outer);
   }
@@ -1446,7 +1574,7 @@ function buildSite(H, M, ground) {
   // ---------------------------------------------------------------- pavimentos exteriores
   for (const p of H.pavings) {
     if (p.z === null) continue;
-    prism(S, p.poly, p.z - 0.25, p.z, { side: 'concrete', top: p.mat });
+    prism(S, p.poly, p.z0 ?? p.z - 0.25, p.z, { side: p.side || 'concrete', top: p.mat });   // z0/side: muretes e canteiros elevados
   }
   // pavimentos com z = null seguem a cota do terreno (ex.: acesso automóvel em rampa, lajetas com juntas relvadas)
   for (const p of H.pavings.filter((q) => q.z === null)) {
@@ -1789,7 +1917,7 @@ const K = {
       for (const sz of [-1, 1]) for (const sx of [-1, 1]) {      // zonas de cozinhar serigrafadas
         const ring = new THREE.Mesh(new THREE.RingGeometry(0.085, 0.09, 40).rotateX(-Math.PI / 2), M.hobMark); ring.position.set(cx + sx * 0.12, h + 0.0065, cz + sz * 0.25); g.add(ring);
       }
-    } else box(g, M.blackGlass, 0.52, 0.006, 0.8, cx, h, cz);              // placa de indução
+    } else if (o.hob !== 'none') box(g, M.blackGlass, 0.52, 0.006, 0.8, cx, h, cz);              // placa de indução (hob='none': placa como peça própria)
     bowl(g, M.ceramicDark, -cx * 0.6, h, d / 2 - 0.45, 0.16); vase(g, M, -cx * 0.6 + 0.05, h, -d / 2 + 0.4, 0.9, M.ceramicPot, 7);
   },
   stool(g, M) {
@@ -1805,9 +1933,11 @@ const K = {
     const ox = -w / 2 + 1.4;                                   // eixo do forno
     const xs = [], ys = [2.02];                                // juntas: módulos de ~60 cm e armários altos por cima
     for (let x = -w / 2 + 0.7; x < w / 2 - 0.2; x += 0.6) if (Math.abs(x - ox) > 0.05) xs.push(x);
-    xs.push(ox - 0.3, ox + 0.3);
+    const hasOven = (o.ovens ?? 1) > 0;   // ovens: 0 = coluna só com frigorífico e despensa
+    if (hasOven) xs.push(ox - 0.3, ox + 0.3);
     if (o.fridge === 'int') {        // combinado integrável atrás de duas portas (frigorífico em cima, congelador em baixo)
       joints(g, M, -w / 2 + 0.1, -w / 2 + 0.7, 0.1, 2.02, zf, [], [0.82]);
+    } else if (o.fridge === 'none') {      // sem frigorífico (coluna de despensa; frigorífico como peça própria)
     } else if (o.fridge === 'combi') {      // combinado 60 cm em inox
       const fx = -w / 2 + 0.4;
       box(g, M.steel, 0.6, 1.86, 0.03, fx, 0.02, zf + 0.005);
@@ -1819,15 +1949,17 @@ const K = {
       box(g, M.blackGlass, 0.16, 0.32, 0.01, -w / 2 + 0.3, 1.0, zf + 0.025);
     }
     joints(g, M, -w / 2, w / 2, 0.1, H, zf, xs.filter((x) => o.fridge !== 'int' || x > -w / 2 + 0.69), ys);
-    joints(g, M, ox - 0.3, ox + 0.3, 0.1, 0.8, zf, [], [0.45]);                          // gavetões sob o forno
-    // forno encastrado (tipo AEG BPK535160M, 594 × 595 mm): vidro preto, faixa de comandos inox, puxador em barra
-    const oy = 0.82;
-    box(g, M.blackGlass, 0.594, 0.595, 0.022, ox, oy, zf + 0.011);
-    box(g, M.steel, 0.594, 0.09, 0.006, ox, oy + 0.505, zf + 0.024);
-    box(g, M.blackGlass, 0.16, 0.035, 0.003, ox, oy + 0.532, zf + 0.028);                // visor
-    for (const sx of [-1, 1]) cyl(g, M.steel, 0.018, 0.012, ox + sx * 0.2, oy + 0.55, zf + 0.03, 20).rotation.x = Math.PI / 2;
-    bar(g, M.steel, [ox - 0.25, oy + 0.45, zf + 0.06], [ox + 0.25, oy + 0.45, zf + 0.06], 0.009);
-    for (const sx of [-1, 1]) bar(g, M.steel, [ox + sx * 0.23, oy + 0.45, zf + 0.024], [ox + sx * 0.23, oy + 0.45, zf + 0.06], 0.006);
+    if (hasOven) {
+      joints(g, M, ox - 0.3, ox + 0.3, 0.1, 0.8, zf, [], [0.45]);                          // gavetões sob o forno
+      // forno encastrado (tipo AEG BPK535160M, 594 × 595 mm): vidro preto, faixa de comandos inox, puxador em barra
+      const oy = 0.82;
+      box(g, M.blackGlass, 0.594, 0.595, 0.022, ox, oy, zf + 0.011);
+      box(g, M.steel, 0.594, 0.09, 0.006, ox, oy + 0.505, zf + 0.024);
+      box(g, M.blackGlass, 0.16, 0.035, 0.003, ox, oy + 0.532, zf + 0.028);                // visor
+      for (const sx of [-1, 1]) cyl(g, M.steel, 0.018, 0.012, ox + sx * 0.2, oy + 0.55, zf + 0.03, 20).rotation.x = Math.PI / 2;
+      bar(g, M.steel, [ox - 0.25, oy + 0.45, zf + 0.06], [ox + 0.25, oy + 0.45, zf + 0.06], 0.009);
+      for (const sx of [-1, 1]) bar(g, M.steel, [ox + sx * 0.23, oy + 0.45, zf + 0.024], [ox + sx * 0.23, oy + 0.45, zf + 0.06], 0.006);
+    }
     if ((o.ovens ?? 1) > 1) {
       box(g, M.blackGlass, 0.594, 0.455, 0.022, ox, 1.5, zf + 0.011);
       bar(g, M.steel, [ox - 0.25, 1.88, zf + 0.06], [ox + 0.25, 1.88, zf + 0.06], 0.009);
@@ -1846,6 +1978,12 @@ const K = {
     }
     const xs = []; for (let x = -w / 2 + 0.6; x < w / 2 - 0.15; x += 0.6) xs.push(x);
     joints(g, M, -w / 2, w / 2, 0.1, yt - 0.01, d / 2, xs, [yt - 0.19]);
+    if (o.hob !== undefined) {         // o.hob = posição x local de uma placa de indução encastrada (590 × 520 mm)
+      box(g, M.blackGlass, 0.59, 0.006, 0.52, o.hob, yt + t, 0.01);
+      for (const sz of [-1, 1]) for (const sx2 of [-1, 1]) {
+        const ring = new THREE.Mesh(new THREE.RingGeometry(0.075, 0.08, 40).rotateX(-Math.PI / 2), M.hobMark); ring.position.set(o.hob + sx2 * 0.14, yt + t + 0.0065, 0.01 + sz * 0.12); g.add(ring);
+      }
+    }
     if (!sink) { box(g, T, w + 0.02, t, d + 0.02, 0, yt, 0); return; }
     // tampo com o recorte da cuba (forma com buraco, UV em metros)
     const sh = new THREE.Shape(); sh.moveTo(-w / 2 - 0.01, -d / 2 - 0.01); sh.lineTo(w / 2 + 0.01, -d / 2 - 0.01); sh.lineTo(w / 2 + 0.01, d / 2 + 0.01); sh.lineTo(-w / 2 - 0.01, d / 2 + 0.01);
@@ -1940,7 +2078,7 @@ const K = {
     soft(g, M.fabricLight, 0.6, 0.42, 0.13, 0, 0.36, -0.3, { r: 0.06, crown: 0.02 }).rotation.x = -0.18;
     pillow(g, M.fabric, 0.38, 0.3, 0.11, 0.02, 0.58, -0.13, -0.22, 0.1);
   },
-  tvwall(g, M, w, d) { const dd = d || 0.42; box(g, M.woodLight, w, 0.32, dd, 0, 0.1, 0); box(g, M.tv, 1.45, 0.83, 0.03, 0, 0.95, -dd / 2 + 0.03); },
+  tvwall(g, M, w, d, o = {}) { const dd = d || 0.42; box(g, M.woodLight, w, 0.32, dd, 0, 0.1, 0); if (o.tv !== false) box(g, M.tv, 1.45, 0.83, 0.03, 0, 0.95, -dd / 2 + 0.03); },   // o.tv=false: televisor como peça própria
   sideboard(g, M, w, d) { box(g, M.woodLight, w, 0.6, d, 0, 0.15, 0); for (const sx of [-1, 1]) box(g, M.blackMetal, 0.03, 0.15, 0.03, sx * (w / 2 - 0.1), 0, 0);
     vase(g, M, -w / 2 + 0.35, 0.75, 0, 1.2, M.ceramicPot, 9); lathe(g, M.ceramicDark, [[0, 0], [0.06, 0], [0.09, 0.08], [0.06, 0.2], [0.03, 0.24]], -w / 2 + 0.62, 0.75, 0.03);
     books(g, M, w / 2 - 0.3, 0.75, 0, 2, -0.2); bowl(g, M.ceramicPot, w / 2 - 0.55, 0.75, 0.02, 0.12); },
@@ -2088,6 +2226,41 @@ const K = {
   stool2(g, M) { cyl(g, M.darkCab, 0.17, 0.03, 0, 0.44, 0); for (let i = 0; i < 3; i++) { const a = (i / 3) * Math.PI * 2; bar(g, M.darkCab, [Math.cos(a) * 0.12, 0, Math.sin(a) * 0.12], [Math.cos(a) * 0.08, 0.44, Math.sin(a) * 0.08], 0.02); }
     cyl(g, M.blackGlass, 0.03, 0.14, 0.02, 0.47, 0.03, 12); },
   // ---- garagem
+  // ---- electrodomésticos como peças próprias (trocáveis por modelos .glb no editor)
+  fridge(g, M, w, d, o = {}) {     // frigorífico combinado: o.panel = integrado (frente lacada como os armários; omissão) | 'steel'
+    const H = o.h || 2.38, F = o.panel === 'steel' ? M.steel : M.lacquer, zf = d / 2;
+    box(g, M.lacquerPlain, w, H, d - 0.02, 0, 0, -0.01);
+    box(g, F, w - 0.006, H - 0.006, 0.02, 0, 0.003, zf - 0.01);
+    for (const yj of [0.82, 2.02]) box(g, M.gap, w - 0.006, 0.003, 0.002, 0, yj, zf + 0.001);
+    for (const [y0, y1] of [[0.45, 0.75], [0.95, 1.45]]) bar(g, M.steel, [w / 2 - 0.06, y0, zf + 0.04], [w / 2 - 0.06, y1, zf + 0.04], 0.008);
+  },
+  hob(g, M, w, d, o = {}) {        // placa de indução encastrada (assente no tampo: z = cota do tampo); o.vent = exaustão integrada ao centro
+    const W = w || 0.59, D = d || 0.52;
+    box(g, M.blackGlass, W, 0.006, D, 0, 0, 0);
+    if (o.vent) {                    // grelha de aspiração a meio do comprimento (tipo AEG ComboHob)
+      const lx = W >= D, gw = (lx ? D : W) - 0.02;
+      box(g, M.blackMetal, lx ? 0.11 : gw, 0.004, lx ? gw : 0.11, 0, 0.006, 0);
+      for (let i = 0; i < 9; i++) box(g, M.steel, lx ? 0.004 : gw - 0.04, 0.002, lx ? gw - 0.04 : 0.004, lx ? -0.045 + i * 0.011 : 0, 0.01, lx ? 0 : -0.045 + i * 0.011);
+    }
+    for (const sz of [-1, 1]) for (const sx of [-1, 1]) {
+      const ring = new THREE.Mesh(new THREE.RingGeometry(0.075, 0.08, 40).rotateX(-Math.PI / 2), M.hobMark); ring.position.set(sx * W * 0.24, 0.0065, sz * D * 0.23); g.add(ring);
+    }
+  },
+  oven(g, M, w, d, o = {}) {       // forno encastrado (frente 594 × 595 mm; o.h = altura da frente, ex. 0,455 compacto): vidro preto, faixa de comandos, puxador
+    const W = Math.min(w || 0.594, 0.594), zf = (d || 0.03) / 2, Hf = o.h || 0.595;
+    box(g, M.blackGlass, W, Hf, 0.022, 0, 0, zf - 0.011);
+    box(g, M.steel, W, 0.09, 0.006, 0, Hf - 0.09, zf + 0.002);
+    for (const sx of [-1, 1]) cyl(g, M.steel, 0.018, 0.012, sx * 0.2, Hf - 0.045, zf + 0.006, 20).rotation.x = Math.PI / 2;
+    bar(g, M.steel, [-0.25, Hf - 0.145, zf + 0.04], [0.25, Hf - 0.145, zf + 0.04], 0.009);
+    for (const sx of [-1, 1]) bar(g, M.steel, [sx * 0.23, Hf - 0.145, zf], [sx * 0.23, Hf - 0.145, zf + 0.04], 0.006);
+  },
+  tv(g, M, w, d) {                 // televisor de parede (z = altura da base); w = largura do ecrã
+    const W = w || 1.45, Hh = W * 0.5625;
+    box(g, M.blackMetal, W + 0.02, Hh + 0.02, 0.03, 0, 0, 0); box(g, M.tv, W, Hh, 0.004, 0, 0.01, 0.021);
+  },
+  model(g, M, w, d) {              // peça só com modelo .glb (acrescentada no editor): caixa provisória até o modelo carregar
+    const b = new THREE.Mesh(new THREE.BoxGeometry(w || 0.6, 0.3, d || 0.6), M.wallcap); b.position.y = 0.15; g.add(b);
+  },
   car(g, M, w, d, o) {             // silhueta de automóvel extrudida (frente em +z)
     const L = d, s = new THREE.Shape();
     const P = [[-L / 2, 0.3], [-L / 2 + 0.05, 0.62], [-L / 2 + 0.7, 0.78], [-L / 2 + 1.35, 1.22], [L / 2 - 1.3, 1.25], [L / 2 - 0.55, 0.85], [L / 2 - 0.05, 0.72], [L / 2, 0.32], [L / 2 - 0.25, 0.2], [-L / 2 + 0.25, 0.2]];
@@ -2145,6 +2318,59 @@ function rayToWalls(x, y, dx, dy, segs) {
 const DIRS = { N: [0, 1], E: [1, 0], S: [0, -1], W: [-1, 0] };
 const OPP = { N: 'S', S: 'N', E: 'W', W: 'E' };
 
+
+// ---------------------------------------------------------------- modelos 3D reais (.glb) no lugar da peça paramétrica
+// f.glb = 'models/x.glb' (publicado com a página; num artifact vai em base64 em 'models/x.glb.b64.txt', porque os artifacts
+// não servem .glb). A peça paramétrica fica até o modelo chegar; o modelo é rodado (f.glbYaw, graus) para a frente ficar em +z
+// local, escalado para o comprimento f.d (ou largura f.w, ou f.glbScale) e assente em y = 0.
+const glbCache = new Map(), glbPending = [];
+const parseGLB = async (buf) => {
+  const scene = (await new GLTFLoader().parseAsync(buf, '')).scene;
+  // limpeza de ficheiros do Sketchfab/SketchUp: arestas desenhadas (linhas) e superfícies invisíveis (alfa ~0) que escrevem
+  // profundidade e deixam manchas na pintura
+  const drop = [];
+  scene.traverse((o) => {
+    if (o.isLine || o.isLineSegments || o.isPoints) drop.push(o);
+    else if (o.isMesh) { const ms = [].concat(o.material); if (ms.every((m) => m && m.transparent && m.opacity < 0.02 && !(m.transmission > 0))) drop.push(o); }
+  });
+  for (const o of drop) o.parent && o.parent.remove(o);
+  let tris = 0; scene.traverse((o) => { if (o.isMesh) { const gm = o.geometry; tris += (gm.index ? gm.index.count : gm.attributes.position.count) / 3; } });
+  scene.userData.triangles = tris;
+  return scene;
+};
+function registerGLB(url, buf) { const p = parseGLB(buf); glbCache.set(url, p); return p; }   // modelo carregado no editor (antes de o site o servir)
+function fetchGLB(url) {
+  if (!glbCache.has(url)) glbCache.set(url, (async () => {
+    const isGLB = (b) => b.byteLength > 12 && new TextDecoder().decode(new Uint8Array(b, 0, 4)) === 'glTF';
+    let buf = null;
+    try { const r = await fetch(url); if (r.ok) { const b = await r.arrayBuffer(); if (isGLB(b)) buf = b; } } catch (e) { /* tenta a versão base64 */ }
+    if (!buf) {
+      const r = await fetch(url + '.b64.txt'); if (!r.ok) throw new Error('modelo em falta: ' + url);
+      const t = atob((await r.text()).trim()), u = new Uint8Array(t.length);
+      for (let i = 0; i < t.length; i++) u[i] = t.charCodeAt(i);
+      buf = u.buffer;
+    }
+    return parseGLB(buf);
+  })());
+  return glbCache.get(url);
+}
+function attachGLB(g, f) {
+  const p = fetchGLB(f.glb).then((src) => {
+    const m = src.clone(true), wrap = new THREE.Group();
+    m.rotation.y = ((f.glbYaw || 0) * Math.PI) / 180; wrap.add(m); wrap.updateMatrixWorld(true);
+    let bb = new THREE.Box3().setFromObject(m); const size = bb.getSize(new THREE.Vector3());
+    const s = f.glbScale ?? (f.d ? f.d / size.z : f.w ? f.w / size.x : 1);   // sem medidas: o ficheiro já em metros
+    wrap.scale.setScalar(s); wrap.updateMatrixWorld(true);
+    bb = new THREE.Box3().setFromObject(wrap); const c = bb.getCenter(new THREE.Vector3());
+    wrap.position.set(-c.x, -bb.min.y + (f.glbLift || 0), -c.z);
+    m.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.FrontSide; } });
+    for (const ch of [...g.children]) g.remove(ch);
+    g.add(wrap);
+  }).catch((e) => console.warn(String(e)));
+  glbPending.push(p);
+}
+const modelsReady = () => Promise.allSettled(glbPending);
+
 function buildFurniture(H, M, baseZ) {
   const root = new THREE.Group(); root.name = 'mobiliario';
   const segs = [];
@@ -2158,6 +2384,7 @@ function buildFurniture(H, M, baseZ) {
     // f.front = material das frentes/caixas lacadas (ex.: 'walnut' nos móveis de cozinha e roupeiros)
     const Mf = f.front && M[f.front] ? { ...M, lacquer: M[f.front], lacquerPlain: M[f.front] } : M;
     make(g, Mf, f.w, f.d, { ...f, paint: f.paint ? M[f.paint] : undefined });
+    if (f.glb) attachGLB(g, f);
     let x = f.x, y = f.y, rot = 0, face = f.face || 'S';
     if (f.rot != null) {             // rotação explícita (radianos, three.js) — gravada pelo editor; sem encosto automático
       rot = f.rot;
@@ -2196,7 +2423,7 @@ function buildFurniture(H, M, baseZ) {
     }
     if (f.sx) g.scale.x = f.sx;
     if (f.sz) g.scale.z = f.sz;      // comprimento das peças sem parâmetro d      // largura das peças sem parâmetro w (cadeirões, sanitas…): escala em x local
-    g.userData = { kind: f.kind, name: f.name || f.kind, seat: ['chair', 'ropechair', 'stool', 'armchair', 'outchair', 'sofa', 'sofaL', 'patiosofa', 'lounger'].includes(f.kind), wallBacked: !!f.wallBacked || f.face === 'wall', target: f.target, index: i };
+    g.userData = { kind: f.kind, name: f.name || f.kind, seat: ['chair', 'ropechair', 'stool', 'armchair', 'outchair', 'sofa', 'sofaL', 'patiosofa', 'lounger'].includes(f.kind), wallBacked: !!f.wallBacked || f.face === 'wall', target: f.target, embedded: !!f.embedded, index: i };
     return g;
   };
   const slots = H.furniture.map((f, i) => { const g = one(f, i); if (g) root.add(g); return g; });
@@ -2209,7 +2436,7 @@ function buildFurniture(H, M, baseZ) {
   root.userData.piece = (i) => slots[i];
   return root;
 }
-return { buildFurniture };
+return { registerGLB, modelsReady, buildFurniture };
 })();
 
 // ===== src/vegetation.js =====
@@ -2225,7 +2452,7 @@ function cnv(w, h = w) { const c = document.createElement('canvas'); c.width = w
 const hsl = (h, s, l, a = 1) => `hsla(${h},${s}%,${l}%,${a})`;
 
 // ---------------------------------------------------------------- texturas de folhagem (RGBA)
-function foliageTex(seed, { leaf = 7, count = 900, hue = 105, sat = 38, light = 28, spread = 10, round = 0.55, twig = true } = {}) {
+function foliageTex(seed, { leaf = 7, count = 900, hue = 105, sat = 38, light = 28, spread = 10, round = 0.55, twig = true, flowers = null } = {}) {
   const n = 512; const [c, x] = cnv(n); const r = rng(seed);
   if (twig) { x.strokeStyle = 'rgba(70,55,40,0.9)'; x.lineWidth = 2; for (let i = 0; i < 6; i++) { x.beginPath(); x.moveTo(n / 2, n); x.quadraticCurveTo(r() * n, n / 2, r() * n, r() * n * 0.4); x.stroke(); } }
   for (let i = 0; i < count; i++) {
@@ -2237,6 +2464,17 @@ function foliageTex(seed, { leaf = 7, count = 900, hue = 105, sat = 38, light = 
     x.fillStyle = hsl(hue + (r() - 0.5) * 16, sat + (r() - 0.5) * 12, l);
     x.beginPath(); x.ellipse(px, py, s, s * round, rot, 0, 7); x.fill();
     if (r() < 0.3) { x.fillStyle = hsl(hue, sat, l + 12, 0.5); x.beginPath(); x.ellipse(px - s * 0.2, py - s * 0.2, s * 0.5, s * round * 0.4, rot, 0, 7); x.fill(); }
+  }
+  // flores (opcional): cachos de pétalas claras por cima da folhagem — flowers = {count, colors: [[h, s, l], …], size}
+  if (flowers) {
+    for (let i = 0; i < flowers.count; i++) {
+      const a = r() * Math.PI * 2, d = Math.sqrt(r()) * n * 0.4, cx = n / 2 + Math.cos(a) * d, cy = n / 2 + Math.sin(a) * d * 0.9 - n * 0.04;
+      const [fh, fs, fl] = flowers.colors[Math.floor(r() * flowers.colors.length)];
+      for (let k = 0; k < 7; k++) {
+        const pa = r() * Math.PI * 2, pd = r() * (flowers.size || 9);
+        x.fillStyle = hsl(fh + (r() - 0.5) * 8, fs, fl + (r() - 0.5) * 10); x.beginPath(); x.arc(cx + Math.cos(pa) * pd, cy + Math.sin(pa) * pd, 2.2 + r() * 2.2, 0, 7); x.fill();
+      }
+    }
   }
   return finish(c);
 }
@@ -2395,7 +2633,7 @@ function grassTuft(B, R, x, y, z, h, key) {
   const w = h * (0.9 + R() * 0.5);
   for (let k = 0; k < 3; k++) card(B, key, x, y, z - 0.02, w, h, (k / 3) * Math.PI + R() * 0.5, 0, v3(x, y, z - h));
 }
-function hedgeRun(B, R, ax, ay, bx, by, z0fn, h, depth, inward) {
+function hedgeRun(B, R, ax, ay, bx, by, z0fn, h, depth, inward, key = 'leafHedge') {
   const L = Math.hypot(bx - ax, by - ay), ux = (bx - ax) / L, uy = (by - ay) / L;
   const nx = inward[0], ny = inward[1];
   const n = Math.round(L * 9);
@@ -2403,8 +2641,8 @@ function hedgeRun(B, R, ax, ay, bx, by, z0fn, h, depth, inward) {
     const t = (i + R()) / n, px = ax + ux * L * t + nx * depth * (0.25 + R() * 0.5), py = ay + uy * L * t + ny * depth * (0.25 + R() * 0.5);
     const z0 = z0fn(px, py), zc = z0 + R() * h * 0.85, s = 0.55 + R() * 0.5;
     const ctr = v3(px - nx * depth, py - ny * depth, z0 + h * 0.5);
-    card(B, 'leafHedge', px + nx * depth * 0.4, py + ny * depth * 0.4, zc, s, s, Math.atan2(uy, ux) + (R() - 0.5) * 1.2, (R() - 0.5) * 0.5, ctr);
-    if (R() < 0.35) card(B, 'leafHedge', px, py, z0 + h - 0.2, s, s * 0.6, R() * 3, 1.3, ctr);
+    card(B, key, px + nx * depth * 0.4, py + ny * depth * 0.4, zc, s, s, Math.atan2(uy, ux) + (R() - 0.5) * 1.2, (R() - 0.5) * 0.5, ctr);
+    if (R() < 0.35) card(B, key, px, py, z0 + h - 0.2, s, s * 0.6, R() * 3, 1.3, ctr);
   }
 }
 function ivyWall(B, R, x0, y0, x1, y1, z0, z1, offN) {
@@ -2432,6 +2670,8 @@ function buildVegetation(H, M, ground) {
     leafFern: leafMat(frondTex(7, 98, 34, 30, 0.42), 'leafFern'),
     leafPalm: leafMat(frondTex(8, 92, 36, 34, 0.32), 'leafPalm'),
     grassOrn: leafMat(grassTex(9, { hue: 62, light: 52, plumes: true, blades: 90 }), 'grassOrn'),
+    leafFlowerW: leafMat(foliageTex(11, { leaf: 8, count: 1000, hue: 95, sat: 36, light: 36, spread: 14, round: 0.6, twig: false, flowers: { count: 110, colors: [[60, 30, 94], [40, 20, 90]], size: 10 } }), 'leafFlowerW'),
+    leafFlowerP: leafMat(foliageTex(12, { leaf: 8, count: 1000, hue: 100, sat: 38, light: 35, spread: 14, round: 0.6, twig: false, flowers: { count: 100, colors: [[330, 60, 72], [345, 55, 80], [60, 30, 94]], size: 9 } }), 'leafFlowerP'),
     grassLawn: leafMat(grassTex(10, { hue: 82, light: 42, blades: 90 }), 'grassLawn'),
     stem: new THREE.MeshStandardMaterial({ color: 0x5f6b3a, roughness: 0.8, side: THREE.DoubleSide, name: 'stem' }),
   };
@@ -2469,6 +2709,14 @@ function buildVegetation(H, M, ground) {
           if (!pointInPoly(mx + nx * 0.5, my + ny * 0.5, site)) { nx = -nx; ny = -ny; }
           hedgeRun(B, R, ax + nx * 0.2, ay + ny * 0.2, bx + nx * 0.2, by + ny * 0.2, gz, p.h || 1.75, p.depth || 0.7, [nx, ny]);
         }
+        break;
+      }
+      case 'shrubs': {                          // arbustos (floridos) ao longo de um segmento a→b: canteiros oblíquos; key = leafFlowerW | leafFlowerP | leafHedge
+        const [ax, ay] = p.a, [bx, by] = p.b, L = Math.hypot(bx - ax, by - ay);
+        const nn = p.side || [-(by - ay) / L, (bx - ax) / L];
+        const d = p.depth || 0.6;
+        const k = 1.26 * d;                       // centra a faixa (hedgeRun desloca para dentro: 0,25–0,75 × depth + 0,4 × depth)
+        hedgeRun(B, R, ax - nn[0] * k, ay - nn[1] * k, bx - nn[0] * k, by - nn[1] * k, (x, y) => p.z ?? gz(x, y), p.h || 1.0, 1.4 * d, nn, p.key || 'leafFlowerW');
         break;
       }
       default: console.warn('planta desconhecida', p.type);
@@ -2834,7 +3082,7 @@ return { fmt, roomLabels, findRoom, Measure };
 
 // ===== src/editor.js =====
 const __m_editor = (() => {
-
+const { registerGLB } = __m_furniture;
 // Editor de mobiliário protegido por palavra-passe: mover (arrastar), rodar e alterar a largura das peças, e guardar
 // a disposição no repositório GitHub do site (layout.json ao lado da página). Todos os visitantes carregam layout.json.
 //
@@ -2884,6 +3132,14 @@ async function putFile(token, R, path, text, message) {
   return gh(token, 'PUT', `/repos/${R.owner}/${R.repo}/contents/${path}`, { message, content: utf8b64(text), branch: R.branch, ...(cur && cur.sha ? { sha: cur.sha } : {}) });
 }
 
+async function putBinary(token, R, path, buf, message) {   // ficheiro binário (modelo .glb) — API Contents, base64 por blocos
+  const u = new Uint8Array(buf); let bin = '';
+  for (let i = 0; i < u.length; i += 0x8000) bin += String.fromCharCode(...u.subarray(i, i + 0x8000));
+  const cur = await gh(token, 'GET', `/repos/${R.owner}/${R.repo}/contents/${path}?ref=${R.branch}`);
+  return gh(token, 'PUT', `/repos/${R.owner}/${R.repo}/contents/${path}`, { message, content: btoa(bin), branch: R.branch, ...(cur && cur.sha ? { sha: cur.sha } : {}) });
+}
+const slugName = (n) => n.replace(/\.glb$/i, '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 48) || 'modelo';
+
 // ------------------------------------------------------------------ disposição (layout.json)
 // chave estável por peça: nome (ou tipo) + nº de ocorrência — sobrevive a reordenações da configuração
 function keysOf(list) {
@@ -2898,6 +3154,16 @@ function initEditor(ctx) {
   const ORIG = H.furniture.map((f) => JSON.parse(JSON.stringify(f)));
   const touched = new Set();      // índices com disposição própria (carregada ou editada)
   let dirty = 0;
+  const ADDED = new Set();        // índices de peças acrescentadas no editor
+  const FIN = {};                 // acabamentos trocados: slot → {tex, size, rough, name}
+  function addPiece(a, isNew) {    // a = {key, kind, name, glb, x, y, rot, d?, glbYaw?}
+    const f = { kind: a.kind || 'model', name: a.name, x: a.x, y: a.y, w: a.w || 0, d: a.d || 0, face: 'S', glb: a.glb, rot: a.rot ?? 0, ...(a.glbYaw != null ? { glbYaw: a.glbYaw } : {}) };
+    H.furniture.push(f); const i = H.furniture.length - 1;
+    KEYS.push(a.key); ORIG.push(JSON.parse(JSON.stringify(f))); ADDED.add(i);
+    if (isNew) touched.add(i);
+    furniture.userData.rebuild(i);
+    return i;
+  }
 
   const apply = (i, o) => {
     const f = H.furniture[i];
@@ -2909,6 +3175,8 @@ function initEditor(ctx) {
     if (o.d != null) f.d = o.d;
     if (o.sz != null) f.sz = o.sz;
     if (o.hidden) f.hidden = true;
+    if (o.glb) { f.glb = o.glb; delete f.glbScale; }        // modelo 3D carregado no editor
+    if (o.glbYaw != null) f.glbYaw = o.glbYaw;
     if ((o.x != null || o.y != null) && f.bowls) { f.basins = f.bowls.length; delete f.bowls; } // cubas desenhadas ficam na peça
     touched.add(i);
     furniture.userData.rebuild(i);
@@ -2919,6 +3187,11 @@ function initEditor(ctx) {
       .then((r) => (r.ok ? r.json() : null))
       .then((L) => {
         if (!L || !L.items) return;
+        for (const a of L.added || []) addPiece(a, false);      // peças acrescentadas no editor (modelos 3D)
+        if (L.credits && L.credits.length) { H.meta.creditsLayout = L.credits; ctx.showCredits && ctx.showCredits(L.credits); }
+        for (const [slot, sp] of Object.entries(L.finishes || {})) {        // pavimentos e paredes trocados no editor
+          FIN[slot] = sp; ctx.applyFinish && ctx.applyFinish(slot, { ...sp, url: new URL(sp.tex, location.href).href });
+        }
         for (const [k, o] of Object.entries(L.items)) { const i = KEYS.indexOf(k); if (i >= 0) apply(i, o); }
         ctx.redraw && ctx.redraw();
       })
@@ -2934,7 +3207,7 @@ function initEditor(ctx) {
   .ed-card{background:#fbfaf7;color:#1d2226;border-radius:12px;max-width:420px;width:100%;padding:22px;font:14px/1.45 system-ui,sans-serif;box-shadow:0 20px 50px rgba(0,0,0,.3)}
   .ed-card h3{margin:0 0 6px;font-size:18px}.ed-card p{margin:0 0 12px;color:#4a5359}
   .ed-card label{display:block;font-weight:600;font-size:12px;margin:10px 0 4px}
-  .ed-card input{width:100%;box-sizing:border-box;padding:10px 11px;border:1px solid #c9cfcc;border-radius:8px;font:14px system-ui,sans-serif;background:#fff;color:#1d2226}
+  .ed-card input,.ed-card select{width:100%;box-sizing:border-box;padding:10px 11px;border:1px solid #c9cfcc;border-radius:8px;font:14px system-ui,sans-serif;background:#fff;color:#1d2226}
   .ed-row{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
   .ed-row button,.ed-bar button{font:600 13px/1 system-ui,sans-serif;border:0;border-radius:8px;padding:10px 13px;cursor:pointer;background:#e7e9e8;color:#1d2226}
   .ed-row button.pri,.ed-bar button.pri{background:#2b50c8;color:#fff}.ed-bar button.dang{color:#b3261e}
@@ -3007,6 +3280,8 @@ function initEditor(ctx) {
     <span class="grp"><span class="muted">Largura</span><button id="ed-wm" title="Reduzir 5 cm">−</button><input id="ed-w" inputmode="decimal"><span class="muted">m</span><button id="ed-wp" title="Aumentar 5 cm">+</button></span>
     <span class="grp"><span class="muted">Comprimento</span><button id="ed-dm" title="Reduzir 5 cm">−</button><input id="ed-d" inputmode="decimal"><span class="muted">m</span><button id="ed-dp" title="Aumentar 5 cm">+</button></span>
     <span class="grp"><button id="ed-rl" title="Rodar 90° (esquerda)">↺ 90°</button><button id="ed-rr" title="Rodar 90° (direita)">↻ 90°</button><button id="ed-r15" title="Rodar 15°">↻ 15°</button></span>
+    <button id="ed-glb" title="Carregar um modelo 3D (.glb) para o site: substitui a peça seleccionada (móvel, electrodoméstico, louça, carro) ou acrescenta uma nova">Modelo 3D…</button>
+    <button id="ed-fin" title="Trocar o pavimento ou o revestimento de paredes por uma textura (fotografia do material)">Pavimentos e paredes…</button>
     <button id="ed-reset">Repor peça</button><button id="ed-del" class="dang">Apagar peça</button><button id="ed-undel" hidden>Repor apagadas</button>
     <span class="muted" id="ed-st"></span>
     <button class="pri" id="ed-save">Guardar</button><button id="ed-exit">Sair</button>`;
@@ -3079,13 +3354,20 @@ function initEditor(ctx) {
   };
   q('#ed-save').onclick = async () => {
     const b = q('#ed-save'); b.disabled = true; status('A guardar…');
-    const items = {};
+    const items = {}, added = [];
+    for (const i of ADDED) {            // peças acrescentadas: entram em "added" (apagadas desaparecem)
+      const f = H.furniture[i]; if (f.hidden) continue;
+      added.push({ key: KEYS[i], kind: f.kind, name: f.name, glb: f.glb, x: f.x, y: f.y, rot: f.rot ?? 0, ...(f.d ? { d: f.d } : {}), ...(f.w ? { w: f.w } : {}), ...(f.glbYaw != null ? { glbYaw: f.glbYaw } : {}) });
+    }
     for (const i of touched) {
+      if (ADDED.has(i)) continue;
       const f = H.furniture[i], o = ORIG[i];
       if (JSON.stringify(f) === JSON.stringify(o)) continue;          // peça reposta: sai da disposição
-      items[KEYS[i]] = f.hidden ? { hidden: true } : { x: f.x, y: f.y, rot: f.rot, ...(f.w !== o.w ? { w: f.w } : {}), ...(f.d !== o.d ? { d: f.d } : {}), ...(f.sx ? { sx: f.sx } : {}), ...(f.sz ? { sz: f.sz } : {}) };
+      items[KEYS[i]] = f.hidden ? { hidden: true } : { x: f.x, y: f.y, rot: f.rot, ...(f.w !== o.w ? { w: f.w } : {}), ...(f.d !== o.d ? { d: f.d } : {}), ...(f.sx ? { sx: f.sx } : {}), ...(f.sz ? { sz: f.sz } : {}),
+        ...(f.glb !== o.glb ? { glb: f.glb } : {}), ...(f.glbYaw !== o.glbYaw && f.glbYaw != null ? { glbYaw: f.glbYaw } : {}) };
     }
-    const doc = { version: 1, house: H.meta.slug, saved: new Date().toISOString(), items };
+    const doc = { version: 2, house: H.meta.slug, saved: new Date().toISOString(), items, ...(added.length ? { added } : {}), ...((H.meta.creditsLayout || creditsAdded.length) ? { credits: [...(H.meta.creditsLayout || []), ...creditsAdded] } : {}),
+      ...(Object.keys(FIN).length ? { finishes: FIN } : {}) };
     try {
       await putFile(token, R, (R.dir ? R.dir + '/' : '') + 'layout.json', JSON.stringify(doc, null, 1) + '\n', `Mobiliário: ${H.meta.name} (${Object.keys(items).length} peças)`);
       dirty = 0; status('Guardado — visível para todos dentro de 1 a 2 minutos'); q('#ed-save').disabled = true;
@@ -3094,6 +3376,127 @@ function initEditor(ctx) {
       status(/403/.test(e.message) ? 'Erro: a chave do GitHub não tem permissão Contents: Read and write no repositório ' + R.repo : 'Erro ao guardar: ' + e.message); b.disabled = false;
     }
   };
+  // ---------------------------------------------------------------- carregar um modelo 3D (.glb) para o site
+  // Envia o ficheiro para <pasta>/models/ no repositório (o mesmo token do layout.json) e usa-o já nesta sessão.
+  // Substitui o modelo da peça seleccionada ou acrescenta uma peça nova no centro da vista; depois arrasta-se, roda-se e guarda-se.
+  q('#ed-glb').onclick = () => {
+    const cur = sel >= 0 ? H.furniture[sel] : null;
+    const { c, close } = modal(`<h3>Modelo 3D (.glb)</h3>
+      <p>Ficheiro .glb (ex.: descarregado do Sketchfab em “glTF Binary”). Confirme a licença: CC BY pede crédito; “NC” proíbe uso comercial.</p>
+      <label>Ficheiro</label><input type="file" id="ed-f" accept=".glb,model/gltf-binary">
+      <div class="small" id="ed-info" style="font-size:13px;color:#5d666b;margin-top:6px"></div>
+      <label>Comprimento real (m)</label><input id="ed-len" inputmode="decimal" placeholder="ex.: 3,66">
+      <label>Crédito / licença (opcional)</label><input id="ed-cred" placeholder="ex.: “Modelo” por Autor (Sketchfab), CC BY 4.0">
+      <label style="display:flex;gap:8px;align-items:center;font-weight:400"><input type="checkbox" id="ed-rep" style="width:auto" ${cur ? 'checked' : 'disabled'}> Substituir o modelo da peça seleccionada${cur ? ` (<b>${(cur.name || cur.kind).replace(/</g, '&lt;')}</b>)` : ' (nenhuma seleccionada)'}</label>
+      <div class="ed-err" id="ed-err"></div><div class="ed-row"><button id="ed-x">Cancelar</button><button class="pri" id="ed-ok" disabled>Enviar e colocar</button></div>`);
+    let buf = null, natural = null, fname = '';
+    c.querySelector('#ed-x').onclick = close;
+    c.querySelector('#ed-f').onchange = async (e) => {
+      const file = e.target.files[0], info = c.querySelector('#ed-info'), err = c.querySelector('#ed-err'); err.textContent = ''; buf = null;
+      if (!file) return;
+      if (file.size > 40e6) { err.textContent = 'Ficheiro demasiado grande (máx. 40 MB). Simplifique o modelo antes de o enviar.'; return; }
+      info.textContent = 'A ler o modelo…';
+      try {
+        buf = await file.arrayBuffer(); fname = file.name;
+        if (new TextDecoder().decode(new Uint8Array(buf, 0, 4)) !== 'glTF') throw new Error('não é um ficheiro .glb');
+        const sc = await registerGLB('__preview__', buf);
+        const sz = new THREE.Box3().setFromObject(sc).getSize(new THREE.Vector3());
+        natural = Math.max(sz.x, sz.z);
+        const tris = Math.round(sc.userData.triangles / 1000);
+        info.innerHTML = `${(file.size / 1e6).toFixed(1).replace('.', ',')} MB · ${tris} mil triângulos · medida no ficheiro ${[sz.x, sz.z, sz.y].map((v) => v.toFixed(2).replace('.', ',')).join(' × ')} m` +
+          (tris > 400 ? '<br><b>Modelo pesado</b>: pode ficar lento em telemóveis.' : '') + (file.size > 15e6 ? '<br>Ficheiro grande: demora a abrir para os visitantes.' : '');
+        const lenIn = c.querySelector('#ed-len');
+        if (cur && cur.d) lenIn.value = String(cur.d).replace('.', ',');
+        else if (natural > 0.1 && natural < 25) lenIn.value = natural.toFixed(2).replace('.', ',');
+        c.querySelector('#ed-ok').disabled = false;
+      } catch (ex) { info.textContent = ''; err.textContent = 'Não foi possível ler: ' + (ex.message || ex); buf = null; }
+    };
+    c.querySelector('#ed-ok').onclick = async () => {
+      const err = c.querySelector('#ed-err'), b = c.querySelector('#ed-ok');
+      const len = parseFloat(c.querySelector('#ed-len').value.replace(',', '.'));
+      if (!buf) return; if (!(len > 0.05 && len < 60)) { err.textContent = 'Indique o comprimento real em metros.'; return; }
+      b.disabled = true; err.textContent = 'A enviar para o site…';
+      const name = slugName(fname) + '.glb', rel = 'models/' + name, path = (R.dir ? R.dir + '/' : '') + rel;
+      try {
+        await putBinary(token, R, path, buf, `Modelo 3D: ${name} (${H.meta.name})`);
+        registerGLB(rel, buf);
+        const cred = c.querySelector('#ed-cred').value.trim();
+        const repl = c.querySelector('#ed-rep').checked && sel >= 0;
+        if (repl) {
+          const i = sel, f = H.furniture[i]; capture(i);
+          f.glb = rel; f.d = +len.toFixed(3); delete f.glbScale; delete f.sz;
+          furniture.userData.rebuild(i); changed(i);
+        } else {
+          const cam = ctx.getCamera(), t = new THREE.Vector3();
+          if (cam.isOrthographicCamera) t.set(cam.position.x, 0, cam.position.z); else { cam.getWorldDirection(t); t.multiplyScalar(6).add(cam.position); }
+          const base = 'Modelo ' + slugName(fname); let n = 1; while (KEYS.includes(`${base}#${n}`)) n++;
+          sel = addPiece({ key: `${base}#${n}`, kind: 'model', name: base.replace(/-/g, ' '), glb: rel, x: +t.x.toFixed(2), y: +(-t.z).toFixed(2), rot: 0, d: +len.toFixed(3) }, true);
+          dirty++;
+        }
+        if (cred) { H.meta.credits = [...(H.meta.credits || []), cred]; creditsAdded.push(cred); }
+        close(); refresh(); status('Modelo enviado — carregue em Guardar para ficar visível para todos');
+      } catch (ex) {
+        if (/401|403/.test(ex.message)) { token = null; ss.set('casa3d-token', ''); }
+        err.textContent = /403/.test(ex.message) ? 'A chave do GitHub não tem permissão de escrita.' : 'Erro ao enviar: ' + ex.message; b.disabled = false;
+      }
+    };
+  };
+  const creditsAdded = [];
+
+  // ---------------------------------------------------------------- pavimentos e revestimentos (texturas)
+  // Fotografia do material (azulejo, soalho, pedra…) em repetição: indica-se a medida real que a imagem representa.
+  // A imagem é reduzida a ≤ 2048 px (JPEG) no browser, enviada para <pasta>/textures/ e aplicada já; "Guardar" grava em layout.json.
+  q('#ed-fin').onclick = () => {
+    const slots = ctx.finishSlots ? ctx.finishSlots() : [];
+    const opts = ['Interior', 'Exterior'].map((g_) => `<optgroup label="${g_}">` + slots.filter((x) => x.group === g_).map((x) => `<option value="${x.id}">${x.label}${FIN[x.id] ? ' ✓' : ''}</option>`).join('') + '</optgroup>').join('');
+    const { c, close } = modal(`<h3>Pavimentos e paredes</h3>
+      <p>Escolha a superfície e uma fotografia do material (de preferência uma textura que se repete, tirada de frente). Indique quanto mede, na realidade, o que a imagem mostra.</p>
+      <label>Superfície</label><select id="ed-slot" style="width:100%;padding:10px;border:1px solid #c9cfcc;border-radius:8px;font:14px system-ui">${opts}</select>
+      <div id="ed-cur" style="font-size:13px;color:#5d666b;margin-top:6px"></div>
+      <label>Imagem (JPG, PNG ou WebP)</label><input type="file" id="ed-img" accept="image/jpeg,image/png,image/webp">
+      <div style="display:flex;gap:8px"><div style="flex:1"><label>Largura real (m)</label><input id="ed-sw" inputmode="decimal" value="0,60"></div>
+      <div style="flex:1"><label>Altura real (m)</label><input id="ed-sh" inputmode="decimal" value="0,60"></div></div>
+      <label>Acabamento</label><select id="ed-rough" style="width:100%;padding:10px;border:1px solid #c9cfcc;border-radius:8px;font:14px system-ui">
+        <option value="0.85">Mate</option><option value="0.5" selected>Acetinado</option><option value="0.18">Brilhante / polido</option></select>
+      <div class="ed-err" id="ed-err"></div>
+      <div class="ed-row"><button id="ed-rst">Repor original</button><button id="ed-x">Cancelar</button><button class="pri" id="ed-ok" disabled>Enviar e aplicar</button></div>`);
+    const sel_ = c.querySelector('#ed-slot'), err = c.querySelector('#ed-err');
+    const showCur = () => { const f = FIN[sel_.value]; c.querySelector('#ed-cur').textContent = f ? `Actual: ${f.name || f.tex} (${String(f.size[0]).replace('.', ',')} × ${String(f.size[1]).replace('.', ',')} m)` : 'Actual: material original do modelo'; c.querySelector('#ed-rst').disabled = !f; };
+    sel_.onchange = showCur; showCur();
+    let blob = null, fname = '';
+    c.querySelector('#ed-x').onclick = close;
+    c.querySelector('#ed-img').onchange = async (e) => {
+      const file = e.target.files[0]; blob = null; err.textContent = ''; c.querySelector('#ed-ok').disabled = true; if (!file) return;
+      if (file.size > 25e6) { err.textContent = 'Imagem demasiado grande (máx. 25 MB).'; return; }
+      try {
+        const bmp = await createImageBitmap(file), k = Math.min(1, 2048 / Math.max(bmp.width, bmp.height));
+        const cv = document.createElement('canvas'); cv.width = Math.round(bmp.width * k); cv.height = Math.round(bmp.height * k);
+        cv.getContext('2d').drawImage(bmp, 0, 0, cv.width, cv.height);
+        blob = await new Promise((res) => cv.toBlob(res, 'image/jpeg', 0.88)); fname = file.name;
+        const ar = bmp.width / bmp.height, sw = parseFloat(c.querySelector('#ed-sw').value.replace(',', '.')) || 0.6;
+        c.querySelector('#ed-sh').value = (sw / ar).toFixed(2).replace('.', ',');                 // mantém a proporção da imagem
+        c.querySelector('#ed-ok').disabled = false;
+      } catch (ex) { err.textContent = 'Não foi possível ler a imagem.'; }
+    };
+    c.querySelector('#ed-rst').onclick = () => { const s_ = sel_.value; delete FIN[s_]; ctx.applyFinish(s_, null); dirty++; close(); refresh(); status('Superfície reposta — carregue em Guardar'); };
+    c.querySelector('#ed-ok').onclick = async () => {
+      const sw = parseFloat(c.querySelector('#ed-sw').value.replace(',', '.')), sh = parseFloat(c.querySelector('#ed-sh').value.replace(',', '.'));
+      if (!blob) return; if (!(sw > 0.01 && sh > 0.01 && sw < 20 && sh < 20)) { err.textContent = 'Indique a largura e a altura reais em metros.'; return; }
+      const b = c.querySelector('#ed-ok'); b.disabled = true; err.textContent = 'A enviar para o site…';
+      const slot = sel_.value, rel = `textures/${slugName(slot.replace(/:/g, '-'))}-${slugName(fname.replace(/\.[a-z]+$/i, ''))}.jpg`;
+      try {
+        await putBinary(token, R, (R.dir ? R.dir + '/' : '') + rel, await blob.arrayBuffer(), `Acabamento: ${slot} (${H.meta.name})`);
+        const sp = { tex: rel, size: [+sw.toFixed(3), +sh.toFixed(3)], rough: +c.querySelector('#ed-rough').value, name: fname };
+        FIN[slot] = sp; ctx.applyFinish(slot, { ...sp, url: URL.createObjectURL(blob) });
+        dirty++; close(); refresh(); status('Acabamento aplicado — carregue em Guardar para ficar visível para todos');
+      } catch (ex) {
+        if (/401|403/.test(ex.message)) { token = null; ss.set('casa3d-token', ''); }
+        err.textContent = /403/.test(ex.message) ? 'A chave do GitHub não tem permissão de escrita.' : 'Erro ao enviar: ' + ex.message; b.disabled = false;
+      }
+    };
+  };
+
+
   function startEdit() {
     active = true; openBtn.hidden = true; bar.hidden = false;
     if (ctx.getMode() !== 'plan') ctx.setMode('plan');
@@ -3155,14 +3558,14 @@ const { HOUSE } = __m_house_data;
 const { makeMaterials } = __m_materials;
 const { buildHouse } = __m_build_house;
 const { buildSite, makeGround } = __m_build_site;
-const { buildFurniture } = __m_furniture;
+const { buildFurniture, modelsReady } = __m_furniture;
 const { buildVegetation } = __m_vegetation;
 const { PhotoMode } = __m_photo;
 const { sunDirection, SEASONS } = __m_sun;
 const { makeSky } = __m_sky;
 const { Walker } = __m_walk;
 const { roomLabels, findRoom, Measure, fmt } = __m_tools;
-const { pointInPoly, v3, rectPts } = __m_geom;
+const { pointInPoly, v3, rectPts, rotFwd } = __m_geom;
 const { initEditor } = __m_editor;
 // Casa de Valadares — visualizador 3D. Liga dados (house-data.js) → construtores → interface.
 
@@ -3367,7 +3770,7 @@ for (const p of H.pieces) if (p.z0 < 1.0) ring(p.pts);
 if (H.fin) ring(H.fin.pts);
 if (H.entrance) { const en = H.entrance; blockers.push([en.x, en.y0, en.x, en.door[0]], [en.x, en.door[1], en.x, en.y1]); }
 for (const gd of [].concat(H.garageDoor || [])) blockers.push(gd.o === 'h' ? [gd.x0, gd.y, gd.x1, gd.y] : [gd.x, gd.y0, gd.x, gd.y1]);
-for (const g of H.glass) if (g.sill > 0.3) blockers.push(g.o === 'h' ? [g.a, g.c, g.b, g.c] : [g.c, g.a, g.c, g.b]);
+for (const g of H.glass) if (g.sill > 0.3) blockers.push(g.rot ? [...rotFwd(g.rot, g.a, g.c), ...rotFwd(g.rot, g.b, g.c)] : g.o === 'h' ? [g.a, g.c, g.b, g.c] : [g.c, g.a, g.c, g.b]);
 if (H.pool) ring(rectPts(H.pool.water));
 { const s = H.site.outline; for (let i = 0; i < s.length; i++) { const a = s[i], b = s[(i + 1) % s.length]; blockers.push([a[0], a[1], b[0], b[1]]); } }
 const walkables = [house.floors, site.terrain, site.site];
@@ -3459,7 +3862,7 @@ renderer.domElement.addEventListener('pointerup', (e) => {
   if (!down || Math.hypot(e.clientX - down.x, e.clientY - down.y) > 6 || performance.now() - down.t > 600) return;
   const hit = pick(e); if (!hit) return;
   const D = hit.object.userData.door; // clicar numa porta abre-a ou fecha-a
-  if (D && !measuring && mode !== 'plan') { setDoor(D, D.target < 0.5); $('#t-doors').checked = doors.some((x) => x.target === 1); return; }
+  if (D && !measuring && mode !== 'plan') { setDoor(D, D.target < 0.5); $('#t-doors').checked = doors.some((x) => !x.d.ext && x.target === 1); return; }
   if (mode === 'walk' && e.pointerType === 'touch') return;
   if (measuring) {
     const res = measure.add(hit.point);
@@ -3512,6 +3915,49 @@ if (H.finishes) {
   $('#fin-close').addEventListener('click', () => { $('#fin').hidden = true; });
   $('#fin').addEventListener('click', (e) => { if (e.target.id === 'fin') $('#fin').hidden = true; });
 }
+// ---------------------------------------------------------------- acabamentos trocados no site (editor): pavimento e paredes de cada
+// compartimento, e materiais exteriores (fachada, terraços) — textura fotográfica em metros (size = [largura, altura] de uma repetição)
+const finishSlots = () => {
+  const out = [], keysIn = new Set(), keysExt = new Set();
+  scene.traverse((o) => { if (o.isMesh && o.userData.matKey) (o.userData.matKey.includes('@') ? keysIn : keysExt).add(o.userData.matKey); });
+  for (const r of H.rooms.filter((q) => !q.exterior)) {
+    const nm = r.short || r.name;
+    if ([...keysIn].some((k) => k.endsWith('@f' + r.id))) out.push({ id: `room:${r.id}:floor`, label: `${nm} — pavimento`, group: 'Interior' });
+    if ([...keysIn].some((k) => k.endsWith('@w' + r.id))) out.push({ id: `room:${r.id}:walls`, label: `${nm} — paredes`, group: 'Interior' });
+  }
+  const EXT = { eticsWhite: 'Fachada — reboco branco', etics: 'Fachada — reboco', xisto: 'Fachada — xisto', concrete: 'Fachada — betão', ripado: 'Ripado / caixilharia escura', stone: 'Pedra',
+    deckWood: 'Terraço — deck', limestonePave: 'Exterior — lajeado', pavement: 'Exterior — cubos/calçada', driveway: 'Acesso automóvel', concreteDeck: 'Terraço — betão', porcelain: 'Exterior — porcelânico', roofgravel: 'Cobertura — godo' };
+  for (const k of Object.keys(EXT)) if (keysExt.has(k)) out.push({ id: `mat:${k}`, label: EXT[k], group: 'Exterior' });
+  return out;
+};
+const finishKeys = (slot) => {
+  const [t, a, b] = slot.split(':'), ks = new Set();
+  scene.traverse((o) => { const k = o.isMesh && o.userData.matKey; if (!k) return;
+    if (t === 'mat' && k === a) ks.add(k);
+    if (t === 'room' && k.endsWith('@' + (b === 'floor' ? 'f' : 'w') + a)) ks.add(k); });
+  return ks;
+};
+const finishOrig = new Map(), texLoader = new THREE.TextureLoader();
+function applyFinish(slot, spec) {      // spec = {url, size: [w, h], rough} | null (repor o original)
+  const ks = finishKeys(slot);
+  let mat = null;
+  if (spec) {
+    const tex = texLoader.load(spec.url, () => { if (TEST) frame(); });
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    tex.repeat.set(1 / (spec.size?.[0] || 1), 1 / (spec.size?.[1] || spec.size?.[0] || 1));
+    mat = new THREE.MeshStandardMaterial({ map: tex, roughness: spec.rough ?? 0.6, metalness: 0, name: 'acabamento ' + slot });
+  }
+  scene.traverse((o) => {
+    if (!o.isMesh || !ks.has(o.userData.matKey)) return;
+    if (!finishOrig.has(o)) finishOrig.set(o, o.material);
+    o.material = mat || finishOrig.get(o);
+  });
+  if (TEST) frame();
+}
+
+// créditos de modelos 3D de terceiros (licenças CC-BY pedem atribuição): META.credits = [texto, …]
+const showCredits = (list) => { for (const c of list || []) { const p = document.createElement('p'); p.className = 'small muted credit'; p.style.margin = '6px 0 0'; p.textContent = c; $('#rigor-text').after(p); } };
+showCredits(H.meta.credits);
 if (H.meta.client) { $('#rigor-title').textContent = 'Acabamentos'; $('#rigor-text').textContent = 'Clique num compartimento para ver a área e os acabamentos previstos.'; }
 const FLOOR_NAMES = { ceramicFloor: 'Cerâmica', concreteDeck: 'Betão aparente', concrete_floor: 'Betão', oak: 'Soalho de carvalho', stone: 'Cerâmico tom pedra', slate: 'Lajeado escuro', porcelain: 'Porcelânico exterior', concrete: 'Betão afagado', water: 'Lâmina de água', gravel: 'Godo / jardim' };
 document.addEventListener('click', (e) => { if (e.target.closest('[data-close]')) { $('#roomcard').hidden = true; showHighlight(null); } });
@@ -3520,7 +3966,7 @@ document.addEventListener('click', (e) => { if (e.target.closest('[data-close]')
 for (const b of document.querySelectorAll('[data-setmode]')) b.addEventListener('click', () => setMode(b.dataset.setmode));
 for (const id of ['#t-roof', '#t-furn', '#t-labels', '#t-site', '#t-context', '#t-renders']) $(id).addEventListener('change', applyLayers);
 if (!doors.length) $('#t-doors').closest('label').hidden = true;
-$('#t-doors').addEventListener('change', (e) => { for (const D of doors) setDoor(D, e.target.checked); });
+$('#t-doors').addEventListener('change', (e) => { for (const D of doors) if (!D.d.ext) setDoor(D, e.target.checked); });   // a porta de entrada abre-se à parte (clique, E, aproximação)
 addEventListener('keydown', (e) => { if (mode === 'walk' && e.code === 'KeyE' && !['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) toggleNearestDoor(); });
 $('#t-shadows').addEventListener('change', (e) => { state.shadows = e.target.checked; applyLayers(); });
 $('#hour').addEventListener('input', (e) => { state.hour = +e.target.value; $('#hourval').textContent = hourText(state.hour); updateSun(); });
@@ -3584,9 +4030,10 @@ photo.portalSpecs = () => {
   for (const g of H.glass) {
     const len = g.b - g.a, h = g.head - g.sill, mid = (g.a + g.b) / 2, zc = (g.sill + g.head) / 2;
     // lado interior: o que cai dentro de um compartimento
-    const nA = g.o === 'h' ? [0, 1] : [1, 0];
+    let nA = g.o === 'h' ? [0, 1] : [1, 0];
+    let [tx, ty] = g.o === 'h' ? [mid, g.c] : [g.c, mid];
+    if (g.rot) { const a = (g.rot.ang * Math.PI) / 180; nA = [-Math.sin(a), Math.cos(a)]; [tx, ty] = rotFwd(g.rot, mid, g.c); }
     let n = nA;
-    const [tx, ty] = g.o === 'h' ? [mid, g.c] : [g.c, mid];
     if (!inside(tx + nA[0] * 0.4, ty + nA[1] * 0.4)) n = [-nA[0], -nA[1]];
     if (!inside(tx + n[0] * 0.4, ty + n[1] * 0.4)) continue;
     const off = 0.08, X = tx + n[0] * off, Y = ty + n[1] * off;
@@ -3730,8 +4177,8 @@ $('#loading').hidden = true;
 frame();
 // editor de mobiliário (layout.json para todos; #editar + palavra-passe para mover, rodar e alterar larguras)
 initEditor({ H, M, scene, renderer, furniture, baseZ, test: TEST, getCamera: () => camera, getMode: () => mode, setMode,
-  redraw: () => { if (TEST) frame(); }, showFurniture: () => { $('#t-furn').checked = true; $('#t-renders').checked = false; applyLayers(); } });
-window.__app = { doors, setDoor, updateDoors, V3: THREE.Vector3, RC: THREE.Raycaster, Box3: THREE.Box3, Quat: THREE.Quaternion, M4: THREE.Matrix4, ortho, frame, photo, startPhoto, stopPhoto, RENDERS, goToRender, markers, vegetation, scene, renderer, H, setMode, VIEWS, persp, orbit, walker, state, updateSun, measure };
+  redraw: () => { if (TEST) frame(); }, showCredits, applyFinish, finishSlots, showFurniture: () => { $('#t-furn').checked = true; $('#t-renders').checked = false; applyLayers(); } });
+window.__app = { modelsReady, applyFinish, finishSlots, doors, setDoor, updateDoors, V3: THREE.Vector3, RC: THREE.Raycaster, Box3: THREE.Box3, Quat: THREE.Quaternion, M4: THREE.Matrix4, ortho, frame, photo, startPhoto, stopPhoto, RENDERS, goToRender, markers, vegetation, scene, renderer, H, setMode, VIEWS, persp, orbit, walker, state, updateSun, measure };
 return {  };
 })();
 </script>
