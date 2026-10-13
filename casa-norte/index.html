@@ -2150,14 +2150,17 @@ function buildFurniture(H, M, baseZ) {
   const segs = [];
   // paredes + palheta + peitoris das janelas (uma bancada pode encostar-se sob uma janela)
   for (const poly of [...H.walls.map((w) => w.pts), ...(H.fin ? [H.fin.pts] : []), ...H.pieces.filter((q) => q.z0 < 0.5).map((q) => q.pts)]) for (let i = 0; i < poly.length; i++) { const a = poly[i], b = poly[(i + 1) % poly.length]; segs.push([a[0], a[1], b[0], b[1]]); }
-  for (const f of H.furniture) {
-    const make = K[f.kind]; if (!make) { console.warn('peça desconhecida', f.kind); continue; }
+  // uma peça por entrada de H.furniture; root.userData.rebuild(i) refaz uma peça (editor de mobiliário: mover, rodar, largura)
+  const one = (f, i) => {
+    const make = K[f.kind]; if (!make) { console.warn('peça desconhecida', f.kind); return null; }
     const g = new THREE.Group();
     // f.front = material das frentes/caixas lacadas (ex.: 'walnut' nos móveis de cozinha e roupeiros)
     const Mf = f.front && M[f.front] ? { ...M, lacquer: M[f.front], lacquerPlain: M[f.front] } : M;
     make(g, Mf, f.w, f.d, { ...f, paint: f.paint ? M[f.paint] : undefined });
     let x = f.x, y = f.y, rot = 0, face = f.face || 'S';
-    if (f.faceTo) {
+    if (f.rot != null) {             // rotação explícita (radianos, three.js) — gravada pelo editor; sem encosto automático
+      rot = f.rot;
+    } else if (f.faceTo) {
       const dx = f.faceTo[0] - x, dz = -(f.faceTo[1] - y);
       rot = Math.atan2(dx, dz);
     } else if (face === 'wall') {
@@ -2190,9 +2193,18 @@ function buildFurniture(H, M, baseZ) {
         }
       }
     }
-    g.userData = { kind: f.kind, name: f.name || f.kind, seat: ['chair', 'ropechair', 'stool', 'armchair', 'outchair', 'sofa', 'sofaL', 'patiosofa', 'lounger'].includes(f.kind), wallBacked: !!f.wallBacked || f.face === 'wall', target: f.target };
+    if (f.sx) g.scale.x = f.sx;      // largura das peças sem parâmetro w (cadeirões, sanitas…): escala em x local
+    g.userData = { kind: f.kind, name: f.name || f.kind, seat: ['chair', 'ropechair', 'stool', 'armchair', 'outchair', 'sofa', 'sofaL', 'patiosofa', 'lounger'].includes(f.kind), wallBacked: !!f.wallBacked || f.face === 'wall', target: f.target, index: i };
+    return g;
+  };
+  const slots = H.furniture.map((f, i) => { const g = one(f, i); if (g) root.add(g); return g; });
+  root.userData.rebuild = (i) => {
+    const old = slots[i], g = one(H.furniture[i], i); if (!g) return null;
+    if (old) root.remove(old);   // geometrias podem ser partilhadas entre peças: não se libertam aqui
     root.add(g);
-  }
+    slots[i] = g; return g;
+  };
+  root.userData.piece = (i) => slots[i];
   return root;
 }
 return { buildFurniture };
@@ -2818,6 +2830,291 @@ class Measure {
 return { fmt, roomLabels, findRoom, Measure };
 })();
 
+// ===== src/editor.js =====
+const __m_editor = (() => {
+
+// Editor de mobiliário protegido por palavra-passe: mover (arrastar), rodar e alterar a largura das peças, e guardar
+// a disposição no repositório GitHub do site (layout.json ao lado da página). Todos os visitantes carregam layout.json.
+//
+// Segurança: a chave de acesso ao GitHub (token "fine-grained" só com Contents: read/write no repositório do site) fica
+// cifrada em editor.json na raiz do repositório (AES-GCM, chave derivada da palavra-passe com PBKDF2-SHA256 310 000 iterações).
+// Sem a palavra-passe ninguém consegue guardar. O modo de edição só aparece com #editar no endereço.
+
+const ENC = new TextEncoder(), DEC = new TextDecoder();
+const b64 = (u8) => btoa(String.fromCharCode(...u8));
+const unb64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+const utf8b64 = (str) => { const u = ENC.encode(str); let s = ''; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode(...u.subarray(i, i + 0x8000)); return btoa(s); };
+async function keyFrom(pw, salt) {
+  const base = await crypto.subtle.importKey('raw', ENC.encode(pw), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({ name: 'PBKDF2', salt, iterations: 310000, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+}
+async function seal(pw, secret) {
+  const salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, await keyFrom(pw, salt), ENC.encode(secret)));
+  return { v: 1, kdf: 'PBKDF2-SHA256-310000', salt: b64(salt), iv: b64(iv), ct: b64(ct) };
+}
+async function unseal(pw, box) {
+  const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: unb64(box.iv) }, await keyFrom(pw, unb64(box.salt)), unb64(box.ct));
+  return DEC.decode(pt);
+}
+const ss = { get: (k) => { try { return sessionStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { sessionStorage.setItem(k, v); } catch { /* sem armazenamento */ } } };
+
+// ------------------------------------------------------------------ GitHub (API REST, CORS)
+function repoInfo(H) {
+  const cfg = (H.meta && H.meta.editor) || {};
+  const host = location.hostname, parts = location.pathname.split('/').filter(Boolean);
+  const owner = cfg.owner || (host.endsWith('.github.io') ? host.split('.')[0] : null);
+  const repo = cfg.repo || (host.endsWith('.github.io') ? parts[0] : null);
+  const dir = cfg.dir || (host.endsWith('.github.io') ? parts.slice(1).filter((p) => !p.includes('.')).join('/') : null);
+  return { owner, repo, dir, branch: cfg.branch || 'main' };
+}
+async function gh(token, method, url, body) {
+  const r = await fetch('https://api.github.com' + url, {
+    method, headers: { Authorization: 'Bearer ' + token, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', ...(body ? { 'Content-Type': 'application/json' } : {}) },
+    body: body ? JSON.stringify(body) : undefined, cache: 'no-store',
+  });
+  if (r.status === 404 && method === 'GET') return null;
+  if (!r.ok) { let m = ''; try { m = (await r.json()).message; } catch { /* */ } throw new Error(`GitHub ${r.status}${m ? ': ' + m : ''}`); }
+  return r.status === 204 ? {} : r.json();
+}
+async function putFile(token, R, path, text, message) {
+  const cur = await gh(token, 'GET', `/repos/${R.owner}/${R.repo}/contents/${path}?ref=${R.branch}`);
+  return gh(token, 'PUT', `/repos/${R.owner}/${R.repo}/contents/${path}`, { message, content: utf8b64(text), branch: R.branch, ...(cur && cur.sha ? { sha: cur.sha } : {}) });
+}
+
+// ------------------------------------------------------------------ disposição (layout.json)
+// chave estável por peça: nome (ou tipo) + nº de ocorrência — sobrevive a reordenações da configuração
+function keysOf(list) {
+  const seen = {};
+  return list.map((f) => { const n = f.name || f.kind; seen[n] = (seen[n] || 0) + 1; return `${n}#${seen[n]}`; });
+}
+
+function initEditor(ctx) {
+  const { H, furniture, baseZ, renderer } = ctx;
+  const R = repoInfo(H);
+  const KEYS = keysOf(H.furniture);
+  const ORIG = H.furniture.map((f) => JSON.parse(JSON.stringify(f)));
+  const touched = new Set();      // índices com disposição própria (carregada ou editada)
+  let dirty = 0;
+
+  const apply = (i, o) => {
+    const f = H.furniture[i];
+    if (o.x != null) f.x = o.x;
+    if (o.y != null) f.y = o.y;
+    if (o.rot != null) f.rot = o.rot;
+    if (o.w != null) f.w = o.w;
+    if (o.sx != null) f.sx = o.sx;
+    if ((o.x != null || o.y != null) && f.bowls) { f.basins = f.bowls.length; delete f.bowls; } // cubas desenhadas ficam na peça
+    touched.add(i);
+    furniture.userData.rebuild(i);
+  };
+  // todos os visitantes: aplicar a disposição guardada (se existir)
+  if ((!ctx.test || /layout/.test(location.search)) && /^https?:$/.test(location.protocol)) {
+    fetch(new URL('layout.json', location.href).href + '?v=' + Date.now(), { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((L) => {
+        if (!L || !L.items) return;
+        for (const [k, o] of Object.entries(L.items)) { const i = KEYS.indexOf(k); if (i >= 0) apply(i, o); }
+        ctx.redraw && ctx.redraw();
+      })
+      .catch(() => { /* sem disposição guardada */ });
+  }
+  if (!/editar/.test(location.hash + location.search) || !R.owner || !R.repo) return;
+
+  // ---------------------------------------------------------------- interface
+  const css = document.createElement('style');
+  css.textContent = `
+  .ed-btn{position:fixed;left:16px;bottom:16px;z-index:40;font:600 13px/1 system-ui,sans-serif;background:#1d2226;color:#fff;border:0;border-radius:999px;padding:11px 16px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+  .ed-modal{position:fixed;inset:0;z-index:60;background:rgba(10,12,14,.45);display:grid;place-items:center;padding:16px}
+  .ed-card{background:#fbfaf7;color:#1d2226;border-radius:12px;max-width:420px;width:100%;padding:22px;font:14px/1.45 system-ui,sans-serif;box-shadow:0 20px 50px rgba(0,0,0,.3)}
+  .ed-card h3{margin:0 0 6px;font-size:18px}.ed-card p{margin:0 0 12px;color:#4a5359}
+  .ed-card label{display:block;font-weight:600;font-size:12px;margin:10px 0 4px}
+  .ed-card input{width:100%;box-sizing:border-box;padding:10px 11px;border:1px solid #c9cfcc;border-radius:8px;font:14px system-ui,sans-serif;background:#fff;color:#1d2226}
+  .ed-row{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+  .ed-row button,.ed-bar button{font:600 13px/1 system-ui,sans-serif;border:0;border-radius:8px;padding:10px 13px;cursor:pointer;background:#e7e9e8;color:#1d2226}
+  .ed-row button.pri,.ed-bar button.pri{background:#2b50c8;color:#fff}
+  .ed-err{color:#b3261e;font-size:13px;min-height:18px;margin-top:8px}
+  .ed-bar{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;z-index:45;background:#fbfaf7;color:#1d2226;border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.28);padding:10px 12px;display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;font:13px/1.3 system-ui,sans-serif;max-width:calc(100vw - 32px)}
+  .ed-bar .nm{font-weight:700;min-width:120px}.ed-bar .muted{color:#5d666b}
+  .ed-bar .grp{display:flex;gap:4px;align-items:center}
+  .ed-bar input{width:62px;padding:8px 6px;border:1px solid #c9cfcc;border-radius:8px;font:13px system-ui,sans-serif;text-align:right}
+  .ed-bar button:disabled{opacity:.45;cursor:default}
+  @media (prefers-color-scheme: dark){.ed-card,.ed-bar{background:#1f2427;color:#e4e8e6}.ed-card p,.ed-bar .muted{color:#a7b0ad}.ed-row button,.ed-bar button{background:#333b40;color:#e4e8e6}.ed-card input,.ed-bar input{background:#15191c;color:#e4e8e6;border-color:#3b4449}}
+  `;
+  document.head.appendChild(css);
+  const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
+  const openBtn = el('button', 'ed-btn', 'Editar mobiliário'); document.body.appendChild(openBtn);
+
+  let token = ss.get('casa3d-token');
+  const modal = (inner) => { const m = el('div', 'ed-modal'); const c = el('div', 'ed-card', inner); m.appendChild(c); document.body.appendChild(m); return { m, c, close: () => m.remove() }; };
+
+  async function login() {
+    if (token) return startEdit();
+    const editorUrl = new URL('../'.repeat(Math.max(0, R.dir.split('/').filter(Boolean).length)) + 'editor.json', location.href).href;
+    let box = null;
+    try { const r = await fetch(editorUrl + '?v=' + Date.now(), { cache: 'no-store' }); if (r.ok) box = await r.json(); } catch { /* */ }
+    if (box && box.ct) {
+      const { c, close } = modal(`<h3>Editar mobiliário</h3><p>Introduza a palavra-passe de edição.</p>
+        <label>Palavra-passe</label><input type="password" id="ed-pw" autocomplete="current-password">
+        <div class="ed-err" id="ed-err"></div><div class="ed-row"><button id="ed-x">Cancelar</button><button class="pri" id="ed-ok">Entrar</button></div>`);
+      const go = async () => {
+        const b = c.querySelector('#ed-ok'); b.disabled = true; c.querySelector('#ed-err').textContent = 'A verificar…';
+        try { token = await unseal(c.querySelector('#ed-pw').value, box); ss.set('casa3d-token', token); close(); startEdit(); }
+        catch { c.querySelector('#ed-err').textContent = 'Palavra-passe errada.'; b.disabled = false; }
+      };
+      c.querySelector('#ed-ok').onclick = go; c.querySelector('#ed-pw').onkeydown = (e) => { if (e.key === 'Enter') go(); };
+      c.querySelector('#ed-x').onclick = close; c.querySelector('#ed-pw').focus();
+    } else {
+      const { c, close } = modal(`<h3>Configurar a edição</h3><p>Primeira vez: escolha a palavra-passe de edição e cole a chave de acesso do GitHub (token “fine-grained” só para o repositório <b>${R.repo}</b>, com permissão Contents: Read and write). A chave fica guardada cifrada com a palavra-passe.</p>
+        <label>Nova palavra-passe (mín. 10 caracteres)</label><input type="password" id="ed-p1" autocomplete="new-password">
+        <label>Repetir palavra-passe</label><input type="password" id="ed-p2" autocomplete="new-password">
+        <label>Chave do GitHub</label><input type="password" id="ed-tk" placeholder="github_pat_…" autocomplete="off">
+        <div class="ed-err" id="ed-err"></div><div class="ed-row"><button id="ed-x">Cancelar</button><button class="pri" id="ed-ok">Guardar configuração</button></div>`);
+      c.querySelector('#ed-x').onclick = close;
+      c.querySelector('#ed-ok').onclick = async () => {
+        const p1 = c.querySelector('#ed-p1').value, p2 = c.querySelector('#ed-p2').value, tk = c.querySelector('#ed-tk').value.trim(), err = c.querySelector('#ed-err'), b = c.querySelector('#ed-ok');
+        if (p1.length < 10) { err.textContent = 'A palavra-passe tem de ter pelo menos 10 caracteres.'; return; }
+        if (p1 !== p2) { err.textContent = 'As palavras-passe não coincidem.'; return; }
+        if (!tk) { err.textContent = 'Falta a chave do GitHub.'; return; }
+        b.disabled = true; err.textContent = 'A verificar a chave…';
+        try {
+          const rp = await gh(tk, 'GET', `/repos/${R.owner}/${R.repo}`);
+          if (!rp) throw new Error('a chave não dá acesso ao repositório ' + R.repo);
+          if (rp.permissions && !rp.permissions.push) throw new Error('a chave não tem permissão de escrita (Contents: Read and write)');
+          err.textContent = 'A guardar a configuração…';
+          await putFile(tk, R, 'editor.json', JSON.stringify(await seal(p1, tk), null, 1) + '\n', 'Editor de mobiliário: configuração (chave cifrada)');
+          token = tk; ss.set('casa3d-token', token); close(); startEdit();
+        } catch (e) { err.textContent = 'Não foi possível: ' + e.message; b.disabled = false; }
+      };
+    }
+  }
+  openBtn.onclick = login;
+
+  // ---------------------------------------------------------------- edição
+  let active = false, sel = -1, helper = null, drag = null;
+  const bar = el('div', 'ed-bar'); bar.hidden = true; document.body.appendChild(bar);
+  bar.innerHTML = `<span class="nm" id="ed-nm">Mobiliário</span>
+    <span class="grp"><span class="muted">Largura</span><button id="ed-wm" title="Reduzir 5 cm">−</button><input id="ed-w" inputmode="decimal"><span class="muted">m</span><button id="ed-wp" title="Aumentar 5 cm">+</button></span>
+    <span class="grp"><button id="ed-rl" title="Rodar 90° (esquerda)">↺ 90°</button><button id="ed-rr" title="Rodar 90° (direita)">↻ 90°</button><button id="ed-r15" title="Rodar 15°">↻ 15°</button></span>
+    <button id="ed-reset">Repor peça</button>
+    <span class="muted" id="ed-st"></span>
+    <button class="pri" id="ed-save">Guardar</button><button id="ed-exit">Sair</button>`;
+  const q = (s) => bar.querySelector(s);
+  const piece = (i) => furniture.userData.piece(i);
+  const baseWidth = (i) => {
+    const f = H.furniture[i]; if (f.w > 0) return null;
+    const g = piece(i); const r = g.rotation.y, sx = g.scale.x; g.rotation.y = 0; g.scale.x = 1; g.updateMatrixWorld(true);
+    const b = new THREE.Box3().setFromObject(g); g.rotation.y = r; g.scale.x = sx; g.updateMatrixWorld(true);
+    return Math.max(0.05, b.max.x - b.min.x);
+  };
+  const widthOf = (i) => { const f = H.furniture[i]; return f.w > 0 ? f.w : baseWidth(i) * (f.sx || 1); };
+  const status = (t) => { q('#ed-st').textContent = t != null ? t : (dirty ? `${dirty} alteraç${dirty === 1 ? 'ão' : 'ões'} por guardar` : 'Tudo guardado'); };
+  function refresh() {
+    const has = sel >= 0;
+    for (const id of ['#ed-wm', '#ed-wp', '#ed-w', '#ed-rl', '#ed-rr', '#ed-r15', '#ed-reset']) q(id).disabled = !has;
+    q('#ed-nm').textContent = has ? (H.furniture[sel].name || H.furniture[sel].kind) : 'Clique numa peça e arraste para mover';
+    q('#ed-w').value = has ? widthOf(sel).toFixed(2).replace('.', ',') : '';
+    q('#ed-save').disabled = !dirty;
+    if (helper) { ctx.scene.remove(helper); helper = null; }
+    if (has) { helper = new THREE.BoxHelper(piece(sel), 0x2b50c8); helper.material.depthTest = false; helper.renderOrder = 999; ctx.scene.add(helper); }
+    status(); ctx.redraw && ctx.redraw();
+  }
+  // grava o estado real da peça (posição e rotação já resolvidas pelo construtor) em H.furniture
+  const capture = (i) => { const g = piece(i), f = H.furniture[i]; f.x = +g.position.x.toFixed(3); f.y = +(-g.position.z).toFixed(3); f.rot = +g.rotation.y.toFixed(4); if (f.bowls) { f.basins = f.bowls.length; delete f.bowls; } };
+  const changed = (i) => { touched.add(i); dirty++; };
+  function setWidth(w) {
+    if (sel < 0 || !(w > 0.1)) return;
+    const f = H.furniture[sel]; capture(sel);
+    if (f.w > 0) f.w = +w.toFixed(3); else f.sx = +(w / baseWidth(sel)).toFixed(4);
+    furniture.userData.rebuild(sel); changed(sel); refresh();
+  }
+  function rotate(a) {
+    if (sel < 0) return; capture(sel);
+    const f = H.furniture[sel]; f.rot = +(f.rot + a).toFixed(4);
+    furniture.userData.rebuild(sel); changed(sel); refresh();
+  }
+  q('#ed-wm').onclick = () => setWidth(widthOf(sel) - 0.05);
+  q('#ed-wp').onclick = () => setWidth(widthOf(sel) + 0.05);
+  q('#ed-w').onchange = () => setWidth(parseFloat(q('#ed-w').value.replace(',', '.')));
+  q('#ed-rl').onclick = () => rotate(Math.PI / 2);
+  q('#ed-rr').onclick = () => rotate(-Math.PI / 2);
+  q('#ed-r15').onclick = () => rotate(-Math.PI / 12);
+  q('#ed-reset').onclick = () => { if (sel < 0) return; H.furniture[sel] = JSON.parse(JSON.stringify(ORIG[sel])); furniture.userData.rebuild(sel); touched.add(sel); changed(sel); refresh(); };
+  q('#ed-exit').onclick = () => {
+    if (dirty && !confirm('Há alterações por guardar. Sair mesmo assim? (ficam visíveis só até recarregar a página)')) return;
+    active = false; sel = -1; bar.hidden = true; openBtn.hidden = false; refresh();
+  };
+  q('#ed-save').onclick = async () => {
+    const b = q('#ed-save'); b.disabled = true; status('A guardar…');
+    const items = {};
+    for (const i of touched) {
+      const f = H.furniture[i], o = ORIG[i];
+      if (JSON.stringify(f) === JSON.stringify(o)) continue;          // peça reposta: sai da disposição
+      items[KEYS[i]] = { x: f.x, y: f.y, rot: f.rot, ...(f.w !== o.w ? { w: f.w } : {}), ...(f.sx ? { sx: f.sx } : {}) };
+    }
+    const doc = { version: 1, house: H.meta.slug, saved: new Date().toISOString(), items };
+    try {
+      await putFile(token, R, (R.dir ? R.dir + '/' : '') + 'layout.json', JSON.stringify(doc, null, 1) + '\n', `Mobiliário: ${H.meta.name} (${Object.keys(items).length} peças)`);
+      dirty = 0; status('Guardado — visível para todos dentro de 1 a 2 minutos'); q('#ed-save').disabled = true;
+    } catch (e) {
+      if (/401|403/.test(e.message)) { token = null; ss.set('casa3d-token', ''); }
+      status('Erro ao guardar: ' + e.message); b.disabled = false;
+    }
+  };
+  function startEdit() {
+    active = true; openBtn.hidden = true; bar.hidden = false;
+    if (ctx.getMode() !== 'plan') ctx.setMode('plan');
+    if (ctx.showFurniture) ctx.showFurniture();
+    refresh();
+  }
+
+  // arrastar: captura antes dos controlos de órbita/planta (fase de captura no contentor do canvas)
+  const host = renderer.domElement.parentElement || document.body;
+  const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), hit = new THREE.Vector3();
+  const setRay = (e) => { const r = renderer.domElement.getBoundingClientRect(); ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1); ray.setFromCamera(ndc, ctx.getCamera()); };
+  const pickPiece = (e) => {
+    setRay(e);
+    const hs = ray.intersectObject(furniture, true).filter((h) => h.object.visible);
+    for (const h of hs) { let o = h.object; while (o && o.parent !== furniture) o = o.parent; if (o && o.userData.index != null) return o.userData.index; }
+    return -1;
+  };
+  addEventListener('pointerdown', (e) => {
+    if (!active || e.button > 0 || (e.target.closest && e.target.closest('button, input, select, aside, .ed-bar, .ed-modal, #roomcard, #lightbox'))) return;
+    const i = pickPiece(e);
+    if (i < 0) return;                                   // fora das peças: a câmara continua a funcionar
+    e.stopPropagation(); e.preventDefault();
+    sel = i; const g = piece(i);
+    plane.constant = -g.position.y; setRay(e); ray.ray.intersectPlane(plane, hit);
+    drag = { i, dx: g.position.x - hit.x, dz: g.position.z - hit.z, moved: false, id: e.pointerId };
+    refresh();
+  }, true);
+  addEventListener('pointermove', (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    setRay(e); if (!ray.ray.intersectPlane(plane, hit)) return;
+    const g = piece(drag.i);
+    g.position.x = Math.round((hit.x + drag.dx) * 100) / 100; g.position.z = Math.round((hit.z + drag.dz) * 100) / 100;
+    const f = H.furniture[drag.i]; g.position.y = f.z ?? baseZ(g.position.x, -g.position.z);
+    drag.moved = true; if (helper) helper.update(); ctx.redraw && ctx.redraw();
+  });
+  addEventListener('pointerup', (e) => {     // fase de captura na janela: o clique não chega à selecção de compartimentos
+    if (!drag || e.pointerId !== drag.id) return;
+    e.stopPropagation();
+    if (drag.moved) { capture(drag.i); changed(drag.i); }
+    drag = null; refresh();
+  }, true);
+  addEventListener('keydown', (e) => {
+    if (!active || sel < 0 || /input|textarea/i.test(e.target.tagName)) return;
+    const step = e.shiftKey ? 0.2 : 0.05, g = piece(sel);
+    const mv = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] }[e.key];
+    if (mv) { g.position.x += mv[0]; g.position.z += mv[1]; capture(sel); changed(sel); refresh(); e.preventDefault(); }
+    else if (e.key === 'r' || e.key === 'R') rotate(e.shiftKey ? Math.PI / 2 : -Math.PI / 2);
+    else if (e.key === 'Escape') { sel = -1; refresh(); }
+  });
+  addEventListener('beforeunload', (e) => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
+}
+return { initEditor };
+})();
+
 // ===== src/main.js =====
 const __m_main = (() => {
 const { HOUSE } = __m_house_data;
@@ -2832,6 +3129,7 @@ const { makeSky } = __m_sky;
 const { Walker } = __m_walk;
 const { roomLabels, findRoom, Measure, fmt } = __m_tools;
 const { pointInPoly, v3, rectPts } = __m_geom;
+const { initEditor } = __m_editor;
 // Casa de Valadares — visualizador 3D. Liga dados (house-data.js) → construtores → interface.
 
 const H = HOUSE;
@@ -3396,6 +3694,9 @@ document.body.dataset.mode = mode;
 resize(); updateSun(); applyLayers();
 $('#loading').hidden = true;
 frame();
+// editor de mobiliário (layout.json para todos; #editar + palavra-passe para mover, rodar e alterar larguras)
+initEditor({ H, M, scene, renderer, furniture, baseZ, test: TEST, getCamera: () => camera, getMode: () => mode, setMode,
+  redraw: () => { if (TEST) frame(); }, showFurniture: () => { $('#t-furn').checked = true; $('#t-renders').checked = false; applyLayers(); } });
 window.__app = { doors, setDoor, updateDoors, V3: THREE.Vector3, RC: THREE.Raycaster, Box3: THREE.Box3, Quat: THREE.Quaternion, M4: THREE.Matrix4, ortho, frame, photo, startPhoto, stopPhoto, RENDERS, goToRender, markers, vegetation, scene, renderer, H, setMode, VIEWS, persp, orbit, walker, state, updateSun, measure };
 return {  };
 })();
