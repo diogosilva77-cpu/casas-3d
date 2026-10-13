@@ -1,0 +1,80 @@
+{
+ "version": 1,
+ "house": "casa-norte",
+ "saved": "2026-10-13T15:36:31.114Z",
+ "items": {
+  "Mesa de jantar#1": {
+   "x": 19.99,
+   "y": -8.16,
+   "rot": 0,
+   "w": 2
+  },
+  "Ilha#1": {
+   "x": 19.96,
+   "y": -9.9,
+   "rot": 1.5708,
+   "w": 0.9,
+   "d": 3
+  },
+  "Banco#1": {
+   "hidden": true
+  },
+  "Banco#2": {
+   "hidden": true
+  },
+  "Banco#3": {
+   "hidden": true
+  },
+  "Banco#4": {
+   "hidden": true
+  },
+  "Mesa de centro#1": {
+   "x": 19.98,
+   "y": -4.98,
+   "rot": 0,
+   "d": 0.7
+  },
+  "Tapete sala#1": {
+   "x": 20.05,
+   "y": -5.26,
+   "rot": 0
+  },
+  "Móvel TV#1": {
+   "x": 19.99,
+   "y": -3.53,
+   "rot": 0
+  },
+  "Sofá#1": {
+   "x": 20.06,
+   "y": -5.98,
+   "rot": 3.1416
+  },
+  "Mesa de apoio#1": {
+   "x": 21.81,
+   "y": -5.76,
+   "rot": 3.1416
+  },
+  "Cadeirão#1": {
+   "x": 18.05,
+   "y": -4.95,
+   "rot": 1.547
+  },
+  "Bancada sul#1": {
+   "x": 18.76,
+   "y": -11.5,
+   "rot": 3.1416,
+   "w": 8.4
+  },
+  "Mesa exterior#1": {
+   "x": 15.56,
+   "y": -6.69,
+   "rot": -1.5708,
+   "d": 0.8
+  },
+  "Consola do hall#1": {
+   "x": 23.48,
+   "y": -4.48,
+   "rot": 1.5708
+  }
+ }
+}
