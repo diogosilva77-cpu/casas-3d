@@ -289,6 +289,7 @@ body.photo .titleblock, body.photo .modes, body.photo #panel, body.photo #panel-
   <div id="loading">A construir o modelo…</div>
 </div>
 <script type="importmap">{"imports": {"three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/", "three/examples/jsm/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/", "three-gpu-pathtracer": "https://cdn.jsdelivr.net/npm/three-gpu-pathtracer@0.0.26/build/index.module.js", "three-mesh-bvh": "https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.9.15/build/index.module.js"}}</script>
+<script>window.CASA3D_TEX = "../texturas/";</script>
 <script type="module">
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
@@ -299,6 +300,7 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 
 // ===== src/house-data.js =====
 const __m_house_data = (() => {
@@ -307,9 +309,20 @@ const HOUSE = {"meta": {"units": "m", "axes": "X nascente, Y norte, Z altura; th
 return { HOUSE };
 })();
 
+// ===== src/texlib.js =====
+const __m_texlib = (() => {
+
+// GERADO por textures_src/write_js.py — não editar à mão.
+// Biblioteca de texturas fotográficas (Poly Haven, CC0): dimensão real de cada repetição (m).
+const TEXLIB = {"betao_tabua": [1.8, 1.8], "reboco_int": [3.2, 3.2], "reboco_ext": [2.23, 2.23], "madeira": [1.83, 1.83], "madeira_clara": [1.0, 1.0], "nogueira": [1.0, 1.0], "soalho": [2.0, 2.0], "deck": [2.4, 2.32], "microcimento": [2.5, 2.5], "porcelanico": [3.6, 3.6], "ceramico": [2.4, 2.4], "lajeado": [2.4, 2.4], "betao_liso": [2.4, 2.4], "relva": [2.0, 2.0], "terreno": [2.51, 2.51], "gravilha": [2.0, 2.0], "gravilha_clara": [2.0, 2.0], "asfalto": [2.1, 2.1], "cubos": [1.0, 1.0], "xisto": [2.5, 2.5], "linho": [0.27, 0.27]};
+// Céus HDRI (Poly Haven, CC0): u/elev = posição do sol na imagem; scale = valor linear de 1,0 no JPEG; irradiâncias (sol/céu) em unidades HDR.
+const SKIES = {"dia": {"src": "kloofendal_48d_partly_cloudy_puresky", "u": 0.595, "elev": 47.9, "scale": 16.0, "sunIrr": 3.197, "skyIrr": 1.661, "sunColor": [0.993, 1.0, 0.909]}, "tarde": {"src": "kloppenheim_06_puresky", "u": 0.613, "elev": 4.66, "scale": 8.0, "sunIrr": 0.002, "skyIrr": 2.71, "sunColor": [1.0, 0.212, 0.0]}};
+return { TEXLIB, SKIES };
+})();
+
 // ===== src/materials.js =====
 const __m_materials = (() => {
-
+const { TEXLIB } = __m_texlib;
 // Materiais PBR com texturas procedimentais (canvas) e normal maps derivados de mapas de altura.
 // Cores calibradas pelos renders do projecto (betão cofrado claro, RAL 7021, carvalho claro, taupe, microcimento).
 // Cada textura está em metros: `size` = dimensão real (m) de uma repetição; as UV das malhas estão em metros.
@@ -825,7 +838,112 @@ function makeMaterials() {
   for (const [k, m] of Object.entries(M)) m.name = k; // nomes por acabamento (úteis no .glb)
   return M;
 }
-return { makeMaterials };
+
+// ---------------------------------------------------------------- texturas fotográficas (biblioteca PBR, Poly Haven CC0)
+// Cada material do kit pode usar uma textura da biblioteca (app/textures/lib): cor (detalhe com média 0,5 — a cor final vem de
+// `color`, calibrada pelos renders/mapa de acabamentos), normal e ARM (R = oclusão, G = rugosidade). Os mapas procedimentais ficam
+// enquanto as fotografias carregam e se alguma falhar. Para mudar a cor de um material: PHOTO[k].color (ou HOUSE.meta.photoColors).
+const PHOTO = {
+  // paredes
+  concrete: { lib: 'betao_tabua', color: '#b7b4ae', n: 0.9, macro: 0.22 },
+  soffit: { lib: 'betao_tabua', color: '#b9b5ab', n: 0.7, macro: 0.15 },
+  etics: { lib: 'reboco_ext', color: '#2c3035', n: 0.6, macro: 0.12 },
+  eticsWhite: { lib: 'reboco_ext', color: '#eae6dd', n: 0.6, macro: 0.08 },
+  plaster: { lib: 'reboco_int', color: '#ecebe6', n: 0.5, macro: 0.05 },
+  paint_garage: { lib: 'reboco_int', color: '#e6e3dc', n: 0.5 },
+  ceiling: { lib: 'reboco_int', color: '#f5f4f1', n: 0.25 },
+  xisto: { lib: 'xisto', color: '#534c45', n: 1.3, macro: 0.15 },
+  tile: { lib: 'microcimento', color: '#d3cfc8', n: 0.5 },
+  // pavimentos
+  oak: { lib: 'soalho', color: '#d0baa0', n: 0.8 },
+  stone: { lib: 'microcimento', color: '#d2cdc6', n: 0.5 },
+  porcelain: { lib: 'porcelanico', color: '#cecbc5', n: 0.8 },
+  ceramicFloor: { lib: 'ceramico', color: '#cdc8c0', n: 0.6 },
+  slab: { lib: 'betao_liso', color: '#c6c3be', n: 0.6, macro: 0.12 },
+  concrete_floor: { lib: 'betao_liso', color: '#9c978f', n: 0.5, macro: 0.1 },
+  concreteDeck: { lib: 'betao_liso', color: '#b5b2ac', n: 0.6, macro: 0.15 },
+  limestonePave: { lib: 'lajeado', color: '#d8cdb8', n: 0.8, macro: 0.1 },
+  deckWood: { lib: 'deck', color: '#9a7656', n: 1.0, macro: 0.12 },
+  pavement: { lib: 'cubos', color: '#aba8a2', n: 1.2, macro: 0.15 },
+  asphalt: { lib: 'asfalto', color: '#4b4d50', n: 0.8, macro: 0.25 },
+  grass: { lib: 'relva', color: '#5b6f3c', n: 1.0, macro: 0.35 },
+  contextGround: { lib: 'terreno', color: '#4c5e32', n: 0.8, macro: 0.35 },
+  gravel: { lib: 'gravilha', color: '#3c3e40', n: 1.0, macro: 0.15 },
+  roofgravel: { lib: 'gravilha_clara', color: '#bcbab6', n: 1.0, macro: 0.15 },
+  // madeiras de mobiliário
+  woodLight: { lib: 'madeira_clara', color: '#c4a47f', n: 0.4 },
+  woodTeak: { lib: 'madeira', color: '#a87a52', n: 0.5 },
+  walnut: { lib: 'nogueira', color: '#7a5038', n: 0.5 },
+  // tecidos (trama real do linho; sheen mantém-se)
+  fabric: { lib: 'linho', color: '#a29a90', n: 1.0 },
+  fabricLight: { lib: 'linho', color: '#ddd8ce', n: 0.9 },
+  fabricDark: { lib: 'linho', color: '#8c857e', n: 1.0 },
+  linen: { lib: 'linho', color: '#e9e7e1', n: 0.9 },
+  knit: { lib: 'linho', color: '#d5cdbe', n: 2.0 },
+  towel: { lib: 'linho', color: '#e1ddd3', n: 2.5 },
+  blackout: { lib: 'linho', color: '#34373b', n: 1.2 },
+};
+
+// ruído de baixa frequência (variação de tom em grande escala: quebra a repetição visível das texturas em paredes e relvados)
+let macroTex = null;
+function macroNoise() {
+  if (macroTex) return macroTex;
+  const n = 256; const [c, x] = canvas(n); x.fillStyle = '#808080'; x.fillRect(0, 0, n, n);
+  cloudLayer(x, n, 91, 70, 2);
+  macroTex = new THREE.CanvasTexture(c); macroTex.wrapS = macroTex.wrapT = THREE.RepeatWrapping; macroTex.colorSpace = THREE.NoColorSpace;
+  return macroTex;
+}
+function addMacro(m, k) {
+  const mt = macroNoise();
+  m.onBeforeCompile = (sh) => {
+    sh.uniforms.macroMap = { value: mt }; sh.uniforms.macroK = { value: k };
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vMacroW;')
+      .replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\nvMacroW = (modelMatrix * vec4(transformed, 1.0)).xyz;');
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform sampler2D macroMap; uniform float macroK; varying vec3 vMacroW;')
+      .replace('#include <map_fragment>', `#include <map_fragment>
+        { vec3 w = vMacroW * 0.055;
+          float mv = (texture2D(macroMap, w.xz).r + texture2D(macroMap, w.xy + 0.37).r + texture2D(macroMap, w.zy + 0.71).r) / 3.0
+                   + (texture2D(macroMap, w.xz * 3.7 + 0.13).r - 0.5) * 0.35;
+          diffuseColor.rgb *= 1.0 + (mv - 0.5) * 2.0 * macroK; }`);
+  };
+  m.customProgramCacheKey = () => 'macro' + k;
+}
+
+/** Substitui os mapas procedimentais pelos fotográficos nos materiais usados. base = pasta da biblioteca ('textures/lib/').
+ *  Devolve uma Promise que resolve quando todas as imagens carregaram (ou falharam). */
+function upgradeMaterials(M, { base = 'textures/lib/', used = null, anisotropy = 8, colors = {} } = {}) {
+  const loader = new THREE.TextureLoader();
+  const cache = new Map();
+  const load = (lib, kind) => {
+    const key = lib + kind;
+    if (!cache.has(key)) {
+      const [sw, sh] = TEXLIB[lib];
+      cache.set(key, new Promise((res) => loader.load(`${base}${lib}_${kind}.jpg`, (t) => {
+        t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = anisotropy;
+        t.colorSpace = kind === 'c' ? THREE.SRGBColorSpace : THREE.NoColorSpace;
+        t.repeat.set(1 / sw, 1 / sh); res(t);
+      }, undefined, () => res(null))));
+    }
+    return cache.get(key);
+  };
+  const jobs = [];
+  for (const [k, p] of Object.entries(PHOTO)) {
+    const m = M[k];
+    if (!m || !TEXLIB[p.lib] || (used && !used.has(k))) continue;
+    jobs.push(Promise.all([load(p.lib, 'c'), load(p.lib, 'n'), load(p.lib, 'r')]).then(([c, n, r]) => {
+      if (!c) return;
+      m.map = c;
+      m.color = new THREE.Color(colors[k] || p.color).multiplyScalar(2);      // detalhe com média 0,5 → cor pretendida
+      if (n) { m.normalMap = n; m.normalScale = new THREE.Vector2(p.n, p.n); }
+      if (r) { m.roughnessMap = r; m.aoMap = r; m.aoMapIntensity = 1; m.roughness = p.rough ?? 1; }
+      if (p.macro) addMacro(m, p.macro);
+      m.userData.photo = p.lib;
+      m.needsUpdate = true;
+    }));
+  }
+  return Promise.allSettled(jobs);
+}
+return { makeMaterials, PHOTO, upgradeMaterials };
 })();
 
 // ===== src/geom.js =====
@@ -2748,8 +2866,8 @@ function skyTexture(lib, skyKit) {
 }
 
 class PhotoMode {
-  constructor({ renderer, scene, M, skyKit, hide, onStatus }) {
-    Object.assign(this, { renderer, scene, M, skyKit, hide, onStatus });
+  constructor({ renderer, scene, M, skyKit, hide, onStatus, hdrSky }) {
+    Object.assign(this, { renderer, scene, M, skyKit, hide, onStatus, hdrSky });
     this.active = false; this.pt = null; this.maxSamples = 700;
   }
   async start(camera) {
@@ -2770,8 +2888,11 @@ class PhotoMode {
     patch(M.water, { transmission: 1, thickness: 0.6, opacity: 1, transparent: false, attenuationColor: new THREE.Color(0x3f8f98), attenuationDistance: 2.2, color: new THREE.Color(0xffffff) });
     this.interiorEnv = [];
     for (const m of Object.values(M)) if (m.envMap) { this.interiorEnv.push([m, m.envMap]); m.envMap = null; m.needsUpdate = true; }
-    const sky = skyTexture(L, this.skyKit);
-    scene.background = sky; scene.environment = sky; scene.environmentIntensity = 0.85; scene.backgroundIntensity = 1;
+    const sky = (this.hdrSky && this.hdrSky()) || skyTexture(L, this.skyKit);   // céu HDRI fotográfico (rodado e já com a intensidade)
+    const hdr = !sky.isProceduralEquirectTexture && sky.isDataTexture;
+    this.savedRot = [scene.backgroundRotation.clone(), scene.environmentRotation.clone()];
+    if (hdr) { scene.backgroundRotation.set(0, 0, 0); scene.environmentRotation.set(0, 0, 0); }   // a rotação já está na textura
+    scene.background = sky; scene.environment = sky; scene.environmentIntensity = hdr ? 1 : 0.85; scene.backgroundIntensity = 1;
     this.sky = sky;
     // "portais" de luz: luzes rectangulares invisíveis junto a cada vão envidraçado e clarabóia, viradas para dentro.
     // Aproximam a luz do céu que entra pelos vãos e fazem a imagem interior convergir muito mais depressa.
@@ -2871,6 +2992,7 @@ class PhotoMode {
     if (this.pt) { this.pt.pausePathTracing = false; this.pt.reset(); }
     if (saved) {
       scene.background = saved.background; scene.environment = saved.environment; scene.environmentIntensity = saved.envI; scene.backgroundIntensity = saved.bgI;
+      if (this.savedRot) { scene.backgroundRotation.copy(this.savedRot[0]); scene.environmentRotation.copy(this.savedRot[1]); }
       for (const [o, v] of saved.mats) o.visible = v;
       for (const k of ['glass', 'skyglass', 'water', 'led']) if (saved[k]) { Object.assign(M[k], saved[k]); M[k].needsUpdate = true; }
       if (this.baseExposure !== undefined) this.renderer.toneMappingExposure = this.baseExposure;
@@ -3529,10 +3651,202 @@ function initEditor(ctx) {
 return { initEditor };
 })();
 
+// ===== src/probes.js =====
+const __m_probes = (() => {
+const { pointInPoly } = __m_geom;
+// Luz interior por compartimento ("light probes"): em cada compartimento interior uma câmara cúbica fotografa a cena real
+// (sol que entra pelos vãos, céu visto pelas janelas, paredes, pavimento e mobiliário já iluminados) e essa imagem passa a ser o
+// ambiente (IBL) das superfícies e peças desse compartimento. Duas passagens ≈ dois ressaltos de luz.
+// Substitui o ambiente "de interior" genérico: a luz reflectida tem a cor e a direcção reais (soalho quente, janela a sul…).
+
+// ponto interior "mais afastado das paredes" (compartimentos em L: o centróide pode cair fora)
+function interiorPoint(poly) {
+  const xs = poly.map((p) => p[0]), ys = poly.map((p) => p[1]);
+  const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+  const segD = (x, y) => {
+    let d = Infinity;
+    for (let i = 0; i < poly.length; i++) {
+      const [ax, ay] = poly[i], [bx, by] = poly[(i + 1) % poly.length], dx = bx - ax, dy = by - ay;
+      const t = Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / (dx * dx + dy * dy || 1)));
+      d = Math.min(d, Math.hypot(x - ax - t * dx, y - ay - t * dy));
+    }
+    return d;
+  };
+  let best = [(x0 + x1) / 2, (y0 + y1) / 2], bd = -1;
+  for (let i = 1; i < 16; i++) for (let j = 1; j < 16; j++) {
+    const x = x0 + ((x1 - x0) * i) / 16, y = y0 + ((y1 - y0) * j) / 16;
+    if (!pointInPoly(x, y, poly)) continue;
+    const d = segD(x, y); if (d > bd) { bd = d; best = [x, y]; }
+  }
+  return best;
+}
+
+class RoomProbes {
+  constructor({ renderer, scene, H, baseZ, groups, res = 128 }) {
+    Object.assign(this, { renderer, scene, H, groups });
+    this.pmrem = new THREE.PMREMGenerator(renderer);
+    this.rooms = H.rooms.filter((r) => !r.exterior && r.poly && r.poly.length > 2).map((r) => {
+      const p = interiorPoint(r.poly);
+      const rt = new THREE.WebGLCubeRenderTarget(res, { type: THREE.HalfFloatType });
+      const cam = new THREE.CubeCamera(0.05, 300, rt);
+      cam.position.set(p[0], baseZ(p[0], p[1]) + 1.35, -p[1]);
+      return { r, p, rt, cam, env: null, mats: new Map() };
+    });
+    this.byId = new Map(this.rooms.map((q) => [String(q.r.id), q]));
+    this.meshes = new Map();       // mesh → compartimento
+    this.ready = false;
+  }
+  roomAt(x, y) { return this.rooms.find((q) => pointInPoly(x, y, q.r.poly)) || null; }
+  // atribui cada malha interior a um compartimento (chave @f<id>/@w<id> das faces de compartimento; senão o centro da peça)
+  classify() {
+    const box = new THREE.Box3(), c = new THREE.Vector3();
+    for (const g of this.groups) g.traverse((o) => {
+      if (!o.isMesh || this.meshes.has(o)) return;
+      const ms = [].concat(o.material);
+      if (!ms.every((m) => m && m.isMeshStandardMaterial && !m.transparent)) return;
+      const k = o.userData.matKey, m = k && k.match(/@[fw](\d+)$/);
+      let q = m ? this.byId.get(m[1]) : o.userData.room != null ? this.byId.get(String(o.userData.room)) : null;
+      if (!q && !m && o.userData.room == null) {
+        // peças sem chave de compartimento: só se a caixa inteira (em planta) estiver dentro de um compartimento —
+        // paredes, palas e faces exteriores ficam com o céu
+        box.setFromObject(o); box.getCenter(c);
+        if (c.y < -0.6 || box.max.y > 3.05) return;
+        q = this.roomAt(c.x, -c.z);
+        const e = 0.02;
+        if (q && ![[box.min.x + e, box.min.z + e], [box.max.x - e, box.min.z + e], [box.min.x + e, box.max.z - e], [box.max.x - e, box.max.z - e]]
+          .every(([x, z]) => pointInPoly(x, -z, q.r.poly))) q = null;
+      }
+      if (!q) return;
+      this.meshes.set(o, q);
+      o.material = Array.isArray(o.material) ? o.material.map((mm) => this.cloneFor(mm, q)) : this.cloneFor(o.material, q);
+    });
+  }
+  cloneFor(m, q) {
+    if (m.userData.probeRoom !== undefined) return m;
+    let c = q.mats.get(m);
+    if (!c) {
+      c = m.clone();
+      c.onBeforeCompile = m.onBeforeCompile; c.customProgramCacheKey = m.customProgramCacheKey;
+      c.userData = { ...m.userData, probeRoom: q.r.id, probeSrc: m };
+      if (q.env) { c.envMap = q.env.texture; c.envMapIntensity = 1; }
+      q.mats.set(m, c);
+    }
+    return c;
+  }
+  /** material novo numa peça já atribuída (ex.: acabamento escolhido no editor): passa a receber a luz do compartimento */
+  adopt(mat, roomId) {
+    const q = this.byId.get(String(roomId)); if (!q || !mat || !mat.isMeshStandardMaterial) return;
+    mat.userData.probeRoom = q.r.id; q.mats.set(mat, mat);
+    if (q.env) { mat.envMap = q.env.texture; mat.envMapIntensity = 1; mat.needsUpdate = true; }
+  }
+  /** fotografa os compartimentos (passes = ressaltos). prepare/restore: o main garante cobertura visível e sombra do lote inteiro. */
+  update({ passes = 2, prepare, restore } = {}) {
+    if (!this.rooms.length) return;
+    this.classify();
+    prepare && prepare();
+    for (let pass = 0; pass < passes; pass++) {
+      const next = [];
+      for (const q of this.rooms) { q.cam.update(this.renderer, this.scene); next.push(this.pmrem.fromCubemap(q.rt.texture)); }
+      this.rooms.forEach((q, i) => {
+        if (q.env) q.env.dispose();
+        q.env = next[i];
+        for (const c of q.mats.values()) { c.envMap = q.env.texture; c.envMapIntensity = 1; c.needsUpdate = true; }
+      });
+    }
+    restore && restore();
+    this.ready = true;
+  }
+}
+return { RoomProbes };
+})();
+
+// ===== src/details.js =====
+const __m_details = (() => {
+const { pointInPoly } = __m_geom;
+// Pormenores que dão escala e realismo ao interior.
+// Rodapé: ao longo das faces interiores de cada compartimento seco (não nas instalações sanitárias), só onde há parede atrás
+// (os vãos de portas, envidraçados de piso e aberturas ficam livres automaticamente). Lacado branco 70 × 12 mm.
+
+const WET = /\b(i\.?\s?s\.?|wc|banho|lavand|duche)\b/i;
+
+const DRY = ['oak', 'ceramicFloor', 'stone', 'marble', 'concrete_floor'];
+const OUT = /p[aá]tio|terra[cç]|varand|garag|alpend|logradour|alpendre|churrasq/i;
+
+function buildSkirting(H, M, baseZ, { h = 0.07, t = 0.012, mat = 'doorWhite', furniture = null, walls = null } = {}) {
+  const g = new THREE.Group(); g.name = 'rodape';
+  const solids = [...H.walls.map((w) => w.pts), ...(H.pieces || []).filter((p) => p.z0 <= 0.02 && p.z1 > 0.3).map((p) => p.pts)];
+  const wallAt = (x, y) => solids.some((p) => pointInPoly(x, y, p));
+  // móveis assentes no chão encostados à parede (cozinha, roupeiros, estantes): sem rodapé por trás
+  const boxes = [];
+  if (furniture) { const b = new THREE.Box3(); furniture.updateMatrixWorld(true);
+    for (const c of furniture.children) { b.setFromObject(c); if (!b.isEmpty() && b.min.y < 0.15 && b.max.y - b.min.y > 0.3) boxes.push([b.min.x, b.max.x, -b.max.z, -b.min.z]); } }
+  const rc = new THREE.Raycaster();
+  if (walls) for (const w of walls) w.updateMatrixWorld(true);
+  const furnAt = (x, y) => boxes.some(([x0, x1, y0, y1]) => x > x0 && x < x1 && y > y0 && y < y1);
+  for (const r of H.rooms) {
+    const geos = [];
+    if (r.exterior || !r.poly || WET.test(r.name) || OUT.test(r.name) || !DRY.includes(r.floor) || r.wet) continue;
+    const P = r.poly; let A = 0;
+    for (let i = 0; i < P.length; i++) { const [x0, y0] = P[i], [x1, y1] = P[(i + 1) % P.length]; A += x0 * y1 - x1 * y0; }
+    const sgn = A > 0 ? 1 : -1;                                 // anti-horário: o exterior fica à direita do sentido do contorno
+    for (let i = 0; i < P.length; i++) {
+      const [ax, ay] = P[i], [bx, by] = P[(i + 1) % P.length];
+      const L = Math.hypot(bx - ax, by - ay); if (L < 0.08) continue;
+      const ux = (bx - ax) / L, uy = (by - ay) / L, nx = uy * sgn, ny = -ux * sgn;    // n = para dentro da parede
+      // troços com parede atrás (amostras de 2 cm, 4 cm para dentro da parede)
+      const step = 0.02, n = Math.floor(L / step); let s0 = null;
+      const flush = (s1) => {
+        if (s0 === null) return;
+        const a = s0 + (s0 === 0 ? t : 0), b = s1;             // primeira peça encurtada no canto (sem sobreposição)
+        if (b - a > 0.05) {
+          // face real da parede (o contorno do compartimento pode estar a alguns mm dela): procura ao longo da normal
+          const mx = ax + ux * (a + (b - a) / 2), my = ay + uy * (a + (b - a) / 2);
+          let wf = 0; for (let k = -0.03; k <= 0.06; k += 0.002) if (wallAt(mx + nx * k, my + ny * k)) { wf = k; break; }
+          if (walls) {   // a face desenhada manda (revestimentos podem estar afastados do contorno da parede)
+            const z0 = baseZ(mx - nx * 0.2, my - ny * 0.2);
+            rc.set(new THREE.Vector3(mx - nx * 0.15, z0 + 0.035, -(my - ny * 0.15)), new THREE.Vector3(nx, 0, -ny)); rc.far = 0.4;
+            const hit = rc.intersectObjects(walls, true)[0];
+            if (hit) wf = hit.distance - 0.15;
+          }
+          const len = b - a, off = wf - (t / 2 - 0.001), cx = ax + ux * (a + len / 2) + nx * off, cy = ay + uy * (a + len / 2) + ny * off;
+          const z = baseZ(cx - nx * 0.2, cy - ny * 0.2);
+          const geo = new THREE.BoxGeometry(len, h, t);
+          geo.rotateY(Math.atan2(uy, ux));                     // x local ao longo da parede (planta: y → −z no three)
+          geo.translate(cx, z + 0.001 + h / 2, -cy);
+          geos.push(geo);
+        }
+        s0 = null;
+      };
+      for (let k = 0; k <= n; k++) {
+        const s = Math.min(L, k * step), px = ax + ux * s + nx * 0.04, py = ay + uy * s + ny * 0.04;
+        const free = wallAt(px, py) && !furnAt(ax + ux * s - nx * 0.03, ay + uy * s - ny * 0.03);
+        if (free) { if (s0 === null) s0 = s; } else flush(s);
+      }
+      flush(L);
+    }
+    if (!geos.length) continue;
+    // uma só malha (mesmo material): leve para o GPU
+    const pos = [], nor = [], uv = [], idx = []; let off = 0;
+    for (const geo of geos) {
+      const gi = geo.index.array, gp = geo.attributes.position.array, gn = geo.attributes.normal.array, gu = geo.attributes.uv.array;
+      pos.push(...gp); nor.push(...gn); uv.push(...gu); for (const v of gi) idx.push(v + off); off += gp.length / 3; geo.dispose();
+    }
+    const bg = new THREE.BufferGeometry();
+    bg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); bg.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+    bg.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); bg.setIndex(idx);
+    const m = new THREE.Mesh(bg, M[mat] || M.white); m.name = 'rodapé'; m.castShadow = false; m.receiveShadow = true;
+    m.userData.room = r.id; g.add(m);
+  }
+  return g;
+}
+return { buildSkirting };
+})();
+
 // ===== src/main.js =====
 const __m_main = (() => {
 const { HOUSE } = __m_house_data;
-const { makeMaterials } = __m_materials;
+const { makeMaterials, upgradeMaterials } = __m_materials;
+const { SKIES } = __m_texlib;
 const { buildHouse } = __m_build_house;
 const { buildSite, makeGround } = __m_build_site;
 const { buildFurniture, modelsReady } = __m_furniture;
@@ -3544,6 +3858,8 @@ const { Walker } = __m_walk;
 const { roomLabels, findRoom, Measure, fmt } = __m_tools;
 const { pointInPoly, v3, rectPts, rotFwd } = __m_geom;
 const { initEditor } = __m_editor;
+const { RoomProbes } = __m_probes;
+const { buildSkirting } = __m_details;
 // Casa de Valadares — visualizador 3D. Liga dados (house-data.js) → construtores → interface.
 
 const H = HOUSE;
@@ -3569,8 +3885,10 @@ const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'hi
 const pixelRatioFor = (hd) => (mobile ? Math.min(devicePixelRatio, hd ? 1.5 : 1.25) : hd ? Math.min(2, Math.max(1.5, devicePixelRatio)) : Math.min(devicePixelRatio, 1.25));
 renderer.setPixelRatio(TEST ? 1 : pixelRatioFor(!mobile));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 0.74;
+// AgX: transição suave para o branco nas altas luzes (céu, paredes ao sol) sem a saturação exagerada do ACES
+const LOOK = Object.assign({ tone: 'agx', exposure: 1.05, skyFill: 0.42, skyBg: 1.2, interiorEV: 0.6, probes: true, contrast: 1.08, saturation: 1.05, vignette: 0.15 }, H.meta.look || {});
+renderer.toneMapping = LOOK.tone === 'aces' ? THREE.ACESFilmicToneMapping : LOOK.tone === 'neutral' ? THREE.NeutralToneMapping : THREE.AgXToneMapping;
+renderer.toneMappingExposure = LOOK.exposure;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFShadowMap;
 host.appendChild(renderer.domElement);
@@ -3580,6 +3898,9 @@ host.appendChild(labelRenderer.domElement);
 
 const scene = new THREE.Scene();
 const M = makeMaterials();
+// vidro físico em tempo real (computador): transmissão + reflexo de Fresnel do céu, em vez de transparência simples
+// (a transparência multiplicava também o reflexo pela opacidade → vidros negros vistos de fora)
+if (!mobile || TESTFX) Object.assign(M.glass, { transmission: 1, opacity: 1, transparent: false, depthWrite: true, roughness: 0, thickness: 0, ior: 1.52, color: new THREE.Color(0xf2f6f5) });
 { // anisotropia máxima do GPU: pavimentos e paredes nítidos em ângulos rasantes
   const an = renderer.capabilities.getMaxAnisotropy();
   for (const m of Object.values(M)) for (const k of ['map', 'normalMap', 'roughnessMap']) if (m && m[k]) { m[k].anisotropy = an; m[k].needsUpdate = true; }
@@ -3605,13 +3926,48 @@ let envRT = null;
 const roomRT = pmrem.fromScene(skyKit.roomScene, 0.06, 0.1, 100); // luz reflectida no interior (quente)
 
 const state = { season: 'verao', hour: 16, shadows: true, fx: true, hd: !mobile && !TEST };
+// ---------------------------------------------------------------- céus HDRI fotográficos (Poly Haven, CC0)
+// Um céu de dia (sol alto) e um de fim de tarde (sol baixo); rodados para que o sol da imagem coincida com o sol calculado
+// (DirectionalLight, que dá as sombras). O disco solar foi retirado das imagens; a luz do céu vem do ambiente (IBL).
+const TEXBASE = window.CASA3D_TEX || 'textures/';
+const skyHDR = { tex: {}, pm: {}, key: null };
+const skyReady = Promise.all(Object.keys(SKIES).map((k) => new Promise((res) => new THREE.TextureLoader().load(`${TEXBASE}ceu/ceu_${k}.jpg`, (t) => {
+  t.mapping = THREE.EquirectangularReflectionMapping; t.colorSpace = THREE.SRGBColorSpace;
+  skyHDR.tex[k] = t;
+  // ambiente (IBL) a partir de uma cópia 1024×512: o PMREM fica igual e é muito mais rápido (telemóveis)
+  const c = document.createElement('canvas'); c.width = 1024; c.height = 512; c.getContext('2d').drawImage(t.image, 0, 0, 1024, 512);
+  const e = new THREE.CanvasTexture(c); e.mapping = THREE.EquirectangularReflectionMapping; e.colorSpace = THREE.SRGBColorSpace;
+  skyHDR.pm[k] = pmrem.fromEquirectangular(e); e.dispose(); res();
+}, undefined, () => res())))).then(() => { if (Object.keys(skyHDR.tex).length) { updateSun(); applySkyBackground(); } if (TEST) frame(); });
+function applySkyBackground() {
+  const t = skyHDR.key && skyHDR.tex[skyHDR.key];
+  sky.visible = mode !== 'plan' && !t;
+  if (mode !== 'plan') scene.background = t || null;
+}
+function applySkyHDR(s) {
+  const key = s.elevation >= 14 ? 'dia' : 'tarde';
+  if (!skyHDR.pm[key]) return false;
+  const k = SKIES[key];
+  // rotação em Y: o sol da imagem (u → ângulo atan2(z, x) no referencial do three) passa para o azimute do sol calculado
+  const angImg = (k.u - 0.5) * 2 * Math.PI, angSun = Math.atan2(s.dir.z, s.dir.x);
+  const rot = angImg - angSun;
+  scene.backgroundRotation.set(0, rot, 0); scene.environmentRotation.set(0, rot, 0);
+  // luz do céu (irradiância num plano horizontal) proporcional ao sol, com um mínimo para o sol baixo/nublado
+  const E = Math.max(0.45, sun.intensity * LOOK.skyFill + (key === 'tarde' ? 0.35 : 0));
+  const unit = k.skyIrr / k.scale;                      // irradiância do JPEG com intensidade 1
+  scene.environment = skyHDR.pm[key].texture;
+  scene.environmentIntensity = E / unit / Math.PI;
+  scene.backgroundIntensity = scene.environmentIntensity * LOOK.skyBg;
+  skyHDR.key = key;
+  return true;
+}
 const INTERIOR_MATS = ['plaster', 'ceiling', 'oak', 'tile', 'stone', 'lacquer', 'lacquerPlain', 'fluted', 'white', 'ceramic', 'marble', 'fabric', 'fabricLight', 'fabricDark', 'linen', 'rug', 'woodLight', 'darkCab', 'paint_garage', 'concrete_floor', 'steel', 'mirror', 'blackMetal', 'art', 'knit', 'towel', 'woodTeak', 'book1', 'book2', 'book3', 'book4', 'paper', 'ceramicDark', 'stem', 'ceramicPot', 'blackGlass', 'ceramicFloor', 'granite', 'resin', 'doorWhite'].filter((k) => M[k] && M[k].isMeshStandardMaterial);
 const sunDir = new THREE.Vector3(0, 1, 0);
-let shadowKey = '';
+let shadowKey = '', wideShadow = false;
 // sombras nítidas: o volume de sombra acompanha o ponto observado (raio ~ distância), alinhado à grelha de texels
 // para não "nadar" ao mover a câmara; em vistas afastadas cobre o lote inteiro.
 function fitShadow() {
-  const c = mode === 'walk' ? persp.position : mode === '3d' ? orbit.target : null;
+  const c = wideShadow ? null : mode === 'walk' ? persp.position : mode === '3d' ? orbit.target : null;
   let r = SHADOW_R0, cx = BB.cx, cz = -BB.cy;
   if (c) {
     const dist = mode === 'walk' ? 6 : persp.position.distanceTo(orbit.target);
@@ -3639,13 +3995,16 @@ function updateSun() {
   sun.intensity = s.elevation > 0 ? 0.8 + 3.9 * low : 0;
   sun.color.setHSL(0.09, 0.6 - 0.45 * low, 0.62 + 0.3 * low);
   hemi.intensity = 0.06 + 0.1 * Math.max(0, Math.min(1, s.elevation / 40));
-  if (envRT) envRT.dispose();
-  envRT = pmrem.fromScene(skyKit.envScene, 0.04, 0.1, 100);
-  scene.environment = envRT.texture;
-  scene.environmentIntensity = 0.3 + 0.12 * low;
+  if (!applySkyHDR(s)) {               // enquanto os céus fotográficos carregam (ou se falharem): céu procedimental
+    if (envRT) envRT.dispose();
+    envRT = pmrem.fromScene(skyKit.envScene, 0.04, 0.1, 100);
+    scene.environment = envRT.texture;
+    scene.environmentIntensity = 0.3 + 0.12 * low;
+  } else applySkyBackground();
   // interior: a luz que entra pelos vãos e se reflecte não é simulada; um reforço de ambiente nos materiais
   // interiores aproxima esse efeito sem apagar as sombras do exterior
   for (const k of INTERIOR_MATS) { M[k].envMap = roomRT.texture; M[k].envMapIntensity = 0.52 + 0.26 * low; M[k].needsUpdate = true; }
+  scheduleProbes();
   $('#sunread').textContent = `Sol ${fmt(Math.max(0, s.elevation), 0)}° de altura · azimute ${fmt(s.azimuth, 0)}°`;
 }
 
@@ -3660,9 +4019,30 @@ const baseZ = (x, y) => {
 };
 const furniture = buildFurniture(H, M, baseZ);
 const vegetation = buildVegetation(H, M, ground);
+const skirting = buildSkirting(H, M, baseZ, { furniture, walls: [house.walls] }); house.skirting = skirting;   // rodapé (pormenor)
 const labels = roomLabels(H);
 for (const g of [...Object.values(house), ...Object.values(site), furniture, vegetation, labels.group]) scene.add(g);
 const roofParts = [house.roof, house.ceilings];
+// texturas fotográficas: só as dos materiais usados nesta casa (as procedimentais ficam enquanto carregam)
+const usedMats = new Set(); scene.traverse((o) => { for (const m of [].concat(o.material || [])) if (m && m.name) usedMats.add(m.name); });
+// luz interior por compartimento (depois das texturas, céus e modelos): ver probes.js
+let probes = null, probeTimer = 0;
+function updateProbes() {
+  if (!LOOK.probes || photo?.active) return;
+  if (!probes) probes = new RoomProbes({ renderer, scene, H, baseZ, groups: [...Object.values(house), furniture], res: mobile ? 64 : 128 });
+  const vis = roofParts.map((g) => g.visible), furn = furniture.visible, lab = labels.group.visible, mk = markers.visible, hl = highlight.visible;
+  probes.update({
+    passes: mobile ? 1 : 2,
+    prepare: () => { for (const g of roofParts) g.visible = true; furniture.visible = true; labels.group.visible = markers.visible = highlight.visible = false;
+      wideShadow = true; shadowKey = ''; fitShadow(); },
+    restore: () => { roofParts.forEach((g, i) => (g.visible = vis[i])); furniture.visible = furn; labels.group.visible = lab; markers.visible = mk; highlight.visible = hl;
+      wideShadow = false; shadowKey = ''; },
+  });
+  if (TEST) frame();
+}
+const scheduleProbes = () => { if (!probes) return; clearTimeout(probeTimer); probeTimer = setTimeout(updateProbes, TEST ? 0 : 350); };
+const texReady = upgradeMaterials(M, { base: TEXBASE + 'lib/', used: usedMats, anisotropy: renderer.capabilities.getMaxAnisotropy(), colors: H.meta.photoColors || {} })
+  .then(() => { if (TEST) frame(); });
 
 // destaque de compartimento seleccionado
 const hiMat = new THREE.MeshBasicMaterial({ color: 0x2f62d6, transparent: true, opacity: 0.22, depthWrite: false, side: THREE.DoubleSide });
@@ -3729,6 +4109,19 @@ if (useFX) {
   gtao._restoreVisibility = () => { rs(); for (const o of hidden) o.visible = true; hidden = []; };
   composer.addPass(gtao);
   composer.addPass(new OutputPass());
+  // gradação final (espaço do ecrã): curva em S suave, saturação e vinheta leve — o "acabamento fotográfico" do AgX
+  composer.addPass(new ShaderPass({
+    uniforms: { tDiffuse: { value: null }, contrast: { value: LOOK.contrast }, saturation: { value: LOOK.saturation }, vignette: { value: LOOK.vignette } },
+    vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+    fragmentShader: `uniform sampler2D tDiffuse; uniform float contrast, saturation, vignette; varying vec2 vUv;
+      void main(){ vec4 c = texture2D(tDiffuse, vUv); vec3 x = c.rgb;
+        float l = dot(x, vec3(0.2126, 0.7152, 0.0722));
+        x = mix(vec3(l), x, saturation);
+        x = clamp((x - 0.5) * contrast + 0.5, 0.0, 1.0);
+        x = mix(x, x * x * (3.0 - 2.0 * x), (contrast - 1.0) * 1.5);
+        vec2 d = vUv - 0.5; x *= 1.0 - vignette * smoothstep(0.25, 0.85, dot(d, d) * 2.2);
+        gl_FragColor = vec4(x, c.a); }`,
+  }));
 }
 const orbit = new OrbitControls(persp, renderer.domElement);
 orbit.target.copy(v3(...V0.target)); orbit.enableDamping = true; orbit.dampingFactor = 0.08;
@@ -3796,6 +4189,7 @@ function setMode(m) {
   renderer.clippingPlanes = m === 'plan' ? [new THREE.Plane(new THREE.Vector3(0, -1, 0), 1.25)] : [];
   sky.visible = m !== 'plan';
   scene.background = m === 'plan' ? new THREE.Color(getComputedStyle(document.documentElement).getPropertyValue('--plan-bg').trim() || '#f3f2ee') : null;
+  applySkyBackground();
   if (m === '3d') { persp.fov = 55; persp.position.copy(savedOrbit.pos); orbit.target.copy(savedOrbit.target); orbit.update(); }
   if (m === 'walk') { persp.fov = walkFov(); const ws = H.walkStart || [BB.cx, BB.cy, 0]; walker.place(ws[0], ws[1], ws[2]); } // [X, Y, rumo em graus: 0 = norte, 90 = poente]
   persp.updateProjectionMatrix();
@@ -3928,6 +4322,8 @@ function applyFinish(slot, spec) {      // spec = {url, size: [w, h], rough} | n
     if (!o.isMesh || !ks.has(o.userData.matKey)) return;
     if (!finishOrig.has(o)) finishOrig.set(o, o.material);
     o.material = mat || finishOrig.get(o);
+    const rid = finishOrig.get(o).userData?.probeRoom;               // luz interior do compartimento também no acabamento novo
+    if (mat && rid !== undefined && probes) probes.adopt(mat, rid);
   });
   if (TEST) frame();
 }
@@ -3983,8 +4379,26 @@ $('#panel-toggle').addEventListener('click', () => {
 });
 
 // ---------------------------------------------------------------- modo fotografia (path tracing)
+// céu HDRI para o path tracer: textura float linear, já rodada para o sol actual e multiplicada pela intensidade do ambiente
+function hdrSkyForPhoto() {
+  const k = skyHDR.key, img = k && skyHDR.tex[k]?.image;
+  if (!img) return null;
+  const W = 2048, Hh = 1024, c = document.createElement('canvas'); c.width = W; c.height = Hh;
+  const x = c.getContext('2d'); x.drawImage(img, 0, 0, W, Hh);
+  const src = x.getImageData(0, 0, W, Hh).data, out = new Float32Array(W * Hh * 4);
+  const lut = new Float32Array(256).map((_, i) => { const v = i / 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
+  const I = scene.environmentIntensity, shift = Math.round((scene.backgroundRotation.y / (2 * Math.PI)) * W);
+  for (let j = 0; j < Hh; j++) for (let i = 0; i < W; i++) {
+    const si = (((i + shift) % W) + W) % W, s4 = ((Hh - 1 - j) * W + si) * 4, d4 = (j * W + i) * 4;   // DataTexture: linha 0 = baixo
+    out[d4] = lut[src[s4]] * I; out[d4 + 1] = lut[src[s4 + 1]] * I; out[d4 + 2] = lut[src[s4 + 2]] * I; out[d4 + 3] = 1;
+  }
+  const t = new THREE.DataTexture(out, W, Hh, THREE.RGBAFormat, THREE.FloatType);
+  t.mapping = THREE.EquirectangularReflectionMapping; t.colorSpace = THREE.LinearSRGBColorSpace;
+  t.magFilter = t.minFilter = THREE.LinearFilter; t.needsUpdate = true;
+  return t;
+}
 const photo = new PhotoMode({
-  renderer, scene, M, skyKit,
+  renderer, scene, M, skyKit, hdrSky: hdrSkyForPhoto,
   hide: () => [sky, labels.group, markers, highlight, measure.group, house.plan],
   onStatus: (st) => {
     const bar = $('#photobar');
@@ -4030,6 +4444,7 @@ function startPhoto() {
   if (mode === 'plan') setMode('3d');
   if (mode === '3d') orbit.enabled = false;
   walker.enabled = false;
+  renderer.toneMappingExposure = LOOK.exposure;   // o modo fotografia mede a sua própria exposição
   photo.start(persp).then(() => { photo.denoiseOn = $('#photo-dn').checked; $('#photo-ev').value = photo.ev; $('#photo-evval').textContent = (photo.ev > 0 ? '+' : '') + photo.ev.toFixed(1); });
 }
 function stopPhoto() {
@@ -4128,11 +4543,19 @@ function resize() {
 }
 addEventListener('resize', resize);
 const clock = new THREE.Clock();
+// exposição automática: dentro de casa abre ~1 EV (como um fotógrafo), com transição suave ao entrar/sair
+let expK = 0;
+function autoExposure(dt) {
+  const p = persp.position, inside = camera === persp && p.y < 3.0 && pointInPoly(p.x, -p.z, H.roof.outline) && !!findRoom(H, p.x, -p.z);
+  const target = inside ? 1 : 0;
+  expK = TEST ? target : expK + (target - expK) * Math.min(1, dt * 3);
+  renderer.toneMappingExposure = LOOK.exposure * Math.pow(2, LOOK.interiorEV * expK);
+}
 function frame() {
   const dt = Math.min(0.05, clock.getDelta());
   if (mode === '3d') orbit.update();
   if (camera === persp) fitDepth();
-  if (!photo.active) fitShadow();
+  if (!photo.active) { fitShadow(); autoExposure(dt); }
   if (mode === 'plan') orbit2d.update();
   walker.update(dt);
   updateDoors(dt);
@@ -4155,7 +4578,8 @@ frame();
 // editor de mobiliário (layout.json para todos; #editar + palavra-passe para mover, rodar e alterar larguras)
 initEditor({ H, M, scene, renderer, furniture, baseZ, test: TEST, getCamera: () => camera, getMode: () => mode, setMode,
   redraw: () => { if (TEST) frame(); }, showCredits, applyFinish, finishSlots, showFurniture: () => { $('#t-furn').checked = true; $('#t-renders').checked = false; applyLayers(); } });
-window.__app = { modelsReady, applyFinish, finishSlots, doors, setDoor, updateDoors, V3: THREE.Vector3, RC: THREE.Raycaster, Box3: THREE.Box3, Quat: THREE.Quaternion, M4: THREE.Matrix4, ortho, frame, photo, startPhoto, stopPhoto, RENDERS, goToRender, markers, vegetation, scene, renderer, H, setMode, VIEWS, persp, orbit, walker, state, updateSun, measure };
+const allReady = Promise.allSettled([modelsReady(), texReady, skyReady]).then(() => updateProbes());
+window.__app = { modelsReady: () => allReady, updateProbes, getProbes: () => probes, skyHDR, LOOK, applyFinish, finishSlots, doors, setDoor, updateDoors, V3: THREE.Vector3, RC: THREE.Raycaster, Box3: THREE.Box3, Quat: THREE.Quaternion, M4: THREE.Matrix4, ortho, frame, photo, startPhoto, stopPhoto, RENDERS, goToRender, markers, vegetation, scene, renderer, H, setMode, VIEWS, persp, orbit, walker, state, updateSun, measure };
 return {  };
 })();
 </script>
