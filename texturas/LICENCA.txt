@@ -1,2 +1,2 @@
-Texturas e céus HDRI: Poly Haven (polyhaven.com), licença CC0 — domínio público, uso comercial livre, sem atribuição obrigatória.
+Texturas, céus HDRI e folhagem (folhas digitalizadas de modelos de plantas): Poly Haven (polyhaven.com), licença CC0 — domínio público, uso comercial livre, sem atribuição obrigatória.
 Processados para o visualizador 3D (cor de detalhe, normal, ARM; céus sem disco solar).
