@@ -2771,7 +2771,9 @@ function palm(B, R, x, y, z, h) {
 }
 function grassTuft(B, R, x, y, z, h, key) {
   const w = h * (1.6 + R() * 0.5);               // tufo fotográfico (textura 2:1)
-  for (let k = 0; k < 3; k++) card(B, key, x, y, z - 0.02, w, h, (k / 3) * Math.PI + R() * 0.5, 0, v3(x, y, z - h));
+  // 5 cartões em estrela, ligeiramente desencontrados e inclinados: o tufo não mostra os planos
+  for (let k = 0; k < 5; k++) { const a = (k / 5) * Math.PI + R() * 0.4, o = 0.06 * h;
+    card(B, key, x + (R() - 0.5) * o, y + (R() - 0.5) * o, z - 0.02, w * (0.8 + R() * 0.35), h * (0.85 + R() * 0.25), a, (R() - 0.5) * 0.35, v3(x, y, z - h)); }
 }
 function hedgeRun(B, R, ax, ay, bx, by, z0fn, h, depth, inward, key = 'leafHedge') {
   const L = Math.hypot(bx - ax, by - ay), ux = (bx - ax) / L, uy = (by - ay) / L;
