@@ -4427,7 +4427,7 @@ if (H.fin) ring(H.fin.pts);
 if (H.entrance) { const en = H.entrance; blockers.push([en.x, en.y0, en.x, en.door[0]], [en.x, en.door[1], en.x, en.y1]); }
 for (const gd of [].concat(H.garageDoor || [])) blockers.push([...(gd.o === 'h' ? [gd.x0, gd.y, gd.x1, gd.y] : [gd.x, gd.y0, gd.x, gd.y1]), ...(MULTI && gd.zb !== undefined ? [gd.zb - 0.1, gd.zb + (gd.z1 || 2.4)] : [])]);
 for (const g of H.glass) if (g.sill - (g.zb || 0) > 0.3 || MULTI) { const sg = g.rot ? [...rotFwd(g.rot, g.a, g.c), ...rotFwd(g.rot, g.b, g.c)] : g.o === 'h' ? [g.a, g.c, g.b, g.c] : [g.c, g.a, g.c, g.b];
-  if (g.sill - (g.zb || 0) > 0.3) blockers.push(MULTI ? [...sg, g.zb ?? 0, g.head] : sg);
+  if (g.sill - (g.zb || 0) > 0.3) blockers.push(MULTI ? [...sg, Math.min(g.sill, (g.zb ?? 0) + 1.2), g.head] : sg);   // conjunto: o vidro bloqueia a partir do peitoril (janelas altas por cima de portas não fecham a passagem)
   else if (MULTI) blockers.push([...sg, g.zb - 5, g.zb - 4]);   // portas de vidro: só as fixas bloqueiam (as de correr deixam passar — selecção do passeio)
 }
 if (H.pool) ring(rectPts(H.pool.water));
