@@ -1457,10 +1457,11 @@ function buildHouse(H, M) {
 
   // ---------------------------------------------------------------- tectos falsos (interior) – parte do grupo cobertura
   const C = new Buckets();
-  if (H.ceilings) for (const c of H.ceilings) cap(C, 'ceiling', c.poly, c.holes || [], c.z, false);   // conjunto: tecto de cada compartimento à sua cota
+  // tecto de cada compartimento com a chave "ceiling@c<id>": a luz interior (sondas) trata-o como peça desse compartimento
+  if (H.ceilings) for (const c of H.ceilings) cap(C, c.room != null ? alias('ceiling', 'c' + c.room) : 'ceiling', c.poly, c.holes || [], c.z, false);   // conjunto: à cota de cada compartimento
   else for (const r of H.rooms) {
     if (r.exterior) continue;
-    cap(C, 'ceiling', r.poly, [], Z.ceiling, false);
+    cap(C, alias('ceiling', 'c' + r.id), r.poly, [], Z.ceiling, false);
   }
   for (const poly of D.ceilings || []) cap(C, 'ceiling', poly, [], Z.ceiling, false); // tectos de zonas sem compartimento próprio
   put(groups.ceilings, ...C.meshes(M, { name: 'tectos', cast: false }));
@@ -3960,7 +3961,7 @@ class RoomProbes {
       if (!o.isMesh || this.meshes.has(o)) return;
       const ms = [].concat(o.material);
       if (!ms.every((m) => m && m.isMeshStandardMaterial && !m.transparent)) return;
-      const k = o.userData.matKey, m = k && k.match(/@[fw](\d+)$/);
+      const k = o.userData.matKey, m = k && k.match(/@[fwc](\d+)$/);   // f pavimento, w parede, c tecto
       let q = m ? this.byId.get(m[1]) : o.userData.room != null ? this.byId.get(String(o.userData.room)) : null;
       if (!q && !m && o.userData.room == null) {
         // peças sem chave de compartimento: só se a caixa inteira (em planta) estiver dentro de um compartimento —
