@@ -1,0 +1,36 @@
+{
+ "version": 1,
+ "house": "moradias-cadavao",
+ "saved": "2026-10-15T09:41:46.285Z",
+ "units": {
+  "A": {
+   "status": "vendida",
+   "price": 550000
+  },
+  "B": {
+   "status": "disponivel",
+   "price": 430000,
+   "tip": "T3",
+   "area": 158
+  },
+  "C": {
+   "status": "reservada",
+   "price": 500000
+  },
+  "D": {
+   "status": "disponivel"
+  },
+  "E": {
+   "status": "disponivel"
+  },
+  "F": {
+   "status": "disponivel"
+  },
+  "G": {
+   "status": "disponivel"
+  },
+  "H": {
+   "status": "disponivel"
+  }
+ }
+}
