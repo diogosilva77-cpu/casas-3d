@@ -1362,8 +1362,11 @@ function buildHouse(H, M) {
   // Abrem e fecham (clique, tecla E ou ao chegar perto no passeio): as secções sobem na calha vertical e recolhem por baixo do tecto
   // da garagem. userData.door como as portas: d.type = 'garage', começa fechado.
   for (const gd of [].concat(H.garageDoor || [])) {
-    const zb = gd.zb || 0, mat = M[gd.mat || 'garagedoor'] || M.garagedoor, fs = gd.side === 'N' || gd.side === 'E' ? 1 : -1, inw = -fs;   // inw: para dentro
+    const zb = gd.zb || 0, mat = M[gd.mat || 'garagedoor'] || M.garagedoor, fs = gd.side === 'N' || gd.side === 'E' ? 1 : -1;
     const V = (gd.o || 'v') === 'v', a = V ? gd.y0 : gd.x0, b = V ? gd.y1 : gd.x1, c = V ? gd.x : gd.y, len = b - a, mid = (a + b) / 2;
+    // para dentro: o lado onde está o compartimento interior (sem 'side', o portão podia abrir para a rua)
+    const inRoom = (t_) => { const [x_, y_] = V ? [c + t_, mid] : [mid, c + t_]; return (H.rooms || []).some((r) => !r.exterior && r.poly && pointInPoly(x_, y_, r.poly)); };
+    const inw = inRoom(0.6) ? 1 : inRoom(-0.6) ? -1 : -fs;
     const zt = gd.z1, H0 = zt - 0.04, n = Math.max(4, Math.round(zt / 0.5)), hs = zt / n, T = H0 - 0.02;
     const grp = new THREE.Group(); grp.name = 'portão da garagem';
     const secs = [];
