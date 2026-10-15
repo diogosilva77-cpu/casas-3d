@@ -1,0 +1,12 @@
+{
+ "version": 1,
+ "house": "moradias-cadavao",
+ "general": null,
+ "units": {
+  "A": {
+   "file": "plantas/a-plantas-mubu-jardim-tipologias-l9a-210926-v1.pdf",
+   "name": "PLANTAS-MUBU-JARDIM-TIPOLOGIAS-L9A-210926-V1.pdf",
+   "saved": "2026-10-15T12:16:04.501Z"
+  }
+ }
+}
