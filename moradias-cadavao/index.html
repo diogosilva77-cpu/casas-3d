@@ -1358,16 +1358,36 @@ function buildHouse(H, M) {
   box(W, 'ripado', en.x - 0.05, en.door[0], en.x + 0.05, en.door[1], en.z1, Z.slabBottom);
   box(W, 'frame', en.x + 0.09, en.door[1] - 0.16, en.x + 0.12, en.door[1] - 0.13, 0.3, 2.1); // puxador vertical, à frente das réguas
   }
-  // portões seccionados de garagem (opcional: H.garageDoor, objecto ou lista; o = 'v' plano X fixo, 'h' plano Y fixo)
+  // portões seccionados de garagem (opcional: H.garageDoor, objecto ou lista; o = 'v' plano X fixo, 'h' plano Y fixo; side = lado exterior).
+  // Abrem e fecham (clique, tecla E ou ao chegar perto no passeio): as secções sobem na calha vertical e recolhem por baixo do tecto
+  // da garagem. userData.door como as portas: d.type = 'garage', começa fechado.
   for (const gd of [].concat(H.garageDoor || [])) {
-    const zb = gd.zb || 0, m = gd.mat || 'garagedoor', fs = gd.side === 'N' || gd.side === 'E' ? 1 : -1;   // side: lado das réguas (exterior)
-    if ((gd.o || 'v') === 'v') {
-      box(W, m, gd.x - 0.04, gd.y0, gd.x + 0.04, gd.y1, zb, zb + gd.z1);
-      for (let z = 0.6; z < gd.z1; z += 0.6) box(W, 'frame', gd.x + fs * 0.04, gd.y0, gd.x + fs * 0.045, gd.y1, zb + z - 0.008, zb + z + 0.008);
-    } else {
-      box(W, m, gd.x0, gd.y - 0.04, gd.x1, gd.y + 0.04, zb, zb + gd.z1);
-      for (let z = 0.6; z < gd.z1; z += 0.6) box(W, 'frame', gd.x0, gd.y + fs * 0.045, gd.x1, gd.y + fs * 0.04, zb + z - 0.008, zb + z + 0.008);
+    const zb = gd.zb || 0, mat = M[gd.mat || 'garagedoor'] || M.garagedoor, fs = gd.side === 'N' || gd.side === 'E' ? 1 : -1, inw = -fs;   // inw: para dentro
+    const V = (gd.o || 'v') === 'v', a = V ? gd.y0 : gd.x0, b = V ? gd.y1 : gd.x1, c = V ? gd.x : gd.y, len = b - a, mid = (a + b) / 2;
+    const zt = gd.z1, H0 = zt - 0.04, n = Math.max(4, Math.round(zt / 0.5)), hs = zt / n, T = H0 - 0.02;
+    const grp = new THREE.Group(); grp.name = 'portão da garagem';
+    const secs = [];
+    for (let i = 0; i < n; i++) {
+      const geo = V ? new THREE.BoxGeometry(0.04, hs - 0.008, len) : new THREE.BoxGeometry(len, hs - 0.008, 0.04);
+      const m = new THREE.Mesh(geo, mat); m.castShadow = m.receiveShadow = true; m.name = 'portão da garagem'; grp.add(m); secs.push(m);
     }
+    // calha: parâmetro p ao longo da calha → (t para dentro, z); vertical até H0, depois horizontal
+    const track = (p) => (p <= H0 ? [0, p] : [p - H0, H0]);
+    const place = (e) => {
+      for (let i = 0; i < n; i++) {
+        const [t0, z0] = track(i * hs + e * T), [t1, z1] = track((i + 1) * hs + e * T);
+        const tm = (t0 + t1) / 2, zm = (z0 + z1) / 2, ang = Math.atan2(-inw * (t1 - t0), z1 - z0), m = secs[i];
+        if (V) { m.position.set(c + inw * tm, zb + zm, -mid); m.rotation.set(0, 0, ang); }
+        else { m.position.set(mid, zb + zm, -(c + inw * tm)); m.rotation.set(ang, 0, 0); }
+      }
+    };
+    const P = (s_, t_) => (V ? [c + t_, s_] : [s_, c + t_]);
+    const d = { type: 'garage', ext: true, garage: true, room: 'Portão da garagem', zb, pts: null, z1: zt,
+      closed: [P(a, -0.05), P(b, -0.05), P(b, 0.05), P(a, 0.05)] };
+    const D = { d, g: grp, k: 0, target: 0 };
+    D.apply = (e) => place(e);
+    D.apply(0); grp.userData.door = D; for (const m of grp.children) m.userData.door = D;
+    groups.doors.add(grp);
   }
   // portas exteriores maciças (H.extDoors = [{o:'h'|'v', c, a, b, z1, mat}]): folha 6 cm + puxador vertical nas duas faces
   for (const d0 of H.extDoors || []) {
@@ -4762,7 +4782,7 @@ for (const g of H.gates || []) ring(g.pts, g.z0, g.z1);
 for (const r of H.railings || []) for (let i = 0; i < r.pts.length - 1; i++) { const a = r.pts[i], b = r.pts[i + 1]; blockers.push([a[0], a[1], b[0], b[1], (a[2] ?? r.z) - 0.2, (a[2] ?? r.z) + (r.h || 1)]); }
 if (H.fin) ring(H.fin.pts);
 if (H.entrance) { const en = H.entrance; blockers.push([en.x, en.y0, en.x, en.door[0]], [en.x, en.door[1], en.x, en.y1]); }
-for (const gd of [].concat(H.garageDoor || [])) blockers.push([...(gd.o === 'h' ? [gd.x0, gd.y, gd.x1, gd.y] : [gd.x, gd.y0, gd.x, gd.y1]), ...(MULTI && gd.zb !== undefined ? [gd.zb - 0.1, gd.zb + (gd.z1 || 2.4)] : [])]);
+// portões de garagem: obstáculo dinâmico (doorSegs) enquanto fechados
 for (const g of H.glass) if (g.sill - (g.zb || 0) > 0.3 || MULTI) { const sg = g.rot ? [...rotFwd(g.rot, g.a, g.c), ...rotFwd(g.rot, g.b, g.c)] : g.o === 'h' ? [g.a, g.c, g.b, g.c] : [g.c, g.a, g.c, g.b];
   if (g.sill - (g.zb || 0) > 0.3) blockers.push(MULTI ? [...sg, Math.min(g.sill, (g.zb ?? 0) + 1.2), g.head] : sg);   // conjunto: o vidro bloqueia a partir do peitoril (janelas altas por cima de portas não fecham a passagem)
   // envidraçados até ao chão: painéis fixos em house.glass.userData.block; folhas de correr são portas (abrem ao chegar perto)
@@ -4775,7 +4795,7 @@ const walkables = [house.floors, house.stairs, site.terrain, site.site];
 const doors = house.doors.children.map((g) => g.userData.door);
 const doorSegs = (D) => {
   const pts = D.k > 0.5 ? (D.d.type === 'slide' ? null : D.d.pts) : D.d.closed, out = [];
-  const z = MULTI && D.d.zb !== undefined ? [D.d.zb - 0.1, D.d.zb + 2.1] : [];   // conjunto: a folha só bloqueia no seu piso
+  const z = MULTI && D.d.zb !== undefined ? [D.d.zb - 0.1, D.d.zb + (D.d.garage ? D.d.z1 : 2.1)] : [];   // conjunto: a folha só bloqueia no seu piso
   if (pts) for (let i = 0; i < pts.length; i++) { const a = pts[i], b = pts[(i + 1) % pts.length]; out.push([a[0], a[1], b[0], b[1], ...z]); }
   return out;
 };
@@ -4790,10 +4810,10 @@ function toggleNearestDoor() {
 const ease = (k) => k * k * (3 - 2 * k);
 function updateDoors(dt) {
   if (mode === 'walk' && walker.moving) // no passeio, uma porta fechada abre-se quando se chega perto dela
-    for (const D of doors) if (D.target === 0) { const [x, y] = doorMid(D); if (Math.hypot(x - walker.pos.x, y - walker.pos.y) < 0.95) setDoor(D, true); }
+    for (const D of doors) if (D.target === 0) { const [x, y] = doorMid(D); if (Math.hypot(x - walker.pos.x, y - walker.pos.y) < (D.d.garage ? 2.0 : 0.95)) setDoor(D, true); }
   for (const D of doors) {
     if (D.k === D.target) continue;
-    const st = dt / (D.d.type === 'slide' ? 0.9 : 0.75);
+    const st = dt / (D.d.garage ? 2.6 : D.d.type === 'slide' ? 0.9 : 0.75);   // portão da garagem: ~2,6 s
     D.k = D.k < D.target ? Math.min(D.target, D.k + st) : Math.max(D.target, D.k - st);
     D.apply(ease(D.k));
   }
