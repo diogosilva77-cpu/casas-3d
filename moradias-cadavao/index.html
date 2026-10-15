@@ -3480,9 +3480,152 @@ class Measure {
 return { fmt, roomLabels, findRoom, Measure };
 })();
 
+// ===== src/sales.js =====
+const __m_sales = (() => {
+
+// Conjuntos de moradias: preço e estado de venda de cada moradia (disponível / reservada / vendida).
+// - vendas.json ao lado da página (gravado pelo editor, #editar) é lido por todos os visitantes;
+//   valores iniciais opcionais em META.sales = {A: {status, price, tip, area, note}}.
+// - Passar o rato por cima de uma moradia na vista 3D mostra um cartão: vendida → «Vendida»; reservada → «Reservada»;
+//   disponível → preço, tipologia e informação básica (área, quartos, I.S., garagem, piscina, pisos).
+// Só se activa quando há mais de uma moradia (H.units.length > 1).
+
+const STATUS = { disponivel: 'Disponível', reservada: 'Reservada', vendida: 'Vendida' };
+const NOT_LIVING = /garagem|arrumo|adega|t[ée]cnic/i;
+const nf = (v, d = 0) => Number(v).toLocaleString('pt-PT', { minimumFractionDigits: d, maximumFractionDigits: d });
+const fmtPrice = (p) => (p > 0 ? nf(p) + ' €' : '');
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+// informação base calculada do modelo (o editor pode sobrepor tipologia e área)
+function unitFacts(H, u) {
+  const rooms = H.rooms.filter((r) => r.unit === u.id && !r.exterior);
+  const living = rooms.filter((r) => !NOT_LIVING.test(r.name));
+  const area = living.reduce((a, r) => a + (r.official || r.area || 0), 0);
+  const quartos = rooms.filter((r) => /^(quarto|suite|suíte)/i.test(r.name)).length;
+  const wc = rooms.filter((r) => /^(i\.\s?s\.|wc|casa de banho)/i.test(r.name)).length;
+  const garagem = rooms.some((r) => /garagem/i.test(r.name));
+  const summary = u.summary || '';
+  const tip = (summary.match(/\bT\d+\b/) || [])[0] || (quartos ? 'T' + quartos : '');
+  const piscina = /piscina/i.test(summary);
+  const extras = summary.split('·').map((s) => s.trim()).filter((s) => s && !/^T\d+$/.test(s) && !/piscina/i.test(s));
+  return { tip, area: Math.round(area), quartos, wc, garagem, piscina, extras };
+}
+
+function initSales(ctx) {
+  const { H, UNITS } = ctx;
+  if (!UNITS || UNITS.length < 2) return null;
+  const S = {};
+  for (const u of UNITS) S[u.id] = { status: 'disponivel', ...((H.meta.sales || {})[u.id] || {}) };
+  const subs = [];
+  const api = {
+    get: (id) => S[id] || { status: 'disponivel' },
+    all: () => JSON.parse(JSON.stringify(S)),
+    set(next) { for (const u of UNITS) S[u.id] = { status: 'disponivel', ...(next[u.id] || {}) }; subs.forEach((f) => f()); },
+    onChange: (f) => subs.push(f),
+    facts: (u) => { const f = unitFacts(H, u), s = S[u.id] || {}; return { ...f, tip: s.tip || f.tip, area: s.area || f.area }; },
+  };
+  if ((!ctx.test || /vendas/.test(location.search)) && /^https?:$/.test(location.protocol)) {
+    fetch(new URL('vendas.json', location.href).href + '?v=' + Date.now(), { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null)).then((d) => { if (d && d.units) api.set(d.units); }).catch(() => { /* ainda sem vendas.json */ });
+  }
+
+  // ---------------------------------------------------------------- cartão ao passar o rato
+  const css = document.createElement('style');
+  css.textContent = `
+  .utip{position:fixed;z-index:35;pointer-events:none;min-width:210px;max-width:270px;background:var(--paper,#fbfaf7);color:var(--ink,#1f2226);border-radius:12px;
+    box-shadow:0 10px 30px rgba(0,0,0,.28);padding:12px 14px;font:13px/1.4 var(--body,system-ui,sans-serif);transform:translate(16px,16px)}
+  .utip .h{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .utip .n{font:600 19px/1.1 var(--display,system-ui);letter-spacing:.02em}
+  .utip .pill{font:600 11px/1 system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;border-radius:999px;padding:5px 8px;color:#fff;background:#2e7d4f}
+  .utip .pill.vendida{background:#b3261e}.utip .pill.reservada{background:#a86400}
+  .utip .p{font:600 24px/1.1 var(--display,system-ui);margin:8px 0 2px;font-variant-numeric:tabular-nums}
+  .utip .sold{font:600 26px/1.1 var(--display,system-ui);letter-spacing:.08em;color:#b3261e;margin:8px 0 2px;text-transform:uppercase}
+  .utip .l{color:var(--muted,#5d666b)}.utip .k{margin-top:4px}
+  .utip .hint{margin-top:8px;font-size:12px;color:var(--muted,#5d666b)}
+  .ubadge.vendida{background:#b3261e}.ubadge.reservada{background:#a86400}
+  .ubadge .st{position:absolute;left:50%;top:100%;transform:translate(-50%,4px);white-space:nowrap;font:600 10px/1 system-ui,sans-serif;letter-spacing:.06em;
+    text-transform:uppercase;color:#fff;background:inherit;border-radius:999px;padding:4px 7px;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+  .ubadge{position:relative}
+  .chip[data-st]::after{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;margin-left:6px;vertical-align:1px;background:#2e7d4f}
+  .chip[data-st=vendida]::after{background:#b3261e}.chip[data-st=reservada]::after{background:#a86400}
+  .u-sale{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.u-sale .pr{font:600 20px/1.1 var(--display,system-ui)}
+  .u-sale .pill{font:600 11px/1 system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;border-radius:999px;padding:5px 8px;color:#fff;background:#2e7d4f}
+  .u-sale .pill.vendida{background:#b3261e}.u-sale .pill.reservada{background:#a86400}
+  @media (hover:none){.utip{display:none!important}}`;
+  document.head.appendChild(css);
+  const tip = document.createElement('div'); tip.className = 'utip'; tip.hidden = true; document.body.appendChild(tip);
+
+  api.cardHTML = (u, hint = true) => {
+    const s = api.get(u.id), f = api.facts(u), st = s.status || 'disponivel';
+    let h = `<div class="h"><span class="n">${esc(u.name)}</span><span class="pill ${st}">${STATUS[st]}</span></div>`;
+    if (st === 'vendida') return h + `<div class="sold">Vendida</div>`;
+    if (st === 'reservada') return h + `<div class="k">${esc(f.tip)}${f.area ? ` · ${nf(f.area)} m²` : ''}</div>`;
+    h += `<div class="p">${s.price > 0 ? fmtPrice(s.price) : '<span class="l" style="font-size:16px">Preço sob consulta</span>'}</div>`;
+    h += `<div class="k"><b>${esc(f.tip)}</b>${f.area ? ` · ${nf(f.area)} m² úteis` : ''}</div>`;
+    const parts = [f.quartos ? `${f.quartos} quarto${f.quartos > 1 ? 's' : ''}` : '', f.wc ? `${f.wc} I.S.` : '', f.garagem ? 'garagem' : '', f.piscina ? 'piscina' : ''].filter(Boolean);
+    if (parts.length) h += `<div class="l">${parts.join(' · ')}</div>`;
+    if (f.extras.length) h += `<div class="l">${esc(f.extras.join(' · '))}</div>`;
+    if (s.note) h += `<div class="k">${esc(s.note)}</div>`;
+    if (hint) h += `<div class="hint">Clique para ver de perto e visitar</div>`;
+    return h;
+  };
+  // linha de preço/estado no cartão da moradia escolhida (painel lateral)
+  api.lineHTML = (u) => {
+    const s = api.get(u.id), st = s.status || 'disponivel';
+    return `<div class="u-sale">${st === 'disponivel' && s.price > 0 ? `<span class="pr">${fmtPrice(s.price)}</span>` : ''}<span class="pill ${st}">${STATUS[st]}</span></div>`;
+  };
+
+  // caixas de cada moradia (edifício e lote) para saber por cima de qual está o rato
+  const v3 = (x, y, z) => new THREE.Vector3(x, z, -y);
+  const boxes = [];
+  for (const u of UNITS) {
+    const [x0, y0, x1, y1] = u.bbox, zs = (u.levels || []).map((l) => l.z), zmin = Math.min(0, ...zs);
+    const tops = (H.extraRoofs || []).concat(H.roof && H.roof.outline ? [H.roof] : []).filter((r) => r.outline && r.z1 != null).filter((r) => {
+      const cx = r.outline.reduce((a, p) => a + p[0], 0) / r.outline.length, cy = r.outline.reduce((a, p) => a + p[1], 0) / r.outline.length;
+      return cx > x0 && cx < x1 && cy > y0 && cy < y1; }).map((r) => r.z1 + (r.parapet || 0));
+    const top = Math.max(Math.max(...zs, 0) + 3.2, ...tops);
+    boxes.push({ u, b: new THREE.Box3().setFromPoints([v3(x0, y0, zmin - 3.5), v3(x1, y1, top)]), pri: 0 });
+    if (u.lot) {
+      const xs = u.lot.map((p) => p[0]), ys = u.lot.map((p) => p[1]);
+      boxes.push({ u, b: new THREE.Box3().setFromPoints([v3(Math.min(...xs), Math.min(...ys), zmin - 4), v3(Math.max(...xs), Math.max(...ys), Math.max(...zs, 0) + 0.3)]), pri: 1 });
+    }
+  }
+  const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), pt = new THREE.Vector3();
+  api.unitAt = (cx, cy) => {
+    const r = ctx.renderer.domElement.getBoundingClientRect();
+    ndc.set(((cx - r.left) / r.width) * 2 - 1, -((cy - r.top) / r.height) * 2 + 1); ray.setFromCamera(ndc, ctx.getCamera());
+    let best = null;
+    for (const B of boxes) { if (!ray.ray.intersectBox(B.b, pt)) continue; const d = pt.distanceTo(ray.ray.origin) + B.pri * 0.5; if (!best || d < best.d) best = { d, u: B.u }; }
+    return best ? best.u : null;
+  };
+  let hoverU = null, raf = 0, last = null;
+  const show = (u, x, y) => {
+    if (!u) { tip.hidden = true; hoverU = null; return; }
+    if (hoverU !== u) { tip.innerHTML = api.cardHTML(u, ctx.canClick ? ctx.canClick() : true); hoverU = u; }
+    tip.hidden = false;
+    const w = tip.offsetWidth, h = tip.offsetHeight;
+    tip.style.left = Math.min(x, innerWidth - w - 24) + 'px'; tip.style.top = Math.min(y, innerHeight - h - 24) + 'px';
+  };
+  api.hovered = () => hoverU;
+  ctx.renderer.domElement.addEventListener('pointermove', (e) => {
+    if (e.pointerType === 'touch') return;
+    last = e; if (raf) return;
+    raf = requestAnimationFrame(() => { raf = 0; const ev = last; if (!ctx.active()) return show(null); if (ev.buttons) return show(null); show(api.unitAt(ev.clientX, ev.clientY), ev.clientX, ev.clientY); });
+  });
+  ctx.renderer.domElement.addEventListener('pointerleave', () => show(null));
+  ctx.renderer.domElement.addEventListener('pointerdown', () => show(null));
+  api.showAt = (u, x, y) => { hoverU = null; show(u, x, y); };
+  api.hide = () => show(null);
+  api.onChange(() => { hoverU = null; tip.hidden = true; });
+  return api;
+}
+return { STATUS, fmtPrice, unitFacts, initSales };
+})();
+
 // ===== src/editor.js =====
 const __m_editor = (() => {
 const { registerGLB } = __m_furniture;
+const { STATUS, unitFacts } = __m_sales;
 // Editor de mobiliário protegido por palavra-passe: mover (arrastar), rodar e alterar a largura das peças, e guardar
 // a disposição no repositório GitHub do site (layout.json ao lado da página). Todos os visitantes carregam layout.json.
 //
@@ -3617,11 +3760,17 @@ function initEditor(ctx) {
   .ed-bar .grp{display:flex;gap:4px;align-items:center}
   .ed-bar input{width:62px;padding:8px 6px;border:1px solid #c9cfcc;border-radius:8px;font:13px system-ui,sans-serif;text-align:right}
   .ed-bar button:disabled{opacity:.45;cursor:default}
-  @media (prefers-color-scheme: dark){.ed-card,.ed-bar{background:#1f2427;color:#e4e8e6}.ed-card p,.ed-bar .muted{color:#a7b0ad}.ed-row button,.ed-bar button{background:#333b40;color:#e4e8e6}.ed-card input,.ed-bar input{background:#15191c;color:#e4e8e6;border-color:#3b4449}}
+  .ed-tab{border-collapse:collapse;width:100%;font-size:13px}.ed-tab th{text-align:left;font-size:11px;font-weight:600;color:#5d666b;padding:4px 6px}
+  .ed-tab td{padding:4px 6px;border-top:1px solid #e3e6e4}.ed-tab td.ul{font:700 16px system-ui;width:22px;text-align:center;border-left:4px solid #2e7d4f}
+  .ed-tab tr.vendida td.ul{border-left-color:#b3261e}.ed-tab tr.reservada td.ul{border-left-color:#a86400}
+  .ed-tab input,.ed-tab select{padding:7px 8px;border:1px solid #c9cfcc;border-radius:7px;font:13px system-ui,sans-serif;background:#fff;color:#1d2226}
+  .ed-tab input[data-k=price]{width:110px;text-align:right}
+  @media (prefers-color-scheme: dark){.ed-tab input,.ed-tab select{background:#15191c;color:#e4e8e6;border-color:#3b4449}.ed-tab td{border-color:#333b40}.ed-card,.ed-bar{background:#1f2427;color:#e4e8e6}.ed-card p,.ed-bar .muted{color:#a7b0ad}.ed-row button,.ed-bar button{background:#333b40;color:#e4e8e6}.ed-card input,.ed-bar input{background:#15191c;color:#e4e8e6;border-color:#3b4449}}
   `;
   document.head.appendChild(css);
   const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
-  const openBtn = el('button', 'ed-btn', 'Editar mobiliário'); document.body.appendChild(openBtn);
+  const SALES = ctx.sales;     // conjunto de moradias: preços e vendas
+  const openBtn = el('button', 'ed-btn', SALES ? 'Editar (mobiliário, preços e vendas)' : 'Editar mobiliário'); document.body.appendChild(openBtn);
 
   let token = ss.get('casa3d-token');
   const modal = (inner) => { const m = el('div', 'ed-modal'); const c = el('div', 'ed-card', inner); m.appendChild(c); document.body.appendChild(m); return { m, c, close: () => m.remove() }; };
@@ -3682,6 +3831,7 @@ function initEditor(ctx) {
     <span class="grp"><button id="ed-rl" title="Rodar 90° (esquerda)">↺ 90°</button><button id="ed-rr" title="Rodar 90° (direita)">↻ 90°</button><button id="ed-r15" title="Rodar 15°">↻ 15°</button></span>
     <button id="ed-glb" title="Carregar um modelo 3D (.glb) para o site: substitui a peça seleccionada (móvel, electrodoméstico, louça, carro) ou acrescenta uma nova">Modelo 3D…</button>
     <button id="ed-fin" title="Trocar o pavimento ou o revestimento de paredes por uma textura (fotografia do material)">Pavimentos e paredes…</button>
+    ${SALES ? '<button id="ed-sales" class="pri" title="Preço e estado (disponível, reservada, vendida) de cada moradia">Preços e vendas…</button>' : ''}
     <button id="ed-reset">Repor peça</button><button id="ed-del" class="dang">Apagar peça</button><button id="ed-undel" hidden>Repor apagadas</button>
     <span class="muted" id="ed-st"></span>
     <button class="pri" id="ed-save">Guardar</button><button id="ed-exit">Sair</button>`;
@@ -3842,6 +3992,47 @@ function initEditor(ctx) {
     };
   };
   const creditsAdded = [];
+
+  // ---------------------------------------------------------------- preços e vendas (conjuntos de moradias) → vendas.json
+  if (SALES) q('#ed-sales').onclick = () => {
+    const cur = SALES.all(), U = H.units;
+    const num = (v) => (v > 0 ? Number(v).toLocaleString('pt-PT') : '');
+    const rows = U.map((u) => { const s = cur[u.id] || {}, f = unitFacts(H, u);
+      return `<tr data-u="${u.id}"><td class="ul">${u.short || u.id}</td>
+        <td><select data-k="status">${Object.entries(STATUS).map(([k, v]) => `<option value="${k}"${(s.status || 'disponivel') === k ? ' selected' : ''}>${v}</option>`).join('')}</select></td>
+        <td><input data-k="price" inputmode="numeric" placeholder="ex.: 450 000" value="${num(s.price)}"></td>
+        <td><input data-k="tip" placeholder="${f.tip}" value="${s.tip || ''}" style="width:56px"></td>
+        <td><input data-k="area" inputmode="numeric" placeholder="${f.area}" value="${s.area || ''}" style="width:64px"></td>
+        <td><input data-k="note" placeholder="opcional" value="${(s.note || '').replace(/"/g, '&quot;')}" style="width:150px"></td></tr>`; }).join('');
+    const { c, close } = modal(`<h3>Preços e vendas</h3>
+      <p>Para cada moradia: estado e preço. Ao passar o rato por cima de uma casa, quem visita vê «Vendida», «Reservada» ou o preço com a tipologia e a informação básica. Tipologia e área vêm do projecto — só preencha para corrigir.</p>
+      <div style="overflow:auto;max-height:55vh"><table class="ed-tab"><thead><tr><th></th><th>Estado</th><th>Preço (€)</th><th>Tipologia</th><th>Área (m²)</th><th>Nota curta</th></tr></thead><tbody>${rows}</tbody></table></div>
+      <div class="ed-err" id="ed-err"></div><div class="ed-row"><button id="ed-x">Cancelar</button><button class="pri" id="ed-ok">Guardar</button></div>`);
+    c.style.maxWidth = '760px';
+    const tb = c.querySelector('tbody');
+    const paint = (tr) => { const v = tr.querySelector('[data-k=status]').value; tr.className = v; };
+    tb.querySelectorAll('tr').forEach((tr) => { paint(tr); tr.querySelector('[data-k=status]').onchange = () => paint(tr); });
+    c.querySelector('#ed-x').onclick = close;
+    c.querySelector('#ed-ok').onclick = async () => {
+      const err = c.querySelector('#ed-err'), b = c.querySelector('#ed-ok'), out = {};
+      for (const tr of tb.querySelectorAll('tr')) {
+        const g = (k) => tr.querySelector(`[data-k=${k}]`).value.trim();
+        const price = g('price') ? Math.round(parseFloat(g('price').replace(/[\s.€]/g, '').replace(',', '.'))) : 0;
+        if (g('price') && !(price > 0)) { err.textContent = `Preço inválido na moradia ${tr.dataset.u}.`; return; }
+        const area = g('area') ? Math.round(parseFloat(g('area').replace(',', '.'))) : 0;
+        out[tr.dataset.u] = { status: g('status'), ...(price ? { price } : {}), ...(g('tip') ? { tip: g('tip') } : {}), ...(area > 0 ? { area } : {}), ...(g('note') ? { note: g('note').slice(0, 120) } : {}) };
+      }
+      b.disabled = true; err.textContent = 'A guardar…';
+      try {
+        await putFile(token, R, (R.dir ? R.dir + '/' : '') + 'vendas.json', JSON.stringify({ version: 1, house: H.meta.slug, saved: new Date().toISOString(), units: out }, null, 1) + '\n',
+          `Preços e vendas: ${H.meta.name} (${Object.values(out).filter((x) => x.status === 'vendida').length} vendidas)`);
+        SALES.set(out); close(); status('Preços e vendas guardados — visíveis para todos dentro de 1 a 2 minutos');
+      } catch (ex) {
+        if (/401|403/.test(ex.message)) { token = null; ss.set('casa3d-token', ''); }
+        err.textContent = /403/.test(ex.message) ? 'A chave do GitHub não tem permissão de escrita.' : 'Erro ao guardar: ' + ex.message; b.disabled = false;
+      }
+    };
+  };
 
   // ---------------------------------------------------------------- pavimentos e revestimentos (texturas)
   // Fotografia do material (azulejo, soalho, pedra…) em repetição: indica-se a medida real que a imagem representa.
@@ -4167,6 +4358,7 @@ const { Walker } = __m_walk;
 const { roomLabels, findRoom, Measure, fmt } = __m_tools;
 const { pointInPoly, v3, rectPts, rotFwd } = __m_geom;
 const { initEditor } = __m_editor;
+const { initSales } = __m_sales;
 const { RoomProbes } = __m_probes;
 const { buildSkirting } = __m_details;
 // Casa de Valadares — visualizador 3D. Liga dados (house-data.js) → construtores → interface.
@@ -4586,6 +4778,7 @@ let down = null;
 renderer.domElement.addEventListener('pointerdown', (e) => { down = { x: e.clientX, y: e.clientY, t: performance.now() }; });
 renderer.domElement.addEventListener('pointerup', (e) => {
   if (!down || Math.hypot(e.clientX - down.x, e.clientY - down.y) > 6 || performance.now() - down.t > 600) return;
+  if (sales && mode === '3d' && !unitSel && !measuring) { const u = sales.unitAt(e.clientX, e.clientY); if (u) { sales.hide(); selectUnit(u.id); const v = unitView(u); flyTo(v.pos, v.target, v.fov); return; } }
   const hit = pick(e); if (!hit) return;
   const D = hit.object.userData.door; // clicar numa porta abre-a ou fecha-a
   if (D && !measuring && mode !== 'plan') { setDoor(D, D.target < 0.5); $('#t-doors').checked = doors.some((x) => !x.d.ext && !x.d.glass && x.target === 1); return; }
@@ -4942,7 +5135,11 @@ resize(); updateSun(); applyLayers();
 $('#loading').hidden = true;
 frame();
 // editor de mobiliário (layout.json para todos; #editar + palavra-passe para mover, rodar e alterar larguras)
-initEditor({ H, M, scene, renderer, furniture, baseZ, test: TEST, getCamera: () => camera, getMode: () => mode, setMode,
+// conjunto: preço e estado de venda de cada moradia (vendas.json) + cartão ao passar o rato na vista 3D
+const sales = MULTI ? initSales({ H, UNITS, renderer, test: TEST, getCamera: () => camera,
+  active: () => mode === '3d' && !unitSel && !photo.active && !measuring, canClick: () => true }) : null;
+if (sales) sales.onChange(() => { if (unitBadges.length) paintSales(); renderUnitsUI(); });
+initEditor({ H, M, scene, renderer, furniture, baseZ, test: TEST, sales, getCamera: () => camera, getMode: () => mode, setMode,
   redraw: () => { if (TEST) frame(); }, showCredits, applyFinish, finishSlots, showFurniture: () => { $('#t-furn').checked = true; $('#t-renders').checked = false; applyLayers(); } });
 const allReady = Promise.allSettled([modelsReady(), texReady, skyReady, vegReady]).then(() => updateProbes());
 if (MULTI) initUnits();
@@ -4982,9 +5179,18 @@ function renderUnitsUI() {
   if (!unitSel) { card.innerHTML = '<p class="small muted" style="margin:0">Escolha uma moradia para a ver de perto, entrar e percorrer os pisos.</p>'; $('#level-chips').innerHTML = ''; return; }
   const u = unitSel, rooms = H.rooms.filter((r) => r.unit === u.id && !r.exterior);
   const area = rooms.reduce((a, r) => a + (r.official || r.area), 0);
-  card.innerHTML = `<div class="u-name">${u.name}</div><div class="small muted">${u.summary || ''}${u.summary ? ' · ' : ''}${fmt(area, 0)} m² úteis (soma dos compartimentos)</div>
+  card.innerHTML = `<div class="u-name">${u.name}</div>${sales ? sales.lineHTML(u) : ''}<div class="small muted">${u.summary || ''}${u.summary ? ' · ' : ''}${sales ? `${fmt(sales.facts(u).area, 0)} m² úteis (sem garagem nem arrumos)` : `${fmt(area, 0)} m² úteis (soma dos compartimentos)`}</div>
     <div class="row"><button class="btn" data-uact="view">Ver de fora</button><button class="btn primary" data-uact="walk">Visitar por dentro</button></div>`;
   $('#level-chips').innerHTML = (u.levels || []).map((l) => `<button class="chip" data-level="${l.id}" aria-pressed="${levelSel && levelSel.id === l.id}">${l.name}</button>`).join('');
+}
+// estado de venda nas letras do 3D e nos botões das moradias
+function paintSales() {
+  for (const o of unitBadges) {
+    const el = o.element, s = sales.get(el.dataset.unit).status || 'disponivel';
+    el.classList.remove('vendida', 'reservada'); if (s !== 'disponivel') el.classList.add(s);
+    el.innerHTML = `<b>${(UNITS.find((x) => x.id === el.dataset.unit) || {}).short || el.dataset.unit}</b>` + (s === 'vendida' ? '<span class="st">Vendida</span>' : s === 'reservada' ? '<span class="st">Reservada</span>' : '');
+  }
+  for (const b of document.querySelectorAll('#unit-chips [data-unit]')) if (b.dataset.unit) b.dataset.st = sales.get(b.dataset.unit).status || 'disponivel';
 }
 function initUnits() {
   const sec = $('#units-sec'); if (!sec || !UNITS.length) return;
@@ -5000,11 +5206,15 @@ function initUnits() {
   // etiquetas das moradias no 3D (vista geral): clique escolhe a casa
   for (const u of UNITS) {
     const el = document.createElement('button'); el.type = 'button'; el.className = 'ubadge'; el.innerHTML = `<b>${u.short || u.id}</b>`;
-    el.title = u.name; el.addEventListener('click', (e) => { e.stopPropagation(); selectUnit(u.id); const v = unitView(u); flyTo(v.pos, v.target, v.fov); });
+    el.dataset.unit = u.id;
+    if (sales) { el.addEventListener('pointerenter', () => { const r = el.getBoundingClientRect(); sales.showAt(u, r.right, r.bottom); }); el.addEventListener('pointerleave', () => sales.hide()); }
+    else el.title = u.name;
+    el.addEventListener('click', (e) => { e.stopPropagation(); selectUnit(u.id); const v = unitView(u); flyTo(v.pos, v.target, v.fov); });
     const [x0, y0, x1, y1] = u.bbox, top = Math.max(...H.extraRoofs.filter((r) => { const [cx, cy] = centroidOf(r.outline); return cx > x0 && cx < x1 && cy > y0 && cy < y1; }).map((r) => r.z1 + (r.parapet || 0)), (u.levels[0]?.z ?? 0) + 3.5);
     const o = new CSS2DObject(el); o.position.copy(v3(u.badge ? u.badge[0] : (x0 + x1) / 2, u.badge ? u.badge[1] : (y0 + y1) / 2, top + 1.6)); scene.add(o); unitBadges.push(o);
   }
   $('#t-units').addEventListener('change', applyLayers);
+  if (sales) paintSales();
   renderUnitsUI(); applyLayers();
 }
 return {  };
