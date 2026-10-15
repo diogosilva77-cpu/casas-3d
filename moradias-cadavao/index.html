@@ -191,6 +191,7 @@ body.photo .titleblock, body.photo .modes, body.photo #panel, body.photo #panel-
     <div class="eyebrow" id="t-place">Cadavão · Vila Nova de Gaia</div>
     <h1 id="t-name">Moradias de Cadavão</h1>
     <div class="meta" id="t-meta"></div>
+    <div id="t-dl"></div>
   </header>
 
   <nav class="modes" aria-label="Modo de visualização">
@@ -3566,6 +3567,7 @@ function initSales(ctx) {
     if (parts.length) h += `<div class="l">${parts.join(' · ')}</div>`;
     if (f.extras.length) h += `<div class="l">${esc(f.extras.join(' · '))}</div>`;
     if (s.note) h += `<div class="k">${esc(s.note)}</div>`;
+    if (api.hasPlan && api.hasPlan(u)) h += `<div class="l">Planta para descarregar no painel da moradia</div>`;
     if (hint) h += `<div class="hint">Clique para ver de perto e visitar</div>`;
     return h;
   };
@@ -3620,6 +3622,47 @@ function initSales(ctx) {
   return api;
 }
 return { STATUS, fmtPrice, unitFacts, initSales };
+})();
+
+// ===== src/plans.js =====
+const __m_plans = (() => {
+
+// Plantas para descarregar: o editor (#editar) envia um PDF ou imagem para <pasta>/plantas/ e grava plantas.json;
+// quem visita vê «Descarregar planta» no cartão do título (planta geral) e, num conjunto, no cartão de cada moradia.
+// plantas.json = { general: {file, name}, units: { A: {file, name}, … } }   (file relativo à página)
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const extOf = (f) => ((f || '').match(/\.([a-z0-9]+)$/i) || [, ''])[1].toLowerCase();
+
+function initPlans(ctx) {
+  const { H } = ctx;
+  const P = { general: null, units: {}, ...(H.meta.plans || {}) };
+  const subs = [];
+  const api = {
+    general: () => P.general,
+    unit: (id) => (P.units || {})[id] || null,
+    all: () => JSON.parse(JSON.stringify(P)),
+    set(d) { P.general = d.general || null; P.units = d.units || {}; subs.forEach((f) => f()); },
+    onChange: (f) => subs.push(f),
+    // ligação de descarga (mesma origem: o atributo download dá o nome do ficheiro)
+    link(p, label, fname = label, cls = 'btn ghost dlbtn') {
+      if (!p) return '';
+      const ext = extOf(p.file), nm = String(fname).replace(/[\\/:*?"<>|]/g, '-') + (ext ? '.' + ext : '');
+      return `<a class="${cls}" href="${esc(new URL(p.file, location.href).href)}" download="${esc(nm)}" target="_blank" rel="noopener">`
+        + `<svg width="13" height="13" viewBox="0 0 16 16" aria-hidden="true" style="vertical-align:-2px;margin-right:6px"><path d="M8 1v9m0 0L4.5 6.5M8 10l3.5-3.5M2 12v2.5h12V12" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+        + `${esc(label)}${ext ? `<span style="opacity:.65;margin-left:5px">(${ext.toUpperCase()})</span>` : ''}</a>`;
+    },
+  };
+  if ((!ctx.test || /plantas/.test(location.search)) && /^https?:$/.test(location.protocol)) {
+    fetch(new URL('plantas.json', location.href).href + '?v=' + Date.now(), { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null)).then((d) => { if (d) api.set(d); }).catch(() => { /* ainda sem plantas */ });
+  }
+  const css = document.createElement('style');
+  css.textContent = `.dlbtn{display:inline-flex;align-items:center;text-decoration:none;color:inherit;margin-top:8px}
+  #t-dl:empty{display:none}#t-dl .dlbtn{padding:6px 10px;font-size:12px}`;
+  document.head.appendChild(css);
+  return api;
+}
+return { initPlans };
 })();
 
 // ===== src/editor.js =====
@@ -3770,7 +3813,8 @@ function initEditor(ctx) {
   document.head.appendChild(css);
   const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
   const SALES = ctx.sales;     // conjunto de moradias: preços e vendas
-  const openBtn = el('button', 'ed-btn', SALES ? 'Editar (mobiliário, preços e vendas)' : 'Editar mobiliário'); document.body.appendChild(openBtn);
+  const PLANS = ctx.plans;     // plantas para descarregar
+  const openBtn = el('button', 'ed-btn', SALES ? 'Editar (mobiliário, plantas, preços e vendas)' : 'Editar (mobiliário e plantas)'); document.body.appendChild(openBtn);
 
   let token = ss.get('casa3d-token');
   const modal = (inner) => { const m = el('div', 'ed-modal'); const c = el('div', 'ed-card', inner); m.appendChild(c); document.body.appendChild(m); return { m, c, close: () => m.remove() }; };
@@ -3831,6 +3875,7 @@ function initEditor(ctx) {
     <span class="grp"><button id="ed-rl" title="Rodar 90° (esquerda)">↺ 90°</button><button id="ed-rr" title="Rodar 90° (direita)">↻ 90°</button><button id="ed-r15" title="Rodar 15°">↻ 15°</button></span>
     <button id="ed-glb" title="Carregar um modelo 3D (.glb) para o site: substitui a peça seleccionada (móvel, electrodoméstico, louça, carro) ou acrescenta uma nova">Modelo 3D…</button>
     <button id="ed-fin" title="Trocar o pavimento ou o revestimento de paredes por uma textura (fotografia do material)">Pavimentos e paredes…</button>
+    ${PLANS ? '<button id="ed-plans" title="Enviar a planta (PDF ou imagem) que os visitantes podem descarregar">Plantas…</button>' : ''}
     ${SALES ? '<button id="ed-sales" class="pri" title="Preço e estado (disponível, reservada, vendida) de cada moradia">Preços e vendas…</button>' : ''}
     <button id="ed-reset">Repor peça</button><button id="ed-del" class="dang">Apagar peça</button><button id="ed-undel" hidden>Repor apagadas</button>
     <span class="muted" id="ed-st"></span>
@@ -3992,6 +4037,54 @@ function initEditor(ctx) {
     };
   };
   const creditsAdded = [];
+
+  // ---------------------------------------------------------------- plantas para descarregar → <pasta>/plantas/ + plantas.json
+  if (PLANS) q('#ed-plans').onclick = () => {
+    const cur = PLANS.all(), multi = (H.units || []).length > 1;
+    const rows = [{ k: 'general', label: multi ? 'Conjunto (todas)' : 'Planta da moradia' }].concat(multi ? H.units.map((u) => ({ k: u.id, label: u.name })) : []);
+    const curOf = (k) => (k === 'general' ? cur.general : (cur.units || {})[k]) || null;
+    const { c, close } = modal(`<h3>Plantas para descarregar</h3>
+      <p>Envie a planta em PDF (ou JPG/PNG). Quem visita vê «Descarregar planta»${multi ? ' — a do conjunto no título da página e a de cada moradia no cartão da moradia' : ' no título da página'}.</p>
+      <div style="overflow:auto;max-height:55vh"><table class="ed-tab"><thead><tr><th></th><th>Actual</th><th>Novo ficheiro</th><th></th></tr></thead><tbody>${rows.map((r) => {
+        const p = curOf(r.k);
+        return `<tr data-k="${r.k}"><td style="font-weight:600;white-space:nowrap">${r.label}</td><td class="cur">${p ? `<a href="${new URL(p.file, location.href).href}" target="_blank" rel="noopener">${(p.name || p.file).replace(/</g, '&lt;')}</a>` : '<span style="color:#8a9396">—</span>'}</td>
+          <td><input type="file" accept="application/pdf,.pdf,image/jpeg,image/png,image/webp" style="max-width:210px"></td>
+          <td>${p ? '<label style="display:flex;gap:5px;align-items:center;font-size:12px;white-space:nowrap"><input type="checkbox" class="rm" style="width:auto">Retirar</label>' : ''}</td></tr>`; }).join('')}</tbody></table></div>
+      <div class="ed-err" id="ed-err"></div><div class="ed-row"><button id="ed-x">Cancelar</button><button class="pri" id="ed-ok">Guardar</button></div>`);
+    c.style.maxWidth = '760px';
+    c.querySelector('#ed-x').onclick = close;
+    c.querySelector('#ed-ok').onclick = async () => {
+      const err = c.querySelector('#ed-err'), b = c.querySelector('#ed-ok');
+      const next = { general: cur.general || null, units: { ...(cur.units || {}) } };
+      const jobs = [];
+      for (const tr of c.querySelectorAll('tbody tr')) {
+        const k = tr.dataset.k, f = tr.querySelector('input[type=file]').files[0], rm = tr.querySelector('.rm');
+        if (f) {
+          if (f.size > 40e6) { err.textContent = `Ficheiro demasiado grande (${(f.size / 1e6).toFixed(0)} MB; máx. 40 MB): ${f.name}`; return; }
+          if (!/\.(pdf|jpe?g|png|webp)$/i.test(f.name)) { err.textContent = 'Só PDF, JPG, PNG ou WebP: ' + f.name; return; }
+          jobs.push([k, f]);
+        } else if (rm && rm.checked) { if (k === 'general') next.general = null; else delete next.units[k]; }
+      }
+      b.disabled = true;
+      try {
+        for (const [k, f] of jobs) {
+          err.textContent = `A enviar ${f.name}…`;
+          const ext = f.name.match(/\.([a-z0-9]+)$/i)[1].toLowerCase().replace('jpeg', 'jpg');
+          const rel = `plantas/${k === 'general' ? 'geral' : slugName(k)}-${slugName(f.name.replace(/\.[a-z0-9]+$/i, ''))}.${ext}`;
+          await putBinary(token, R, (R.dir ? R.dir + '/' : '') + rel, await f.arrayBuffer(), `Planta: ${k === 'general' ? 'geral' : k} (${H.meta.name})`);
+          const p = { file: rel, name: f.name, saved: new Date().toISOString() };
+          if (k === 'general') next.general = p; else next.units[k] = p;
+        }
+        err.textContent = 'A guardar…';
+        await putFile(token, R, (R.dir ? R.dir + '/' : '') + 'plantas.json', JSON.stringify({ version: 1, house: H.meta.slug, ...next }, null, 1) + '\n', `Plantas: ${H.meta.name}`);
+        // a ligação aparece já; o ficheiro fica disponível no site dentro de 1–2 min
+        PLANS.set(next); close(); status('Plantas guardadas — disponíveis para descarregar dentro de 1 a 2 minutos');
+      } catch (ex) {
+        if (/401|403/.test(ex.message)) { token = null; ss.set('casa3d-token', ''); }
+        err.textContent = /403/.test(ex.message) ? 'A chave do GitHub não tem permissão de escrita.' : 'Erro ao enviar: ' + ex.message; b.disabled = false;
+      }
+    };
+  };
 
   // ---------------------------------------------------------------- preços e vendas (conjuntos de moradias) → vendas.json
   if (SALES) q('#ed-sales').onclick = () => {
@@ -4359,6 +4452,7 @@ const { roomLabels, findRoom, Measure, fmt } = __m_tools;
 const { pointInPoly, v3, rectPts, rotFwd } = __m_geom;
 const { initEditor } = __m_editor;
 const { initSales } = __m_sales;
+const { initPlans } = __m_plans;
 const { RoomProbes } = __m_probes;
 const { buildSkirting } = __m_details;
 // Casa de Valadares — visualizador 3D. Liga dados (house-data.js) → construtores → interface.
@@ -5135,11 +5229,17 @@ resize(); updateSun(); applyLayers();
 $('#loading').hidden = true;
 frame();
 // editor de mobiliário (layout.json para todos; #editar + palavra-passe para mover, rodar e alterar larguras)
+// plantas para descarregar (plantas.json, enviadas no editor): geral no cartão do título, por moradia no cartão da moradia
+const plans = initPlans({ H, test: TEST });
+const renderPlanTitle = () => { $('#t-dl').innerHTML = plans.link(plans.general(), 'Descarregar planta', `Planta - ${H.meta.name}`); };
+renderPlanTitle();
+plans.onChange(() => { renderPlanTitle(); if (MULTI) renderUnitsUI(); });
 // conjunto: preço e estado de venda de cada moradia (vendas.json) + cartão ao passar o rato na vista 3D
 const sales = MULTI ? initSales({ H, UNITS, renderer, test: TEST, getCamera: () => camera,
   active: () => mode === '3d' && !unitSel && !photo.active && !measuring, canClick: () => true }) : null;
+if (sales) sales.hasPlan = (u) => !!plans.unit(u.id);
 if (sales) sales.onChange(() => { if (unitBadges.length) paintSales(); renderUnitsUI(); });
-initEditor({ H, M, scene, renderer, furniture, baseZ, test: TEST, sales, getCamera: () => camera, getMode: () => mode, setMode,
+initEditor({ H, M, scene, renderer, furniture, baseZ, test: TEST, sales, plans, getCamera: () => camera, getMode: () => mode, setMode,
   redraw: () => { if (TEST) frame(); }, showCredits, applyFinish, finishSlots, showFurniture: () => { $('#t-furn').checked = true; $('#t-renders').checked = false; applyLayers(); } });
 const allReady = Promise.allSettled([modelsReady(), texReady, skyReady, vegReady]).then(() => updateProbes());
 if (MULTI) initUnits();
@@ -5180,7 +5280,7 @@ function renderUnitsUI() {
   const u = unitSel, rooms = H.rooms.filter((r) => r.unit === u.id && !r.exterior);
   const area = rooms.reduce((a, r) => a + (r.official || r.area), 0);
   card.innerHTML = `<div class="u-name">${u.name}</div>${sales ? sales.lineHTML(u) : ''}<div class="small muted">${u.summary || ''}${u.summary ? ' · ' : ''}${sales ? `${fmt(sales.facts(u).area, 0)} m² úteis (sem garagem nem arrumos)` : `${fmt(area, 0)} m² úteis (soma dos compartimentos)`}</div>
-    <div class="row"><button class="btn" data-uact="view">Ver de fora</button><button class="btn primary" data-uact="walk">Visitar por dentro</button></div>`;
+    <div class="row"><button class="btn" data-uact="view">Ver de fora</button><button class="btn primary" data-uact="walk">Visitar por dentro</button></div>${plans.link(plans.unit(u.id), 'Descarregar planta', `Planta - ${H.meta.name} - ${u.name}`)}`;
   $('#level-chips').innerHTML = (u.levels || []).map((l) => `<button class="chip" data-level="${l.id}" aria-pressed="${levelSel && levelSel.id === l.id}">${l.name}</button>`).join('');
 }
 // estado de venda nas letras do 3D e nos botões das moradias
