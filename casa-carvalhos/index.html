@@ -44,7 +44,7 @@ button { font: inherit; color: inherit; }
   font: 600 13px/1 var(--display); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
 .modes button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
 
-#panel { position: absolute; top: 14px; right: 16px; width: 290px; max-height: calc(100% - 84px); overflow-y: auto; background: var(--panel);
+#panel { position: absolute; top: 56px; right: 16px; width: 290px; max-height: calc(100% - 126px); overflow-y: auto; background: var(--panel);
   border: 1px solid var(--rule); border-radius: var(--r); backdrop-filter: blur(6px); }
 #panel section { padding: 12px 14px; border-top: 1px solid var(--rule); display: grid; gap: 8px; }
 #panel section:first-child { border-top: 0; }
@@ -58,6 +58,12 @@ button { font: inherit; color: inherit; }
 .chip { border: 1px solid var(--rule); background: transparent; border-radius: 999px; padding: 5px 11px; cursor: pointer; font-size: 13px; }
 .chip[aria-pressed="true"] { border-color: var(--ink); background: var(--ink); color: var(--paper); }
 .chip:hover { border-color: var(--muted); }
+.ubadge { pointer-events: auto; cursor: pointer; border: 0; background: var(--ink); color: var(--paper); width: 30px; height: 30px; border-radius: 50%;
+  font: 600 16px/30px var(--display); letter-spacing: .02em; box-shadow: 0 2px 8px rgba(0,0,0,.35); padding: 0; transition: transform .12s; }
+.ubadge:hover { transform: scale(1.15); background: var(--accent); }
+#unit-card { display: grid; gap: 6px; }
+#unit-card .u-name { font: 600 19px/1.1 var(--display); letter-spacing: .02em; }
+#unit-card .row .btn { flex: 1; }
 .row { display: flex; align-items: center; gap: 10px; }
 input[type=range] { width: 100%; accent-color: var(--accent); }
 #hourval { font: 600 15px/1 var(--display); min-width: 44px; text-align: right; font-variant-numeric: tabular-nums; }
@@ -70,7 +76,13 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
 .mgrid { display: grid; grid-template-columns: auto 1fr auto 1fr auto 1fr; gap: 2px 6px; margin-top: 4px; }
 .mgrid span { color: var(--muted); }
 #sunread { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
-#panel-toggle { display: none; }
+#panel[data-open="false"] { display: none; }
+/* botão sempre visível para esconder/mostrar os controlos */
+#panel-toggle { display: inline-flex; align-items: center; gap: 7px; position: absolute; top: 14px; right: 16px; z-index: 4; border: 1px solid var(--rule); background: var(--panel);
+  backdrop-filter: blur(6px); border-radius: 999px; padding: 8px 13px; font: 600 12px/1 var(--display); letter-spacing: .1em; text-transform: uppercase; cursor: pointer; color: var(--ink); }
+#panel-toggle:hover { border-color: var(--muted); }
+#panel-toggle svg { transition: transform .18s; }
+#panel-toggle[aria-expanded="true"] svg { transform: rotate(180deg); }
 
 #roomcard { position: absolute; left: 16px; bottom: 16px; width: 320px; max-width: calc(100% - 32px); background: var(--panel);
   border: 1px solid var(--rule); border-left: 3px solid var(--accent); border-radius: var(--r); padding: 12px 14px; backdrop-filter: blur(6px); }
@@ -127,12 +139,11 @@ code { font-size: 12.5px; background: var(--rule); padding: 1px 4px; border-radi
 #loading { position: absolute; inset: 0; display: grid; place-items: center; background: var(--paper); font: 600 16px/1 var(--display); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); z-index: 6; }
 
 @media (max-width: 760px) {
-  .titleblock { padding: 8px 11px; top: 10px; left: 10px; max-width: calc(100% - 20px); }
+  .titleblock { padding: 8px 11px; top: 10px; left: 10px; max-width: calc(100% - 140px); }
   .titleblock h1 { font-size: 21px; } .titleblock .meta { display: none; }
   .modes { top: auto; bottom: 14px; }
   #panel { top: auto; bottom: 64px; right: 10px; left: 10px; width: auto; max-height: 55%; }
-  #panel[data-open="false"] { display: none; }
-  #panel-toggle { display: block; position: absolute; top: 10px; right: 10px; border: 1px solid var(--rule); background: var(--panel); border-radius: 999px; padding: 8px 13px; font: 600 12px/1 var(--display); letter-spacing: .1em; text-transform: uppercase; cursor: pointer; }
+  #panel-toggle { top: 10px; right: 10px; }
   #roomcard { left: 10px; right: 10px; width: auto; bottom: 64px; }
   body[data-mode="walk"] #walkhelp { bottom: 64px; font-size: 12px; }
   body[data-mode="walk"] #roomcard { bottom: 110px; }
@@ -185,6 +196,7 @@ body.photo .titleblock, body.photo .modes, body.photo #panel, body.photo #panel-
     <div class="eyebrow" id="t-place">Carvalhos · Vila Nova de Gaia</div>
     <h1 id="t-name">Casa de Carvalhos</h1>
     <div class="meta" id="t-meta"></div>
+    <div id="t-dl"></div>
   </header>
 
   <nav class="modes" aria-label="Modo de visualização">
@@ -193,8 +205,14 @@ body.photo .titleblock, body.photo .modes, body.photo #panel, body.photo #panel-
     <button data-setmode="walk" aria-pressed="false">Passeio</button>
   </nav>
 
-  <button id="panel-toggle" aria-controls="panel" aria-expanded="false">Controlos</button>
+  <button id="panel-toggle" aria-controls="panel" aria-expanded="true"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Esconder controlos</span></button>
   <aside id="panel" data-open="true">
+    <section id="units-sec" hidden>
+      <h2>Moradias</h2>
+      <div class="chips" id="unit-chips"></div>
+      <div id="unit-card"></div>
+      <div class="chips" id="level-chips" aria-label="Pisos"></div>
+    </section>
     <section>
       <h2>Camadas</h2>
       <label class="toggle">Cobertura e tectos <input type="checkbox" id="t-roof" checked></label>
@@ -204,6 +222,7 @@ body.photo .titleblock, body.photo .modes, body.photo #panel, body.photo #panel-
       <label class="toggle">Terreno, piscina e muros <input type="checkbox" id="t-site" checked></label>
       <label class="toggle">Rua e vizinhos <input type="checkbox" id="t-context" checked></label>
       <label class="toggle">Pontos dos renders <input type="checkbox" id="t-renders" checked></label>
+      <label class="toggle" hidden>Letras das moradias <input type="checkbox" id="t-units" checked></label>
     </section>
     <section>
       <h2>Fotografia realista</h2>
@@ -734,6 +753,7 @@ function makeMaterials() {
   const sett = setts();
   const drive = driveway();
   const xis = stackedStone();
+  const roofSl = tiles({ base: '#aeaca6', joint: 'rgba(70,70,68,0.55)', tw: 0.5, th: 0.5, size: [2.0, 2.0], seed: 53, vary: 6, cloud: 12, jointW: 1.3 });
 
   const M = {
     concrete: std({ map: conc.map, ...nrm(conc, 0.9), roughness: 0.9 }),
@@ -773,6 +793,10 @@ function makeMaterials() {
     glass: new THREE.MeshPhysicalMaterial({ color: 0xeef2f2, metalness: 0, roughness: 0.03, ior: 1.52, transparent: true, opacity: 0.2, // Guardian Sun: neutro, controlo solar
       envMapIntensity: 2.0, depthWrite: false, side: THREE.DoubleSide, specularIntensity: 1 }),
     skyglass: new THREE.MeshPhysicalMaterial({ color: 0xe8f2f5, roughness: 0.04, transparent: true, opacity: 0.25, depthWrite: false, side: THREE.DoubleSide }),
+    glassRail: new THREE.MeshPhysicalMaterial({ color: 0xdfece8, roughness: 0.04, metalness: 0, transparent: true, opacity: 0.28, depthWrite: false, side: THREE.DoubleSide, envMapIntensity: 1.6 }), // guardas em vidro
+    roofSlabs: std({ map: roofSl.map, ...nrm(roofSl, 0.5), roughness: 0.92 }),   // lajetas de betão sobre a cobertura (50 × 50)
+    etics7038: std({ map: eticsW.map, ...nrm(eticsW, 0.45), color: 0xc4c1b8, roughness: 0.9 }),   // reboco areado RAL 7038 (cinza ágata)
+    metal7043: std({ color: 0x4d5254, roughness: 0.5, metalness: 0.35 }),          // chapa lacada RAL 7043 (cinza tráfego B)
     water: new THREE.MeshPhysicalMaterial({ color: 0x3d6f7a, roughness: 0.04, metalness: 0, transparent: true, opacity: 0.6, ior: 1.33,
       normalMap: waterNormal(), normalScale: new THREE.Vector2(0.3, 0.3), envMapIntensity: 2.2 }),
     pooltile: std({ map: poolT.map, ...nrm(poolT, 0.5), roughness: 0.3 }),
@@ -1254,7 +1278,7 @@ return { cloudDensity, makeSky };
 
 // ===== src/build-house.js =====
 const __m_build_house = (() => {
-const { Buckets, prism, box, cap, sides, rectPts, insetOrtho, v3, rotFwd, rotMatrix } = __m_geom;
+const { Buckets, prism, box, cap, sides, rectPts, insetOrtho, v3, rotFwd, rotMatrix, pointInPoly } = __m_geom;
 // Constrói a casa a partir de HOUSE (paredes vectoriais, vãos, cobertura).
 const put = (g, ...ms) => { if (ms.length) g.add(...ms); }; // Object3D.add() sem argumentos dá erro
 
@@ -1263,6 +1287,7 @@ function buildHouse(H, M) {
   const groups = {
     walls: new THREE.Group(), glass: new THREE.Group(), floors: new THREE.Group(),
     roof: new THREE.Group(), ceilings: new THREE.Group(), plan: new THREE.Group(), lights: new THREE.Group(), doors: new THREE.Group(),
+    stairs: new THREE.Group(),
   };
   for (const [k, g] of Object.entries(groups)) g.name = k;
 
@@ -1285,7 +1310,8 @@ function buildHouse(H, M) {
   for (const w of H.walls) prism(W, w.pts, w.z0, w.z1, { side: roomFaces(w.pts, w.faces), top: 'wallcap', bottom: null });
   // lintéis: se a face inferior coincide com o tecto falso, sobe 4 mm (duas faces complanares cintilam)
   for (const p of H.pieces) {
-    const z0 = p.kind === 'lintel' && Math.abs(p.z0 - Z.ceiling) < 0.004 ? Z.ceiling + 0.004 : p.z0;
+    const cz = p.ceil ?? Z.ceiling;   // conjunto/pisos: tecto do compartimento junto ao vão
+    const z0 = p.kind === 'lintel' && Math.abs(p.z0 - cz) < 0.004 ? cz + 0.004 : p.z0;
     prism(W, p.pts, z0, p.z1, { side: roomFaces(p.pts, p.faces), top: 'wallcap', bottom: 'wallcap' });
   }
   const D = H.decor || {};
@@ -1334,32 +1360,34 @@ function buildHouse(H, M) {
   }
   // portões seccionados de garagem (opcional: H.garageDoor, objecto ou lista; o = 'v' plano X fixo, 'h' plano Y fixo)
   for (const gd of [].concat(H.garageDoor || [])) {
+    const zb = gd.zb || 0, m = gd.mat || 'garagedoor', fs = gd.side === 'N' || gd.side === 'E' ? 1 : -1;   // side: lado das réguas (exterior)
     if ((gd.o || 'v') === 'v') {
-      box(W, 'garagedoor', gd.x - 0.04, gd.y0, gd.x + 0.04, gd.y1, 0, gd.z1);
-      for (let z = 0.6; z < gd.z1; z += 0.6) box(W, 'frame', gd.x + 0.04, gd.y0, gd.x + 0.045, gd.y1, z - 0.008, z + 0.008);
+      box(W, m, gd.x - 0.04, gd.y0, gd.x + 0.04, gd.y1, zb, zb + gd.z1);
+      for (let z = 0.6; z < gd.z1; z += 0.6) box(W, 'frame', gd.x + fs * 0.04, gd.y0, gd.x + fs * 0.045, gd.y1, zb + z - 0.008, zb + z + 0.008);
     } else {
-      box(W, 'garagedoor', gd.x0, gd.y - 0.04, gd.x1, gd.y + 0.04, 0, gd.z1);
-      for (let z = 0.6; z < gd.z1; z += 0.6) box(W, 'frame', gd.x0, gd.y - 0.045, gd.x1, gd.y - 0.04, z - 0.008, z + 0.008);
+      box(W, m, gd.x0, gd.y - 0.04, gd.x1, gd.y + 0.04, zb, zb + gd.z1);
+      for (let z = 0.6; z < gd.z1; z += 0.6) box(W, 'frame', gd.x0, gd.y + fs * 0.045, gd.x1, gd.y + fs * 0.04, zb + z - 0.008, zb + z + 0.008);
     }
   }
   // portas exteriores maciças (H.extDoors = [{o:'h'|'v', c, a, b, z1, mat}]): folha 6 cm + puxador vertical nas duas faces
-  for (const d of H.extDoors || []) {
+  for (const d0 of H.extDoors || []) {
+    const zb = d0.zb || 0, d = zb ? { ...d0, z1: zb + (d0.z1 || Z.doorHead) } : d0;   // conjunto: cota do compartimento
     const t = 0.03, m = d.mat || 'garagedoor', z1 = d.z1 || Z.doorHead, hx = d.b - 0.12;
     if (d.swing) {                    // de batente: só o aro aqui; a folha é uma porta que abre (H.doors, ext)
-      if (d.o === 'h') { box(W, 'frame', d.a - 0.03, d.c - t - 0.005, d.a, d.c + t + 0.005, 0, z1 + 0.03); box(W, 'frame', d.b, d.c - t - 0.005, d.b + 0.03, d.c + t + 0.005, 0, z1 + 0.03); box(W, 'frame', d.a, d.c - t - 0.005, d.b, d.c + t + 0.005, z1, z1 + 0.03); }
-      else { box(W, 'frame', d.c - t - 0.005, d.a - 0.03, d.c + t + 0.005, d.a, 0, z1 + 0.03); box(W, 'frame', d.c - t - 0.005, d.b, d.c + t + 0.005, d.b + 0.03, 0, z1 + 0.03); box(W, 'frame', d.c - t - 0.005, d.a, d.c + t + 0.005, d.b, z1, z1 + 0.03); }
+      if (d.o === 'h') { box(W, 'frame', d.a - 0.03, d.c - t - 0.005, d.a, d.c + t + 0.005, zb, z1 + 0.03); box(W, 'frame', d.b, d.c - t - 0.005, d.b + 0.03, d.c + t + 0.005, zb, z1 + 0.03); box(W, 'frame', d.a, d.c - t - 0.005, d.b, d.c + t + 0.005, z1, z1 + 0.03); }
+      else { box(W, 'frame', d.c - t - 0.005, d.a - 0.03, d.c + t + 0.005, d.a, zb, z1 + 0.03); box(W, 'frame', d.c - t - 0.005, d.b, d.c + t + 0.005, d.b + 0.03, zb, z1 + 0.03); box(W, 'frame', d.c - t - 0.005, d.a, d.c + t + 0.005, d.b, z1, z1 + 0.03); }
       continue;
     }
     if (d.o === 'h') {
-      box(W, m, d.a, d.c - t, d.b, d.c + t, 0.005, z1);
-      box(W, 'frame', d.a - 0.03, d.c - t - 0.005, d.a, d.c + t + 0.005, 0, z1 + 0.03); box(W, 'frame', d.b, d.c - t - 0.005, d.b + 0.03, d.c + t + 0.005, 0, z1 + 0.03);
+      box(W, m, d.a, d.c - t, d.b, d.c + t, zb + 0.005, z1);
+      box(W, 'frame', d.a - 0.03, d.c - t - 0.005, d.a, d.c + t + 0.005, zb, z1 + 0.03); box(W, 'frame', d.b, d.c - t - 0.005, d.b + 0.03, d.c + t + 0.005, zb, z1 + 0.03);
       box(W, 'frame', d.a, d.c - t - 0.005, d.b, d.c + t + 0.005, z1, z1 + 0.03);
-      for (const s of [-1, 1]) box(W, 'steel', hx - 0.015, d.c + s * (t + 0.06) - 0.015, hx + 0.015, d.c + s * (t + 0.06) + 0.015, 0.5, 1.7);
+      for (const s of [-1, 1]) box(W, 'steel', hx - 0.015, d.c + s * (t + 0.06) - 0.015, hx + 0.015, d.c + s * (t + 0.06) + 0.015, zb + 0.5, zb + 1.7);
     } else {
-      box(W, m, d.c - t, d.a, d.c + t, d.b, 0.005, z1);
-      box(W, 'frame', d.c - t - 0.005, d.a - 0.03, d.c + t + 0.005, d.a, 0, z1 + 0.03); box(W, 'frame', d.c - t - 0.005, d.b, d.c + t + 0.005, d.b + 0.03, 0, z1 + 0.03);
+      box(W, m, d.c - t, d.a, d.c + t, d.b, zb + 0.005, z1);
+      box(W, 'frame', d.c - t - 0.005, d.a - 0.03, d.c + t + 0.005, d.a, zb, z1 + 0.03); box(W, 'frame', d.c - t - 0.005, d.b, d.c + t + 0.005, d.b + 0.03, zb, z1 + 0.03);
       box(W, 'frame', d.c - t - 0.005, d.a, d.c + t + 0.005, d.b, z1, z1 + 0.03);
-      for (const s of [-1, 1]) box(W, 'steel', d.c + s * (t + 0.06) - 0.015, hx - 0.015, d.c + s * (t + 0.06) + 0.015, hx + 0.015, 0.5, 1.7);
+      for (const s of [-1, 1]) box(W, 'steel', d.c + s * (t + 0.06) - 0.015, hx - 0.015, d.c + s * (t + 0.06) + 0.015, hx + 0.015, zb + 0.5, zb + 1.7);
     }
   }
   // pérgolas (H.pergolas = [{rect, z, dir:'x'|'y', step, w, h, beam, mat}]): vigas de bordo + lâminas paralelas a `dir`
@@ -1371,9 +1399,18 @@ function buildHouse(H, M) {
     else for (let y = y0 + 0.1 + st / 2; y < y1 - 0.1; y += st) box(W, m, x0 + 0.1, y - w / 2, x1 - 0.1, y + w / 2, z - h, z - 0.002);
   }
   // coberturas de volumes a outra cota (H.extraRoofs = [{outline, z0, z1, parapet}]): laje + platibanda opcional
+  // conjunto/pisos: holes (clarabóias, vazios), finish (espessura do godo/lajetas por cima da laje), top (material do acabamento)
+  const XR = new Buckets();   // coberturas extra no grupo da cobertura (o interruptor "Cobertura e tectos" também as retira)
   for (const r of H.extraRoofs || []) {
-    prism(W, r.outline, r.z0, r.z1, { side: r.side || H.roof.side || 'concrete', top: r.parapet ? 'roofgravel' : 'coping', bottom: 'soffit' });
-    if (r.parapet) prism(W, r.outline, r.z1, r.z1 + r.parapet, { side: r.side || H.roof.side || 'concrete', top: 'coping', holes: [insetOrtho(r.outline, 0.15)], holeSide: r.side || H.roof.side || 'concrete' });
+    const W = XR;
+    const sd = r.side || H.roof.side || 'concrete', hs = r.holes || [], pt = r.parapetT || 0.15;
+    const fin = r.parapet && r.finish ? Math.min(r.finish, r.parapet - 0.02) : 0;
+    prism(W, r.outline, r.z0, r.z1, { side: sd, top: r.parapet ? (fin ? null : r.top || 'roofgravel') : r.top || 'coping', bottom: r.bottom || 'soffit', holes: hs, holeSide: sd });
+    if (r.parapet) {
+      const inner = r.inner || insetOrtho(r.outline, pt);   // r.inner: recuo exacto calculado no modelo (contornos irregulares)
+      prism(W, r.outline, r.z1, r.z1 + r.parapet, { side: sd, top: 'coping', holes: [inner], holeSide: sd });
+      if (fin) prism(W, inner, r.z1, r.z1 + fin, { side: sd, top: r.top || 'roofgravel', holes: hs.map((h) => insetOrtho(h, -0.001)), holeSide: sd });
+    }
   }
   // canteiros com lancil em betão e godo (decor.planters = [{rect, h}]) e zonas de godo (decor.gravel = [{rect, z1}])
   for (const { rect: [x0, y0, x1, y1], h } of D.planters || []) {
@@ -1387,10 +1424,50 @@ function buildHouse(H, M) {
   const G0 = new Buckets(), F0 = new Buckets();
   const prof = 0.05, depth = 0.07;
   const rotated = [];   // vidros em paredes oblíquas: construídos no referencial local e rodados (geometria já transformada)
+  const glassBlock = [];   // obstáculos do passeio dos envidraçados até ao chão (painéis fixos); as folhas de correr são portas
   for (const g of H.glass) {
     const G = g.rot ? new Buckets() : G0, F = g.rot ? new Buckets() : F0;
     if (g.rot) rotated.push([g.rot, F, G]);
     const len = g.b - g.a, n = Math.max(1, Math.round(len / 1.6));
+    // envidraçado até ao chão (peitoril < 0,30 m do pavimento) e com ≥ 0,70 m: portas de correr — painéis pares fixos, ímpares
+    // correm por trás do vizinho (abrem com clique, tecla E ou ao aproximar-se no passeio)
+    if (g.slide !== false && g.sill - (g.zb ?? 0) < 0.3 && len >= 0.7) {
+      // ≥ 1,40 m: painéis pares fixos e ímpares de correr; 0,70–1,40 m: uma folha que corre à face da parede
+      const ns = len >= 1.4 ? Math.max(2, Math.round(len / 1.6)) : 1, wp = len / ns, c = g.c, z0 = g.sill, z1 = g.head, P = (sv, tv) => (g.rot ? rotFwd(g.rot, sv, tv) : g.o === 'h' ? [sv, tv] : [tv, sv]);
+      const al = (B, s0, s1, t0, t1, za, zb) => (g.o === 'h' ? box(B, 'frame', s0, t0, s1, t1, za, zb) : box(B, 'frame', t0, s0, t1, s1, za, zb));
+      const gq = (B, s0, s1, t, za, zb) => g.o === 'h'
+        ? B.quad('glass', v3(s0, t, za), v3(s1, t, za), v3(s1, t, zb), v3(s0, t, zb), new THREE.Vector3(0, 0, 1), [[0, 0], [1, 0], [1, 1], [0, 1]])
+        : B.quad('glass', v3(t, s0, za), v3(t, s1, za), v3(t, s1, zb), v3(t, s0, zb), new THREE.Vector3(1, 0, 0), [[0, 0], [1, 0], [1, 1], [0, 1]]);
+      const panel = (B, s0, s1, t) => {   // folha: montantes e travessas de 4,5 cm, 3 cm de espessura, vidro ao centro
+        const f = 0.045, h = 0.015;
+        al(B, s0, s1, t - h, t + h, z0 + 0.01, z0 + 0.01 + f); al(B, s0, s1, t - h, t + h, z1 - 0.01 - f, z1 - 0.01);
+        al(B, s0, s0 + f, t - h, t + h, z0 + 0.01, z1 - 0.01); al(B, s1 - f, s1, t - h, t + h, z0 + 0.01, z1 - 0.01);
+        gq(B, s0 + f, s1 - f, t, z0 + 0.01 + f, z1 - 0.01 - f);
+      };
+      // aro (fixo): soleira, padieira e ombreiras
+      al(F, g.a, g.b, c - depth / 2, c + depth / 2, z0, z0 + 0.01); al(F, g.a, g.b, c - depth / 2, c + depth / 2, z1 - 0.01, z1);
+      al(F, g.a, g.a + 0.02, c - depth / 2, c + depth / 2, z0, z1); al(F, g.b - 0.02, g.b, c - depth / 2, c + depth / 2, z0, z1);
+      for (let i = 0; i < ns; i++) {
+        const s0 = g.a + 0.02 + i * ((len - 0.04) / ns), s1 = s0 + (len - 0.04) / ns;
+        if (ns > 1 && i % 2 === 0) {     // painel fixo (calha exterior)
+          panel(F, s0, s1, c + 0.017);
+          const [ax, ay] = P(s0, c), [bx, by] = P(s1, c); glassBlock.push([ax, ay, bx, by, z0, z1]);
+          continue;
+        }
+        // folha de correr (calha interior): corre para trás do painel anterior
+        const B = new Buckets(); panel(B, s0, s1, c - 0.017);
+        const grp = new THREE.Group(); grp.name = 'porta de vidro';
+        for (const m of B.meshes(M, { name: 'porta de vidro' })) { if (g.rot) { m.geometry.applyMatrix4(rotMatrix(g.rot)); m.geometry.computeBoundingSphere(); } grp.add(m); }
+        const [ax, ay] = P(s0, c - 0.03), [bx, by] = P(s1, c - 0.03), [cx2, cy2] = P(s1, c + 0.03), [dx2, dy2] = P(s0, c + 0.03);
+        const [ux, uy] = [(bx - ax) / (s1 - s0), (by - ay) / (s1 - s0)];
+        const sh = -(s1 - s0) * 0.94, d = { type: 'slide', glass: true, room: 'Porta de vidro', zb: g.zb ?? 0, n: [-uy, ux], closed: [[ax, ay], [bx, by], [cx2, cy2], [dx2, dy2]], pts: null, shift: [ux * sh, uy * sh] };
+        const D = { d, g: grp, k: 0, target: 0 };
+        D.apply = (e) => grp.position.set(d.shift[0] * e, 0, -d.shift[1] * e);
+        D.apply(0); grp.userData.door = D; for (const m of grp.children) m.userData.door = D;
+        groups.doors.add(grp);
+      }
+      continue;
+    }
     const z0 = g.sill, z1 = g.head;
     const along = (s0, s1, t0, t1, za, zb) => (g.o === 'h' ? box(F, 'frame', s0, t0, s1, t1, za, zb) : box(F, 'frame', t0, s0, t1, s1, za, zb));
     const c = g.c, t0 = c - depth / 2, t1 = c + depth / 2;
@@ -1408,6 +1485,7 @@ function buildHouse(H, M) {
     }
   }
   put(groups.glass, ...F0.meshes(M, { name: 'caixilhos' }), ...G0.meshes(M, { name: 'vidro', cast: false }));
+  groups.glass.userData.block = glassBlock;
   for (const [rot, F, G] of rotated) {
     const T = rotMatrix(rot);
     for (const m of [...F.meshes(M, { name: 'caixilhos' }), ...G.meshes(M, { name: 'vidro', cast: false })]) {
@@ -1417,15 +1495,20 @@ function buildHouse(H, M) {
 
   // ---------------------------------------------------------------- pavimentos interiores e fundação
   const FL = new Buckets();
-  for (const poly of H.foundation || [H.roof.outline]) prism(FL, poly, -0.45, -0.012, { side: 'concrete', top: 'concrete_floor' });
-  for (const f of H.floors) cap(FL, f.room != null ? alias(f.mat, 'f' + f.room) : f.mat, f.pts || f.poly, f.holes || [], 0.0, true);
+  for (const fd of H.foundation || [H.roof.outline]) {
+    if (Array.isArray(fd)) prism(FL, fd, -0.45, -0.012, { side: 'concrete', top: 'concrete_floor' });
+    else prism(FL, fd.pts, fd.z0, fd.z1, { side: fd.side || 'concrete', top: 'concrete_floor', bottom: fd.bottom || 'soffit' });   // laje entre pisos / sob o compartimento
+  }
+  for (const f of H.floors) cap(FL, f.room != null ? alias(f.mat, 'f' + f.room) : f.mat, f.pts || f.poly, f.holes || [], f.z ?? 0.0, true);
   put(groups.floors, ...FL.meshes(M, { name: 'pavimentos', cast: false }));
 
   // ---------------------------------------------------------------- tectos falsos (interior) – parte do grupo cobertura
   const C = new Buckets();
-  for (const r of H.rooms) {
+  // tecto de cada compartimento com a chave "ceiling@c<id>": a luz interior (sondas) trata-o como peça desse compartimento
+  if (H.ceilings) for (const c of H.ceilings) cap(C, c.room != null ? alias('ceiling', 'c' + c.room) : 'ceiling', c.poly, c.holes || [], c.z, false);   // conjunto: à cota de cada compartimento
+  else for (const r of H.rooms) {
     if (r.exterior) continue;
-    cap(C, 'ceiling', r.poly, [], Z.ceiling, false);
+    cap(C, 'ceiling', r.poly, [], Z.ceiling, false);   // casa de um piso: um só tecto (as sondas atribuem pelo centro)
   }
   for (const poly of D.ceilings || []) cap(C, 'ceiling', poly, [], Z.ceiling, false); // tectos de zonas sem compartimento próprio
   put(groups.ceilings, ...C.meshes(M, { name: 'tectos', cast: false }));
@@ -1433,7 +1516,9 @@ function buildHouse(H, M) {
   // ---------------------------------------------------------------- cobertura
   const R = new Buckets();
   const RS = H.roof.side || 'concrete';
-  const outline = H.roof.outline, inner = insetOrtho(outline, H.roof.parapet);
+  const outline = H.roof.outline;
+  if (outline && outline.length > 2) {   // conjunto: sem cobertura principal (só extraRoofs)
+  const inner = insetOrtho(outline, H.roof.parapet);
   const ups = H.roof.holes.map((h) => rectPts(h.up));
   // laje (intradorso = tecto exterior das palas)
   prism(R, outline, Z.slabBottom, Z.slabTop, { side: RS, bottom: 'soffit', holes: ups, holeSide: RS });
@@ -1457,7 +1542,8 @@ function buildHouse(H, M) {
     box(R, 'concrete', ch.rect[0], ch.rect[1], ch.rect[2], ch.rect[3], Z.slabTop, ch.top);
     box(R, 'coping', ch.rect[0] - 0.05, ch.rect[1] - 0.05, ch.rect[2] + 0.05, ch.rect[3] + 0.05, ch.top, ch.top + 0.04);
   }
-  put(groups.roof, ...R.meshes(M, { name: 'cobertura' }));
+  }
+  put(groups.roof, ...R.meshes(M, { name: 'cobertura' }), ...XR.meshes(M, { name: 'coberturas' }));
   // painéis solares inclinados (opcional)
   for (const sp of [].concat(H.roof.solar || [])) {
     const c = sp.corners; const zb = Z.roofFinish + 0.15;
@@ -1476,40 +1562,49 @@ function buildHouse(H, M) {
   for (const r of H.rooms) {
     if (r.exterior || r.area < 9) continue;
     const [x0, y0, x1, y1] = r.bbox;
+    const zc = r.ceil ?? Z.ceiling;
     for (let x = x0 + 1.0; x < x1 - 0.6; x += 2.2) for (let y = y0 + 1.0; y < y1 - 0.6; y += 2.2) {
+      if (!pointInPoly(x, y, r.poly)) continue;
       // downlight encastrado redondo (mapa: "downlights"): difusor Ø 8 cm e aro branco Ø 11 cm
       const circ = (r) => Array.from({ length: 24 }, (_, k) => [x + r * Math.cos((k / 24) * Math.PI * 2), y + r * Math.sin((k / 24) * Math.PI * 2)]);
-      cap(L, 'led', circ(0.04), [], Z.ceiling - 0.004, false);
-      cap(L, 'white', circ(0.055), [circ(0.04)], Z.ceiling - 0.003, false);
+      cap(L, 'led', circ(0.04), [], zc - 0.004, false);
+      cap(L, 'white', circ(0.055), [circ(0.04)], zc - 0.003, false);
     }
   }
   put(groups.lights, ...L.meshes(M, { name: 'led', cast: false, receive: false }));
 
   // ---------------------------------------------------------------- vista de planta (poché a 1,20 m, como nas pranchas)
+  const cuts = H.meta.multi ? [...new Set(H.rooms.filter((r) => !r.exterior).map((r) => +(r.z + 1.2).toFixed(3)))] : [1.2];
+  for (const zc of cuts) {
+  const lv = new THREE.Group(); lv.name = 'planta ' + zc.toFixed(2); lv.userData.cut = zc; groups.plan.add(lv);
   const P = new Buckets();
-  const zc = 1.2;
-  for (const w of H.walls) cap(P, 'poche', w.pts, [], zc, true);
+  for (const w of H.walls) if (!H.meta.multi || (w.z0 < zc && w.z1 > zc)) cap(P, 'poche', w.pts, [], zc, true);
   for (const p of H.pieces) if (p.z0 < zc && p.z1 > zc) cap(P, 'poche', p.pts, [], zc, true);
   if (H.fin) cap(P, 'poche', H.fin.pts, [], zc, true);
-  put(groups.plan, ...P.meshes(M, { name: 'poche', cast: false, receive: false }));
+  put(lv, ...P.meshes(M, { name: 'poche', cast: false, receive: false }));
   const segs = [];
   for (const g of H.glass) {
+    if (H.meta.multi && !(g.sill - 0.01 < zc && g.head > zc - 1.0)) continue;
     if (g.rot) segs.push(v3(...rotFwd(g.rot, g.a, g.c), zc + 0.01), v3(...rotFwd(g.rot, g.b, g.c), zc + 0.01));
     else if (g.o === 'h') segs.push(v3(g.a, g.c, zc + 0.01), v3(g.b, g.c, zc + 0.01));
     else segs.push(v3(g.c, g.a, zc + 0.01), v3(g.c, g.b, zc + 0.01));
   }
-  groups.plan.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(segs), M.planLine));
+  if (segs.length) lv.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(segs), M.planLine));
   // símbolo das portas como nas pranchas: folha aberta + arco de abertura (de correr: folha fechada)
   const ds = [];
   for (const d of H.doors || []) {
+    if (H.meta.multi && Math.abs((d.zb || 0) + 1.2 - zc) > 0.05) continue;
     const [px, py] = d.hinge, [ux, uy] = d.u, [nx, ny] = d.n, L = d.L, z = zc + 0.01;
     if (d.type === 'slide') { ds.push(v3(...d.closed[0], z), v3(...d.closed[1], z), v3(...d.closed[2], z), v3(...d.closed[3], z)); continue; }
     ds.push(v3(px, py, z), v3(px + nx * L, py + ny * L, z));
     const a0 = Math.atan2(uy, ux), da = Math.atan2(ux * ny - uy * nx, ux * nx + uy * ny);
     for (let k = 0; k < 16; k++) for (const kk of [k, k + 1]) { const a = a0 + (da * kk) / 16; ds.push(v3(px + Math.cos(a) * L, py + Math.sin(a) * L, z)); }
   }
-  if (ds.length) groups.plan.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(ds), M.planDoor || M.planLine));
+  if (ds.length) lv.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(ds), M.planDoor || M.planLine));
+  }
   groups.plan.visible = false;
+  // ---------------------------------------------------------------- escadas interiores e guardas (conjunto/pisos)
+  buildStairs(H, M, groups.stairs);
 
   return groups;
 }
@@ -1547,12 +1642,13 @@ function buildDoor(d, M) {
     }
     }
   }
-  g.position.set(px, 0, -py);
+  const zb = d.zb || 0;     // conjunto/pisos: cota do compartimento
+  g.position.set(px, zb, -py);
   g.rotation.y = th;
   const k0 = d.ext && !d.startOpen ? 0 : 1;   // portas exteriores começam fechadas
   const D = { d, g, k: k0, target: k0 };
   D.apply = (e) => {
-    if (d.type === 'slide') g.position.set(px + d.shift[0] * e, 0, -(py + d.shift[1] * e));
+    if (d.type === 'slide') g.position.set(px + d.shift[0] * e, zb, -(py + d.shift[1] * e));
     else g.rotation.y = th + (s * Math.PI * e) / 2;
   };
   D.apply(k0);
@@ -1560,12 +1656,67 @@ function buildDoor(d, M) {
   for (const m of g.children) m.userData.door = D;
   return g;
 }
+
+// Escadas interiores (H.stairs) e guardas (H.railings). Lanço: rect [x0, y0, x1, y1], dir = sentido em que SOBE ('N'|'S'|'E'|'W'),
+// z0 → z1 (cotas relativas), n espelhos (omissão: ~0,18 m), mat do cobertor/espelho, side = material das faces laterais,
+// solid=false: lanço "em consola" com laje inclinada de 0,18 m (deixa ver por baixo); kind='landing': patamar à cota z1.
+// Guarda: pts [[x, y] | [x, y, z]…] (z por ponto segue o lanço), z (base), h (altura, 0,9–1,1), type 'glass'|'bar'|'wall'.
+function buildStairs(H, M, group) {
+  const S = new Buckets();
+  for (const s of H.stairs || []) {
+    const [x0, y0, x1, y1] = s.rect, mat = s.mat || 'oak', side = s.side || 'plaster';
+    if (s.kind === 'landing') { box(S, mat, x0, y0, x1, y1, s.z1 - (s.t || 0.2), s.z1, { side, top: mat, bottom: 'ceiling' }); continue; }
+    const rise = s.z1 - s.z0, n = s.n || Math.max(2, Math.round(rise / 0.18)), h = rise / n, d = s.dir || 'N';
+    const along = d === 'N' || d === 'S' ? y1 - y0 : x1 - x0;
+    const run = along / n, solid = s.solid !== false;
+    for (let i = 0; i < n; i++) {
+      const a = i * run, b = (i + 1) * run;               // degrau i (a partir do arranque)
+      let r;
+      if (d === 'N') r = [x0, y0 + a, x1, y0 + b]; else if (d === 'S') r = [x0, y1 - b, x1, y1 - a];
+      else if (d === 'E') r = [x0 + a, y0, x0 + b, y1]; else r = [x1 - b, y0, x1 - a, y1];
+      const zt = s.z0 + h * (i + 1);
+      const zbot = solid ? s.z0 - 0.002 : zt - h - 0.18;
+      box(S, mat, r[0], r[1], r[2], r[3], Math.max(s.zFloor ?? s.z0 - 0.4, zbot), zt, { side, top: mat, bottom: solid ? null : 'ceiling' });
+    }
+  }
+  put(group, ...S.meshes(M, { name: 'escadas' }));
+  // guardas: vidro (placa 12 mm com corrimão inox) ou barras verticais pretas
+  const G = new Buckets();
+  for (const r of H.railings || []) {
+    const pts = r.pts, hh = r.h || 1.0, type = r.type || 'glass';
+    for (let i = 0; i < pts.length - 1; i++) {
+      const [ax, ay, az = r.z] = pts[i], [bx, by, bz = r.z] = pts[i + 1], L = Math.hypot(bx - ax, by - ay);
+      if (L < 0.02) continue;
+      const ux = (bx - ax) / L, uy = (by - ay) / L, nx = -uy, ny = ux;
+      const t = type === 'wall' ? 0.15 : 0.006;
+      const q = (s_, o, z) => v3(ax + ux * s_ + nx * o, ay + uy * s_ + ny * o, z);
+      const zA = (s_) => az + ((bz - az) * s_) / L;
+      const m = type === 'glass' ? 'glassRail' : type === 'wall' ? 'eticsWhite' : 'blackMetal';
+      if (type === 'bar') {
+        for (let s_ = 0.06; s_ < L - 0.03; s_ += 0.11) box(G, 'blackMetal', ax + ux * s_ - 0.009, ay + uy * s_ - 0.009, ax + ux * s_ + 0.009, ay + uy * s_ + 0.009, zA(s_), zA(s_) + hh);
+      } else {
+        const N = new THREE.Vector3(nx, 0, -ny), Nn = N.clone().negate();
+        G.quad(m, q(0, t / 2, zA(0)), q(L, t / 2, zA(L)), q(L, t / 2, zA(L) + hh), q(0, t / 2, zA(0) + hh), N, [[0, 0], [L, 0], [L, hh], [0, hh]]);
+        G.quad(m, q(0, -t / 2, zA(0)), q(L, -t / 2, zA(L)), q(L, -t / 2, zA(L) + hh), q(0, -t / 2, zA(0) + hh), Nn, [[0, 0], [L, 0], [L, hh], [0, hh]]);
+      }
+      // corrimão / remate superior
+      const rw = type === 'wall' ? 0.17 : 0.04, rh = type === 'wall' ? 0.03 : 0.035, rm = type === 'wall' ? 'coping' : 'steel';
+      const c = [q(0, -rw / 2, zA(0) + hh), q(L, -rw / 2, zA(L) + hh), q(L, rw / 2, zA(L) + hh), q(0, rw / 2, zA(0) + hh)];
+      const up = new THREE.Vector3(0, 1, 0);
+      const lift = (p) => p.clone().add(new THREE.Vector3(0, rh, 0));
+      G.quad(rm, lift(c[0]), lift(c[1]), lift(c[2]), lift(c[3]), up, [[0, 0], [L, 0], [L, rw], [0, rw]]);
+      G.quad(rm, c[0], c[1], lift(c[1]), lift(c[0]), new THREE.Vector3(-nx, 0, ny), [[0, 0], [L, 0], [L, rh], [0, rh]]);
+      G.quad(rm, c[3], c[2], lift(c[2]), lift(c[3]), new THREE.Vector3(nx, 0, -ny), [[0, 0], [L, 0], [L, rh], [0, rh]]);
+    }
+  }
+  put(group, ...G.meshes(M, { name: 'guardas' }));
+}
 return { buildHouse };
 })();
 
 // ===== src/build-site.js =====
 const __m_build_site = (() => {
-const { Buckets, prism, box, cap, rectPts, pointInPoly, v3, ccw, signedArea } = __m_geom;
+const { Buckets, prism, box, cap, sides, rectPts, pointInPoly, v3, ccw, signedArea, insetOrtho } = __m_geom;
 // Exterior: terreno, pavimentos, piscina, muros, acessos e contexto.
 const put = (g, ...ms) => { if (ms.length) g.add(...ms); }; // Object3D.add() sem argumentos dá erro
 
@@ -1588,8 +1739,12 @@ function makeGround(H) {
     }
   }
   const samples = pts.concat(edge);
+  // conjunto: terreno em "remendos" planos (TIN) — TERRAIN.patches = [{pts: [[x, y, z]…], holes, mat}], z já relativo
+  const patches = (T.patches || []).map((p) => ({ ...p, plane: planeOf(p.pts), xy: p.pts.map(([x, y]) => [x, y]) }));
+  T._patches = patches;
   const inRect = (x, y, x0, y0, x1, y1) => x >= Math.min(x0, x1) && x <= Math.max(x0, x1) && y >= Math.min(y0, y1) && y <= Math.max(y0, y1);
   return function ground(x, y) {
+    for (const p of patches) if (pointInPoly(x, y, p.xy) && !(p.holes || []).some((h) => pointInPoly(x, y, h))) return p.plane(x, y);
     for (const [poly, z] of T.polys) if (pointInPoly(x, y, poly)) return z;
     for (const [x0, y0, x1, y1, z] of T.flat) if (inRect(x, y, x0, y0, x1, y1)) return z;
     for (const [x0, y0, x1, y1, za, zb] of (T.ramps || [])) if (inRect(x, y, x0, y0, x1, y1)) return za + ((x - x0) / (x1 - x0)) * (zb - za);
@@ -1601,6 +1756,19 @@ function makeGround(H) {
     }
     return sw ? sz / sw : (T.base ?? -0.15); // sem cotas: terreno plano (T.base, omissão −0,15)
   };
+}
+
+// plano pelos 3 vértices que formam o maior triângulo (remendos planos: plataformas e rampas)
+function planeOf(pts) {
+  let best = null; const n = pts.length, step = Math.max(1, Math.floor(n / 12));
+  for (let i = 0; i < n; i += step) for (let j = i + 1; j < n; j += step) for (let k = j + 1; k < n; k += step) {
+    const [ax, ay, az] = pts[i], [bx, by, bz] = pts[j], [cx, cy, cz] = pts[k];
+    const nx = (by - ay) * (cz - az) - (bz - az) * (cy - ay), ny = (bz - az) * (cx - ax) - (bx - ax) * (cz - az), nz = (bx - ax) * (cy - ay) - (by - ay) * (cx - ax);
+    if (!best || Math.abs(nz) > Math.abs(best[2])) best = [nx, ny, nz, ax, ay, az];
+  }
+  if (!best || Math.abs(best[2]) < 1e-9) { const z = pts[0][2]; return () => z; }
+  const [nx, ny, nz, ax, ay, az] = best;
+  return (x, y) => az - (nx * (x - ax) + ny * (y - ay)) / nz;
 }
 
 function buildSite(H, M, ground) {
@@ -1651,7 +1819,9 @@ function buildSite(H, M, ground) {
     for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
       const cx = (gx[i] + gx[i + 1]) / 2, cy = (gy[j] + gy[j + 1]) / 2;
       if (inHole(cx, cy)) continue;
-      (pointInPoly(cx, cy, site) ? inIdx : outIdx).push(id(i, j), id(i + 1, j), id(i + 1, j + 1), id(i, j), id(i + 1, j + 1), id(i, j + 1));
+      const insideSite = pointInPoly(cx, cy, site);
+      if (insideSite && H.terrain._patches && H.terrain._patches.length) continue;   // conjunto: o lote é desenhado pelos remendos
+      (insideSite ? inIdx : outIdx).push(id(i, j), id(i + 1, j), id(i + 1, j + 1), id(i, j), id(i + 1, j + 1), id(i, j + 1));
     }
     const geo = (idx, P = pos) => {
       const g = new THREE.BufferGeometry();
@@ -1662,9 +1832,43 @@ function buildSite(H, M, ground) {
       for (let k = 0; k < n.count; k++) if (n.getY(k) < 0) n.setXYZ(k, -n.getX(k), -n.getY(k), -n.getZ(k));
       return g;
     };
+    if (inIdx.length) {
     const mesh = new THREE.Mesh(geo(inIdx, posIn), M.grass);
     mesh.material.side = THREE.DoubleSide; mesh.receiveShadow = true; mesh.name = 'terreno';
     groups.terrain.add(mesh);
+    }
+    // remendos (TIN): cada um triangulado com a cota do seu plano; degrau à vista para o vizinho mais baixo (face de betão)
+    const TP = new Buckets();
+    for (const p of H.terrain._patches || []) {
+      const key = p.mat || 'grass';
+      const contour = ccw(p.xy).map(([x, y]) => new THREE.Vector2(x, y));
+      const hs = (p.holes || []).map((h) => (signedArea(h) > 0 ? h.slice().reverse() : h).map(([x, y]) => new THREE.Vector2(x, y)));
+      const tris = THREE.ShapeUtils.triangulateShape(contour, hs);
+      const all = contour.concat(...hs), up = new THREE.Vector3(0, 1, 0);
+      for (const [a, b, c] of tris) {
+        const A = all[a], B = all[b], C = all[c];
+        const va = v3(A.x, A.y, p.plane(A.x, A.y)), vb = v3(B.x, B.y, p.plane(B.x, B.y)), vc = v3(C.x, C.y, p.plane(C.x, C.y));
+        const n = new THREE.Vector3().subVectors(vb, va).cross(new THREE.Vector3().subVectors(vc, va)).normalize();
+        TP.tri(key, va, vb, vc, n.y < 0 ? n.negate() : n, [A.x, A.y], [B.x, B.y], [C.x, C.y]);
+      }
+      if (p.skirt === false) continue;
+      const P = ccw(p.xy);
+      for (let i = 0; i < P.length; i++) {
+        const [ax, ay] = P[i], [bx, by] = P[(i + 1) % P.length], L = Math.hypot(bx - ax, by - ay);
+        if (L < 0.02) continue;
+        const nx = (by - ay) / L, ny = -(bx - ax) / L;     // normal exterior (contorno CCW)
+        const k = Math.max(1, Math.ceil(L / 1.0));
+        for (let j = 0; j < k; j++) {
+          const t0 = j / k, t1 = (j + 1) / k, x0 = ax + (bx - ax) * t0, y0 = ay + (by - ay) * t0, x1 = ax + (bx - ax) * t1, y1 = ay + (by - ay) * t1;
+          const mx = (x0 + x1) / 2 + nx * 0.06, my = (y0 + y1) / 2 + ny * 0.06;
+          const zo = ground(mx, my), za = p.plane(x0, y0), zb = p.plane(x1, y1);
+          if (zo === undefined || zo > Math.min(za, zb) - 0.03) continue;
+          const zbot = zo - 0.05;
+          TP.quad(p.side || 'concrete', v3(x0, y0, zbot), v3(x1, y1, zbot), v3(x1, y1, zb), v3(x0, y0, za), new THREE.Vector3(nx, 0, -ny), [[t0 * L, zbot], [t1 * L, zbot], [t1 * L, zb], [t0 * L, za]]);
+        }
+      }
+    }
+    put(groups.terrain, ...TP.meshes(M, { name: 'terreno' }));
     const outer = new THREE.Mesh(geo(outIdx, posOut), M.contextGround);
     outer.receiveShadow = true; outer.name = 'terreno envolvente';
     groups.context.add(outer);
@@ -1705,11 +1909,17 @@ function buildSite(H, M, ground) {
       box(S, s.mat || 'porcelain', r[0], r[1], r[2], r[3], s.zBot - 0.3, s.zBot + rise * (i + 1));
     }
   }
+  // conjunto: muros (polígonos com base e topo) e portões — H.walls2 = [{pts, z0, z1, mat, cap}], H.gates = [{pts, z0, z1, mat}]
+  for (const w of H.walls2 || []) prism(S, w.pts, w.z0, w.z1, { side: w.mat || 'etics7038', top: w.cap || w.mat || 'etics7038', bottom: null });
+  for (const gt of H.gates || []) {
+    prism(S, gt.pts, gt.z0, gt.z1, { side: gt.mat || 'metal7043', top: gt.mat || 'metal7043', bottom: gt.mat || 'metal7043' });
+    if (gt.slots) for (let z = gt.z0 + 0.15; z < gt.z1 - 0.1; z += gt.slots) prism(S, insetOrtho(gt.pts, -0.004), z - 0.004, z + 0.004, { side: 'frame', top: null, bottom: null });
+  }
   // muros de suporte das plataformas: H.site.retaining = [[x0, y0, x1, y1, zTopo], …]
   for (const [x0, y0, x1, y1, ztop] of (H.site.retaining || [])) box(S, 'concrete', x0, y0, x1, y1, -2.2, ztop + 0.02);
 
   // ---------------------------------------------------------------- muros de vedação (a09) e portões
-  {
+  if (!(H.fence && H.fence.none)) {
     const P = ccw(site), F = H.fence;
     const gateNear = (x, y) => F.gates.find((g) => {
       const [ax, ay] = g.a, [bx, by] = g.b; const dx = bx - ax, dy = by - ay, L2 = dx * dx + dy * dy;
@@ -1826,6 +2036,26 @@ function buildSite(H, M, ground) {
     groups.pool.userData.water = water;
   }
 
+  // ---------------------------------------------------------------- piscinas do conjunto (H.pools): polígono da água (qualquer, rodado),
+  // nível da água, profundidade, bordadura (largura e material). Revestimento 1 cm para dentro (sem faces complanares).
+  if (H.pools && H.pools.length) {
+    const PB = new Buckets(), waters = [];
+    for (const p of H.pools) {
+      const W = ccw(p.poly), lvl = p.level, d = p.depth || 1.4, top = p.top ?? lvl + 0.1, cw = p.coping ?? 0.3, cm = p.copingMat || 'limestonePave';
+      const inner = insetOrtho(W, -0.0), outer = insetOrtho(W, -cw), skin = insetOrtho(W, 0.01);
+      sides(PB, skin, lvl - d + 0.01, top - 0.002, 'pooltile', false);                 // paredes da bacia (para dentro)
+      cap(PB, 'pooltile', skin, [], lvl - d + 0.01, true);                            // fundo
+      prism(PB, outer, top - 0.05, top, { side: cm, top: cm, holes: [inner], holeSide: cm });   // bordadura
+      sides(PB, outer, top - 0.6, top - 0.05, 'concrete', true);                      // remate exterior (fica sob o terreno)
+      const sh = new THREE.Shape(skin.map(([x, y]) => new THREE.Vector2(x, y)));
+      const wg = new THREE.ShapeGeometry(sh); wg.rotateX(-Math.PI / 2);
+      const wm = new THREE.Mesh(wg, M.water); wm.position.y = lvl; wm.renderOrder = 2; wm.name = 'água'; waters.push(wm);
+    }
+    put(groups.pool, ...PB.meshes(M, { name: 'piscinas' }));
+    for (const w of waters) groups.pool.add(w);
+    groups.pool.userData.waterAll = waters; groups.pool.userData.water = waters[0];
+  }
+
   // ---------------------------------------------------------------- contexto (a15): ruas e vizinhos simplificados — H.context
   {
     const C = new Buckets(), X = H.context || {};
@@ -1835,10 +2065,22 @@ function buildSite(H, M, ground) {
     });
     // streets: [{line: [[x,y]…] (lado do lote), z, sidewalk, width, side: +1|-1 (lado para onde fica a via)}]
     for (const st of X.streets || []) {
-      const sg = st.side || 1, side1 = off(st.line, sg * (st.sidewalk ?? 1.8)), side2 = off(st.line, sg * ((st.sidewalk ?? 1.8) + (st.width ?? 7.2)));
-      for (let i = 0; i < st.line.length - 1; i++) {
-        prism(C, [st.line[i], st.line[i + 1], side1[i + 1], side1[i]], st.z - 0.3, st.z + 0.12, { side: 'concrete', top: 'pavement' });
-        prism(C, [side1[i], side1[i + 1], side2[i + 1], side2[i]], st.z - 0.3, st.z, { side: 'asphalt', top: 'asphalt' });
+      const line = st.line.map((q) => [q[0], q[1]]), zs = st.line.map((q) => (q.length > 2 ? q[2] : st.z));
+      const sg = st.side || 1, side1 = off(line, sg * (st.sidewalk ?? 1.8)), side2 = off(line, sg * ((st.sidewalk ?? 1.8) + (st.width ?? 7.2)));
+      for (let i = 0; i < line.length - 1; i++) {
+        if (zs[i] === zs[i + 1]) {
+          prism(C, [line[i], line[i + 1], side1[i + 1], side1[i]], zs[i] - 0.3, zs[i] + 0.12, { side: 'concrete', top: st.sidewalk === 0 ? null : 'pavement' });
+          prism(C, [side1[i], side1[i + 1], side2[i + 1], side2[i]], zs[i] - 0.3, zs[i], { side: 'asphalt', top: 'asphalt' });
+          continue;
+        }
+        // troço inclinado: faces de topo com cota por vértice (passeio 12 cm acima do asfalto)
+        const q = (P, z) => v3(P[0], P[1], z), up = new THREE.Vector3(0, 1, 0);
+        const za = zs[i], zb = zs[i + 1];
+        if (st.sidewalk !== 0) {
+          C.quad('pavement', q(line[i], za + 0.12), q(line[i + 1], zb + 0.12), q(side1[i + 1], zb + 0.12), q(side1[i], za + 0.12), up, [line[i], line[i + 1], side1[i + 1], side1[i]]);
+          C.quad('concrete', q(side1[i], za - 0.3), q(side1[i + 1], zb - 0.3), q(side1[i + 1], zb + 0.12), q(side1[i], za + 0.12), new THREE.Vector3(side1[i][0] - line[i][0], 0, -(side1[i][1] - line[i][1])).normalize(), [[0, 0], [1, 0], [1, 1], [0, 1]]);
+        }
+        C.quad('asphalt', q(side1[i], za), q(side1[i + 1], zb), q(side2[i + 1], zb), q(side2[i], za), up, [side1[i], side1[i + 1], side2[i + 1], side2[i]]);
       }
     }
     // buildings: [{rect, z0, eave, ridge?, along: 'x'|'y'}] — sem ridge = volume de cobertura plana
@@ -1863,7 +2105,7 @@ function buildSite(H, M, ground) {
   }
   return groups;
 }
-return { makeGround, buildSite };
+return { makeGround, planeOf, buildSite };
 })();
 
 // ===== src/furniture.js =====
@@ -2468,9 +2710,17 @@ const modelsReady = () => Promise.allSettled(glbPending);
 
 function buildFurniture(H, M, baseZ) {
   const root = new THREE.Group(); root.name = 'mobiliario';
-  const segs = [];
-  // paredes + palheta + peitoris das janelas (uma bancada pode encostar-se sob uma janela)
-  for (const poly of [...H.walls.map((w) => w.pts), ...(H.fin ? [H.fin.pts] : []), ...H.pieces.filter((q) => q.z0 < 0.5).map((q) => q.pts)]) for (let i = 0; i < poly.length; i++) { const a = poly[i], b = poly[(i + 1) % poly.length]; segs.push([a[0], a[1], b[0], b[1]]); }
+  // paredes + palheta + peitoris das janelas (uma bancada pode encostar-se sob uma janela); conjunto/pisos: só as do nível da peça
+  const segCache = new Map();
+  const segsAt = (zb) => {
+    const k = H.meta.multi ? Math.round(zb * 100) : 0;
+    if (segCache.has(k)) return segCache.get(k);
+    const zt = (H.meta.multi ? zb : 0) + 0.5, segs = [];
+    const polys = [...H.walls.filter((w) => !H.meta.multi || (w.z0 <= zt && w.z1 >= zt)).map((w) => w.pts), ...(H.fin ? [H.fin.pts] : []),
+      ...H.pieces.filter((q) => q.z0 < zt && (!H.meta.multi || q.z1 > zt - 0.45)).map((q) => q.pts)];
+    for (const poly of polys) for (let i = 0; i < poly.length; i++) { const a = poly[i], b = poly[(i + 1) % poly.length]; segs.push([a[0], a[1], b[0], b[1]]); }
+    segCache.set(k, segs); return segs;
+  };
   // uma peça por entrada de H.furniture; root.userData.rebuild(i) refaz uma peça (editor de mobiliário: mover, rodar, largura)
   const one = (f, i) => {
     if (f.hidden) return null;       // peça apagada no editor
@@ -2491,7 +2741,7 @@ function buildFurniture(H, M, baseZ) {
       const bb = new THREE.Box3().setFromObject(g), back = -bb.min.z;
       let best = null;
       for (const k of ['N', 'E', 'S', 'W']) {
-        const [dx, dy] = DIRS[k], gap = rayToWalls(x, y, dx, dy, segs) - back;
+        const [dx, dy] = DIRS[k], gap = rayToWalls(x, y, dx, dy, segsAt(f.zb ?? 0)) - back;
         if (gap > -0.25 && (!best || gap < best.gap)) best = { k, gap };
       }
       if (best) {
@@ -2500,7 +2750,7 @@ function buildFurniture(H, M, baseZ) {
       } else face = 'S';
       rot = FACE[face];
     } else rot = typeof face === 'number' ? Math.PI - (face * Math.PI) / 180 : FACE[face] ?? 0;
-    g.position.set(x, (f.z ?? baseZ(x, y)), -y);
+    g.position.set(x, f.zb !== undefined ? f.zb + (f.z ?? 0) : (f.z ?? baseZ(x, y)), -y);   // zb: cota do compartimento (conjunto/pisos)
     g.rotation.y = rot;
     if (f.bowls && g.userData.vesselTop) {   // lavatórios de pousar nos centros desenhados na planta + misturadora alta atrás
       g.updateMatrixWorld(true);
@@ -3116,7 +3366,9 @@ class Walker {
   _collide(nx, ny) {
     const r = this.radius, B = this.dynamic ? this.blockers.concat(this.dynamic()) : this.blockers;
     for (let it = 0; it < 3; it++) {
-      for (const [ax, ay, bx, by] of B) {
+      const zf = this.groundY;
+      for (const [ax, ay, bx, by, z0, z1] of B) {
+        if (z0 !== undefined && !(zf + 0.35 < z1 && zf + 1.75 > z0)) continue;   // conjunto/pisos: obstáculo de outro nível
         const [dist, cx, cy] = segDist(nx, ny, ax, ay, bx, by);
         if (dist < r && dist > 1e-6) { nx = cx + ((nx - cx) / dist) * r; ny = cy + ((ny - cy) / dist) * r; }
       }
@@ -3139,7 +3391,11 @@ class Walker {
       const dx = -Math.sin(this.yaw), dy = Math.cos(this.yaw);
       const nx = this.pos.x + (dx * f + dy * s) * sp, ny = this.pos.y + (dy * f - dx * s) * sp;
       const [cx, cy] = this._collide(nx, ny);
-      const g = this._ground(cx, cy);
+      let g = this._ground(cx, cy);
+      if (g === null) {   // juntas sem chão (soleiras, remate do terreno junto à fachada): procura chão até 0,36 m à frente
+        const L = Math.hypot(cx - this.pos.x, cy - this.pos.y) || 1, ux = (cx - this.pos.x) / L, uy = (cy - this.pos.y) / L;
+        for (const d of [0.12, 0.24, 0.36]) { const g2 = this._ground(cx + ux * d, cy + uy * d); if (g2 !== null && Math.abs(g2 - this.groundY) < 0.45) { g = g2; break; } }
+      }
       if (g !== null && g - this.groundY < 0.45) { this.pos.set(cx, cy); this.groundY += (g - this.groundY) * Math.min(1, dt * 10); }
     }
     this._apply();
@@ -3171,17 +3427,21 @@ function roomLabels(H) {
     el.className = 'rlabel' + (r.exterior ? ' ext' : '');
     el.innerHTML = `<b>${r.short || r.name}</b><span>${fmt(r.area)} m²</span>`;
     const o = new CSS2DObject(el);
-    o.position.copy(v3(cx, cy, 1.2));
+    o.position.copy(v3(cx, cy, (r.z ?? 0) + 1.2));
     o.userData.room = r;
     group.add(o); items.push(o);
   }
-  return { group, setHeight(z) { for (const o of items) o.position.y = z; } };
+  // conjunto/pisos: altura relativa ao pavimento de cada compartimento; filter(fn) mostra só algumas (ex.: a casa visitada)
+  let keep = () => true;
+  return { group, items, setHeight(z) { for (const o of items) o.position.y = (o.userData.room.z ?? 0) + z; },
+    filter(fn) { keep = fn || (() => true); for (const o of items) o.visible = keep(o.userData.room); } };
 }
 
-function findRoom(H, X, Y) {
-  // compartimentos interiores primeiro; depois exteriores
+function findRoom(H, X, Y, z) {
+  // compartimentos interiores primeiro; depois exteriores. Com z (conjunto/pisos): só os compartimentos desse nível
   const sorted = [...H.rooms].sort((a, b) => (a.exterior - b.exterior) || (a.area - b.area));
-  return sorted.find((r) => pointInPoly(X, Y, r.poly)) || null;
+  const lev = (r) => z === undefined || r.z === undefined || (z >= r.z - 0.35 && z <= (r.ceil ?? r.z + 2.7) + 0.05);
+  return sorted.find((r) => lev(r) && pointInPoly(X, Y, r.poly)) || null;
 }
 
 class Measure {
@@ -3226,9 +3486,195 @@ class Measure {
 return { fmt, roomLabels, findRoom, Measure };
 })();
 
+// ===== src/sales.js =====
+const __m_sales = (() => {
+
+// Conjuntos de moradias: preço e estado de venda de cada moradia (disponível / reservada / vendida).
+// - vendas.json ao lado da página (gravado pelo editor, #editar) é lido por todos os visitantes;
+//   valores iniciais opcionais em META.sales = {A: {status, price, tip, area, note}}.
+// - Passar o rato por cima de uma moradia na vista 3D mostra um cartão: vendida → «Vendida»; reservada → «Reservada»;
+//   disponível → preço, tipologia e informação básica (área, quartos, I.S., garagem, piscina, pisos).
+// Só se activa quando há mais de uma moradia (H.units.length > 1).
+
+const STATUS = { disponivel: 'Disponível', reservada: 'Reservada', vendida: 'Vendida' };
+const NOT_LIVING = /garagem|arrumo|adega|t[ée]cnic/i;
+const nf = (v, d = 0) => Number(v).toLocaleString('pt-PT', { minimumFractionDigits: d, maximumFractionDigits: d });
+const fmtPrice = (p) => (p > 0 ? nf(p) + ' €' : '');
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+// informação base calculada do modelo (o editor pode sobrepor tipologia e área)
+function unitFacts(H, u) {
+  const rooms = H.rooms.filter((r) => r.unit === u.id && !r.exterior);
+  const living = rooms.filter((r) => !NOT_LIVING.test(r.name));
+  const area = living.reduce((a, r) => a + (r.official || r.area || 0), 0);
+  const quartos = rooms.filter((r) => /^(quarto|suite|suíte)/i.test(r.name)).length;
+  const wc = rooms.filter((r) => /^(i\.\s?s\.|wc|casa de banho)/i.test(r.name)).length;
+  const garagem = rooms.some((r) => /garagem/i.test(r.name));
+  const summary = u.summary || '';
+  const tip = (summary.match(/\bT\d+\b/) || [])[0] || (quartos ? 'T' + quartos : '');
+  const piscina = /piscina/i.test(summary);
+  const extras = summary.split('·').map((s) => s.trim()).filter((s) => s && !/^T\d+$/.test(s) && !/piscina/i.test(s));
+  return { tip, area: Math.round(area), quartos, wc, garagem, piscina, extras };
+}
+
+function initSales(ctx) {
+  const { H, UNITS } = ctx;
+  if (!UNITS || UNITS.length < 2) return null;
+  const S = {};
+  for (const u of UNITS) S[u.id] = { status: 'disponivel', ...((H.meta.sales || {})[u.id] || {}) };
+  const subs = [];
+  const api = {
+    get: (id) => S[id] || { status: 'disponivel' },
+    all: () => JSON.parse(JSON.stringify(S)),
+    set(next) { for (const u of UNITS) S[u.id] = { status: 'disponivel', ...(next[u.id] || {}) }; subs.forEach((f) => f()); },
+    onChange: (f) => subs.push(f),
+    facts: (u) => { const f = unitFacts(H, u), s = S[u.id] || {}; return { ...f, tip: s.tip || f.tip, area: s.area || f.area }; },
+  };
+  if ((!ctx.test || /vendas/.test(location.search)) && /^https?:$/.test(location.protocol)) {
+    fetch(new URL('vendas.json', location.href).href + '?v=' + Date.now(), { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null)).then((d) => { if (d && d.units) api.set(d.units); }).catch(() => { /* ainda sem vendas.json */ });
+  }
+
+  // ---------------------------------------------------------------- cartão ao passar o rato
+  const css = document.createElement('style');
+  css.textContent = `
+  .utip{position:fixed;z-index:35;pointer-events:none;min-width:210px;max-width:270px;background:var(--paper,#fbfaf7);color:var(--ink,#1f2226);border-radius:12px;
+    box-shadow:0 10px 30px rgba(0,0,0,.28);padding:12px 14px;font:13px/1.4 var(--body,system-ui,sans-serif);transform:translate(16px,16px)}
+  .utip .h{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .utip .n{font:600 19px/1.1 var(--display,system-ui);letter-spacing:.02em}
+  .utip .pill{font:600 11px/1 system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;border-radius:999px;padding:5px 8px;color:#fff;background:#2e7d4f}
+  .utip .pill.vendida{background:#b3261e}.utip .pill.reservada{background:#a86400}
+  .utip .p{font:600 24px/1.1 var(--display,system-ui);margin:8px 0 2px;font-variant-numeric:tabular-nums}
+  .utip .sold{font:600 26px/1.1 var(--display,system-ui);letter-spacing:.08em;color:#b3261e;margin:8px 0 2px;text-transform:uppercase}
+  .utip .l{color:var(--muted,#5d666b)}.utip .k{margin-top:4px}
+  .utip .hint{margin-top:8px;font-size:12px;color:var(--muted,#5d666b)}
+  .ubadge.vendida{background:#b3261e}.ubadge.reservada{background:#a86400}
+  .ubadge .st{position:absolute;left:50%;top:100%;transform:translate(-50%,4px);white-space:nowrap;font:600 10px/1 system-ui,sans-serif;letter-spacing:.06em;
+    text-transform:uppercase;color:#fff;background:inherit;border-radius:999px;padding:4px 7px;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+  .ubadge{position:relative}
+  .chip[data-st]::after{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;margin-left:6px;vertical-align:1px;background:#2e7d4f}
+  .chip[data-st=vendida]::after{background:#b3261e}.chip[data-st=reservada]::after{background:#a86400}
+  .u-sale{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.u-sale .pr{font:600 20px/1.1 var(--display,system-ui)}
+  .u-sale .pill{font:600 11px/1 system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;border-radius:999px;padding:5px 8px;color:#fff;background:#2e7d4f}
+  .u-sale .pill.vendida{background:#b3261e}.u-sale .pill.reservada{background:#a86400}
+  @media (hover:none){.utip{display:none!important}}`;
+  document.head.appendChild(css);
+  const tip = document.createElement('div'); tip.className = 'utip'; tip.hidden = true; document.body.appendChild(tip);
+
+  api.cardHTML = (u, hint = true) => {
+    const s = api.get(u.id), f = api.facts(u), st = s.status || 'disponivel';
+    let h = `<div class="h"><span class="n">${esc(u.name)}</span><span class="pill ${st}">${STATUS[st]}</span></div>`;
+    if (st === 'vendida') return h + `<div class="sold">Vendida</div>`;
+    if (st === 'reservada') return h + `<div class="k">${esc(f.tip)}${f.area ? ` · ${nf(f.area)} m²` : ''}</div>`;
+    h += `<div class="p">${s.price > 0 ? fmtPrice(s.price) : '<span class="l" style="font-size:16px">Preço sob consulta</span>'}</div>`;
+    h += `<div class="k"><b>${esc(f.tip)}</b>${f.area ? ` · ${nf(f.area)} m² úteis` : ''}</div>`;
+    const parts = [f.quartos ? `${f.quartos} quarto${f.quartos > 1 ? 's' : ''}` : '', f.wc ? `${f.wc} I.S.` : '', f.garagem ? 'garagem' : '', f.piscina ? 'piscina' : ''].filter(Boolean);
+    if (parts.length) h += `<div class="l">${parts.join(' · ')}</div>`;
+    if (f.extras.length) h += `<div class="l">${esc(f.extras.join(' · '))}</div>`;
+    if (s.note) h += `<div class="k">${esc(s.note)}</div>`;
+    if (api.hasPlan && api.hasPlan(u)) h += `<div class="l">Planta para descarregar no painel da moradia</div>`;
+    if (hint) h += `<div class="hint">Clique para ver de perto e visitar</div>`;
+    return h;
+  };
+  // linha de preço/estado no cartão da moradia escolhida (painel lateral)
+  api.lineHTML = (u) => {
+    const s = api.get(u.id), st = s.status || 'disponivel';
+    return `<div class="u-sale">${st === 'disponivel' && s.price > 0 ? `<span class="pr">${fmtPrice(s.price)}</span>` : ''}<span class="pill ${st}">${STATUS[st]}</span></div>`;
+  };
+
+  // caixas de cada moradia (edifício e lote) para saber por cima de qual está o rato
+  const v3 = (x, y, z) => new THREE.Vector3(x, z, -y);
+  const boxes = [];
+  for (const u of UNITS) {
+    const [x0, y0, x1, y1] = u.bbox, zs = (u.levels || []).map((l) => l.z), zmin = Math.min(0, ...zs);
+    const tops = (H.extraRoofs || []).concat(H.roof && H.roof.outline ? [H.roof] : []).filter((r) => r.outline && r.z1 != null).filter((r) => {
+      const cx = r.outline.reduce((a, p) => a + p[0], 0) / r.outline.length, cy = r.outline.reduce((a, p) => a + p[1], 0) / r.outline.length;
+      return cx > x0 && cx < x1 && cy > y0 && cy < y1; }).map((r) => r.z1 + (r.parapet || 0));
+    const top = Math.max(Math.max(...zs, 0) + 3.2, ...tops);
+    boxes.push({ u, b: new THREE.Box3().setFromPoints([v3(x0, y0, zmin - 3.5), v3(x1, y1, top)]), pri: 0 });
+    if (u.lot) {
+      const xs = u.lot.map((p) => p[0]), ys = u.lot.map((p) => p[1]);
+      boxes.push({ u, b: new THREE.Box3().setFromPoints([v3(Math.min(...xs), Math.min(...ys), zmin - 4), v3(Math.max(...xs), Math.max(...ys), Math.max(...zs, 0) + 0.3)]), pri: 1 });
+    }
+  }
+  const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), pt = new THREE.Vector3();
+  api.unitAt = (cx, cy) => {
+    const r = ctx.renderer.domElement.getBoundingClientRect();
+    ndc.set(((cx - r.left) / r.width) * 2 - 1, -((cy - r.top) / r.height) * 2 + 1); ray.setFromCamera(ndc, ctx.getCamera());
+    let best = null;
+    for (const B of boxes) { if (!ray.ray.intersectBox(B.b, pt)) continue; const d = pt.distanceTo(ray.ray.origin) + B.pri * 0.5; if (!best || d < best.d) best = { d, u: B.u }; }
+    return best ? best.u : null;
+  };
+  let hoverU = null, raf = 0, last = null;
+  const show = (u, x, y) => {
+    if (!u) { tip.hidden = true; hoverU = null; return; }
+    if (hoverU !== u) { tip.innerHTML = api.cardHTML(u, ctx.canClick ? ctx.canClick() : true); hoverU = u; }
+    tip.hidden = false;
+    const w = tip.offsetWidth, h = tip.offsetHeight;
+    tip.style.left = Math.min(x, innerWidth - w - 24) + 'px'; tip.style.top = Math.min(y, innerHeight - h - 24) + 'px';
+  };
+  api.hovered = () => hoverU;
+  ctx.renderer.domElement.addEventListener('pointermove', (e) => {
+    if (e.pointerType === 'touch') return;
+    last = e; if (raf) return;
+    raf = requestAnimationFrame(() => { raf = 0; const ev = last; if (!ctx.active()) return show(null); if (ev.buttons) return show(null); show(api.unitAt(ev.clientX, ev.clientY), ev.clientX, ev.clientY); });
+  });
+  ctx.renderer.domElement.addEventListener('pointerleave', () => show(null));
+  ctx.renderer.domElement.addEventListener('pointerdown', () => show(null));
+  api.showAt = (u, x, y) => { hoverU = null; show(u, x, y); };
+  api.hide = () => show(null);
+  api.onChange(() => { hoverU = null; tip.hidden = true; });
+  return api;
+}
+return { STATUS, fmtPrice, unitFacts, initSales };
+})();
+
+// ===== src/plans.js =====
+const __m_plans = (() => {
+
+// Plantas para descarregar (só em conjuntos de moradias): o editor (#editar) envia um PDF ou imagem para <pasta>/plantas/ e grava plantas.json;
+// quem visita vê «Descarregar planta» no cartão do título (planta geral) e, num conjunto, no cartão de cada moradia.
+// plantas.json = { general: {file, name}, units: { A: {file, name}, … } }   (file relativo à página)
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const extOf = (f) => ((f || '').match(/\.([a-z0-9]+)$/i) || [, ''])[1].toLowerCase();
+
+function initPlans(ctx) {
+  const { H, UNITS } = ctx;
+  if (!UNITS || UNITS.length < 2) return null;   // só para conjuntos de moradias
+  const P = { general: null, units: {}, ...(H.meta.plans || {}) };
+  const subs = [];
+  const api = {
+    general: () => P.general,
+    unit: (id) => (P.units || {})[id] || null,
+    all: () => JSON.parse(JSON.stringify(P)),
+    set(d) { P.general = d.general || null; P.units = d.units || {}; subs.forEach((f) => f()); },
+    onChange: (f) => subs.push(f),
+    // ligação de descarga (mesma origem: o atributo download dá o nome do ficheiro)
+    link(p, label, fname = label, cls = 'btn ghost dlbtn') {
+      if (!p) return '';
+      const ext = extOf(p.file), nm = String(fname).replace(/[\\/:*?"<>|]/g, '-') + (ext ? '.' + ext : '');
+      return `<a class="${cls}" href="${esc(new URL(p.file, location.href).href)}" download="${esc(nm)}" target="_blank" rel="noopener">`
+        + `<svg width="13" height="13" viewBox="0 0 16 16" aria-hidden="true" style="vertical-align:-2px;margin-right:6px"><path d="M8 1v9m0 0L4.5 6.5M8 10l3.5-3.5M2 12v2.5h12V12" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+        + `${esc(label)}${ext ? `<span style="opacity:.65;margin-left:5px">(${ext.toUpperCase()})</span>` : ''}</a>`;
+    },
+  };
+  if ((!ctx.test || /plantas/.test(location.search)) && /^https?:$/.test(location.protocol)) {
+    fetch(new URL('plantas.json', location.href).href + '?v=' + Date.now(), { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null)).then((d) => { if (d) api.set(d); }).catch(() => { /* ainda sem plantas */ });
+  }
+  const css = document.createElement('style');
+  css.textContent = `.dlbtn{display:inline-flex;align-items:center;text-decoration:none;color:inherit;margin-top:8px}
+  #t-dl:empty{display:none}#t-dl .dlbtn{padding:6px 10px;font-size:12px}`;
+  document.head.appendChild(css);
+  return api;
+}
+return { initPlans };
+})();
+
 // ===== src/editor.js =====
 const __m_editor = (() => {
 const { registerGLB } = __m_furniture;
+const { STATUS, unitFacts } = __m_sales;
 // Editor de mobiliário protegido por palavra-passe: mover (arrastar), rodar e alterar a largura das peças, e guardar
 // a disposição no repositório GitHub do site (layout.json ao lado da página). Todos os visitantes carregam layout.json.
 //
@@ -3363,11 +3809,18 @@ function initEditor(ctx) {
   .ed-bar .grp{display:flex;gap:4px;align-items:center}
   .ed-bar input{width:62px;padding:8px 6px;border:1px solid #c9cfcc;border-radius:8px;font:13px system-ui,sans-serif;text-align:right}
   .ed-bar button:disabled{opacity:.45;cursor:default}
-  @media (prefers-color-scheme: dark){.ed-card,.ed-bar{background:#1f2427;color:#e4e8e6}.ed-card p,.ed-bar .muted{color:#a7b0ad}.ed-row button,.ed-bar button{background:#333b40;color:#e4e8e6}.ed-card input,.ed-bar input{background:#15191c;color:#e4e8e6;border-color:#3b4449}}
+  .ed-tab{border-collapse:collapse;width:100%;font-size:13px}.ed-tab th{text-align:left;font-size:11px;font-weight:600;color:#5d666b;padding:4px 6px}
+  .ed-tab td{padding:4px 6px;border-top:1px solid #e3e6e4}.ed-tab td.ul{font:700 16px system-ui;width:22px;text-align:center;border-left:4px solid #2e7d4f}
+  .ed-tab tr.vendida td.ul{border-left-color:#b3261e}.ed-tab tr.reservada td.ul{border-left-color:#a86400}
+  .ed-tab input,.ed-tab select{padding:7px 8px;border:1px solid #c9cfcc;border-radius:7px;font:13px system-ui,sans-serif;background:#fff;color:#1d2226}
+  .ed-tab input[data-k=price]{width:110px;text-align:right}
+  @media (prefers-color-scheme: dark){.ed-tab input,.ed-tab select{background:#15191c;color:#e4e8e6;border-color:#3b4449}.ed-tab td{border-color:#333b40}.ed-card,.ed-bar{background:#1f2427;color:#e4e8e6}.ed-card p,.ed-bar .muted{color:#a7b0ad}.ed-row button,.ed-bar button{background:#333b40;color:#e4e8e6}.ed-card input,.ed-bar input{background:#15191c;color:#e4e8e6;border-color:#3b4449}}
   `;
   document.head.appendChild(css);
   const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
-  const openBtn = el('button', 'ed-btn', 'Editar mobiliário'); document.body.appendChild(openBtn);
+  const SALES = ctx.sales;     // conjunto de moradias: preços e vendas
+  const PLANS = ctx.plans;     // plantas para descarregar
+  const openBtn = el('button', 'ed-btn', SALES ? 'Editar (mobiliário, plantas, preços e vendas)' : 'Editar mobiliário'); document.body.appendChild(openBtn);
 
   let token = ss.get('casa3d-token');
   const modal = (inner) => { const m = el('div', 'ed-modal'); const c = el('div', 'ed-card', inner); m.appendChild(c); document.body.appendChild(m); return { m, c, close: () => m.remove() }; };
@@ -3428,6 +3881,8 @@ function initEditor(ctx) {
     <span class="grp"><button id="ed-rl" title="Rodar 90° (esquerda)">↺ 90°</button><button id="ed-rr" title="Rodar 90° (direita)">↻ 90°</button><button id="ed-r15" title="Rodar 15°">↻ 15°</button></span>
     <button id="ed-glb" title="Carregar um modelo 3D (.glb) para o site: substitui a peça seleccionada (móvel, electrodoméstico, louça, carro) ou acrescenta uma nova">Modelo 3D…</button>
     <button id="ed-fin" title="Trocar o pavimento ou o revestimento de paredes por uma textura (fotografia do material)">Pavimentos e paredes…</button>
+    ${PLANS ? '<button id="ed-plans" title="Enviar a planta (PDF ou imagem) que os visitantes podem descarregar">Plantas…</button>' : ''}
+    ${SALES ? '<button id="ed-sales" class="pri" title="Preço e estado (disponível, reservada, vendida) de cada moradia">Preços e vendas…</button>' : ''}
     <button id="ed-reset">Repor peça</button><button id="ed-del" class="dang">Apagar peça</button><button id="ed-undel" hidden>Repor apagadas</button>
     <span class="muted" id="ed-st"></span>
     <button class="pri" id="ed-save">Guardar</button><button id="ed-exit">Sair</button>`;
@@ -3589,6 +4044,95 @@ function initEditor(ctx) {
   };
   const creditsAdded = [];
 
+  // ---------------------------------------------------------------- plantas para descarregar → <pasta>/plantas/ + plantas.json
+  if (PLANS) q('#ed-plans').onclick = () => {
+    const cur = PLANS.all(), multi = (H.units || []).length > 1;
+    const rows = [{ k: 'general', label: 'Conjunto (todas)' }].concat(multi ? H.units.map((u) => ({ k: u.id, label: u.name })) : []);
+    const curOf = (k) => (k === 'general' ? cur.general : (cur.units || {})[k]) || null;
+    const { c, close } = modal(`<h3>Plantas para descarregar</h3>
+      <p>Envie a planta em PDF (ou JPG/PNG). Quem visita vê «Descarregar planta»${multi ? ' — a do conjunto no título da página e a de cada moradia no cartão da moradia' : ' no título da página'}.</p>
+      <div style="overflow:auto;max-height:55vh"><table class="ed-tab"><thead><tr><th></th><th>Actual</th><th>Novo ficheiro</th><th></th></tr></thead><tbody>${rows.map((r) => {
+        const p = curOf(r.k);
+        return `<tr data-k="${r.k}"><td style="font-weight:600;white-space:nowrap">${r.label}</td><td class="cur">${p ? `<a href="${new URL(p.file, location.href).href}" target="_blank" rel="noopener">${(p.name || p.file).replace(/</g, '&lt;')}</a>` : '<span style="color:#8a9396">—</span>'}</td>
+          <td><input type="file" accept="application/pdf,.pdf,image/jpeg,image/png,image/webp" style="max-width:210px"></td>
+          <td>${p ? '<label style="display:flex;gap:5px;align-items:center;font-size:12px;white-space:nowrap"><input type="checkbox" class="rm" style="width:auto">Retirar</label>' : ''}</td></tr>`; }).join('')}</tbody></table></div>
+      <div class="ed-err" id="ed-err"></div><div class="ed-row"><button id="ed-x">Cancelar</button><button class="pri" id="ed-ok">Guardar</button></div>`);
+    c.style.maxWidth = '760px';
+    c.querySelector('#ed-x').onclick = close;
+    c.querySelector('#ed-ok').onclick = async () => {
+      const err = c.querySelector('#ed-err'), b = c.querySelector('#ed-ok');
+      const next = { general: cur.general || null, units: { ...(cur.units || {}) } };
+      const jobs = [];
+      for (const tr of c.querySelectorAll('tbody tr')) {
+        const k = tr.dataset.k, f = tr.querySelector('input[type=file]').files[0], rm = tr.querySelector('.rm');
+        if (f) {
+          if (f.size > 40e6) { err.textContent = `Ficheiro demasiado grande (${(f.size / 1e6).toFixed(0)} MB; máx. 40 MB): ${f.name}`; return; }
+          if (!/\.(pdf|jpe?g|png|webp)$/i.test(f.name)) { err.textContent = 'Só PDF, JPG, PNG ou WebP: ' + f.name; return; }
+          jobs.push([k, f]);
+        } else if (rm && rm.checked) { if (k === 'general') next.general = null; else delete next.units[k]; }
+      }
+      b.disabled = true;
+      try {
+        for (const [k, f] of jobs) {
+          err.textContent = `A enviar ${f.name}…`;
+          const ext = f.name.match(/\.([a-z0-9]+)$/i)[1].toLowerCase().replace('jpeg', 'jpg');
+          const rel = `plantas/${k === 'general' ? 'geral' : slugName(k)}-${slugName(f.name.replace(/\.[a-z0-9]+$/i, ''))}.${ext}`;
+          await putBinary(token, R, (R.dir ? R.dir + '/' : '') + rel, await f.arrayBuffer(), `Planta: ${k === 'general' ? 'geral' : k} (${H.meta.name})`);
+          const p = { file: rel, name: f.name, saved: new Date().toISOString() };
+          if (k === 'general') next.general = p; else next.units[k] = p;
+        }
+        err.textContent = 'A guardar…';
+        await putFile(token, R, (R.dir ? R.dir + '/' : '') + 'plantas.json', JSON.stringify({ version: 1, house: H.meta.slug, ...next }, null, 1) + '\n', `Plantas: ${H.meta.name}`);
+        // a ligação aparece já; o ficheiro fica disponível no site dentro de 1–2 min
+        PLANS.set(next); close(); status('Plantas guardadas — disponíveis para descarregar dentro de 1 a 2 minutos');
+      } catch (ex) {
+        if (/401|403/.test(ex.message)) { token = null; ss.set('casa3d-token', ''); }
+        err.textContent = /403/.test(ex.message) ? 'A chave do GitHub não tem permissão de escrita.' : 'Erro ao enviar: ' + ex.message; b.disabled = false;
+      }
+    };
+  };
+
+  // ---------------------------------------------------------------- preços e vendas (conjuntos de moradias) → vendas.json
+  if (SALES) q('#ed-sales').onclick = () => {
+    const cur = SALES.all(), U = H.units;
+    const num = (v) => (v > 0 ? Number(v).toLocaleString('pt-PT') : '');
+    const rows = U.map((u) => { const s = cur[u.id] || {}, f = unitFacts(H, u);
+      return `<tr data-u="${u.id}"><td class="ul">${u.short || u.id}</td>
+        <td><select data-k="status">${Object.entries(STATUS).map(([k, v]) => `<option value="${k}"${(s.status || 'disponivel') === k ? ' selected' : ''}>${v}</option>`).join('')}</select></td>
+        <td><input data-k="price" inputmode="numeric" placeholder="ex.: 450 000" value="${num(s.price)}"></td>
+        <td><input data-k="tip" placeholder="${f.tip}" value="${s.tip || ''}" style="width:56px"></td>
+        <td><input data-k="area" inputmode="numeric" placeholder="${f.area}" value="${s.area || ''}" style="width:64px"></td>
+        <td><input data-k="note" placeholder="opcional" value="${(s.note || '').replace(/"/g, '&quot;')}" style="width:150px"></td></tr>`; }).join('');
+    const { c, close } = modal(`<h3>Preços e vendas</h3>
+      <p>Para cada moradia: estado e preço. Ao passar o rato por cima de uma casa, quem visita vê «Vendida», «Reservada» ou o preço com a tipologia e a informação básica. Tipologia e área vêm do projecto — só preencha para corrigir.</p>
+      <div style="overflow:auto;max-height:55vh"><table class="ed-tab"><thead><tr><th></th><th>Estado</th><th>Preço (€)</th><th>Tipologia</th><th>Área (m²)</th><th>Nota curta</th></tr></thead><tbody>${rows}</tbody></table></div>
+      <div class="ed-err" id="ed-err"></div><div class="ed-row"><button id="ed-x">Cancelar</button><button class="pri" id="ed-ok">Guardar</button></div>`);
+    c.style.maxWidth = '760px';
+    const tb = c.querySelector('tbody');
+    const paint = (tr) => { const v = tr.querySelector('[data-k=status]').value; tr.className = v; };
+    tb.querySelectorAll('tr').forEach((tr) => { paint(tr); tr.querySelector('[data-k=status]').onchange = () => paint(tr); });
+    c.querySelector('#ed-x').onclick = close;
+    c.querySelector('#ed-ok').onclick = async () => {
+      const err = c.querySelector('#ed-err'), b = c.querySelector('#ed-ok'), out = {};
+      for (const tr of tb.querySelectorAll('tr')) {
+        const g = (k) => tr.querySelector(`[data-k=${k}]`).value.trim();
+        const price = g('price') ? Math.round(parseFloat(g('price').replace(/[\s.€]/g, '').replace(',', '.'))) : 0;
+        if (g('price') && !(price > 0)) { err.textContent = `Preço inválido na moradia ${tr.dataset.u}.`; return; }
+        const area = g('area') ? Math.round(parseFloat(g('area').replace(',', '.'))) : 0;
+        out[tr.dataset.u] = { status: g('status'), ...(price ? { price } : {}), ...(g('tip') ? { tip: g('tip') } : {}), ...(area > 0 ? { area } : {}), ...(g('note') ? { note: g('note').slice(0, 120) } : {}) };
+      }
+      b.disabled = true; err.textContent = 'A guardar…';
+      try {
+        await putFile(token, R, (R.dir ? R.dir + '/' : '') + 'vendas.json', JSON.stringify({ version: 1, house: H.meta.slug, saved: new Date().toISOString(), units: out }, null, 1) + '\n',
+          `Preços e vendas: ${H.meta.name} (${Object.values(out).filter((x) => x.status === 'vendida').length} vendidas)`);
+        SALES.set(out); close(); status('Preços e vendas guardados — visíveis para todos dentro de 1 a 2 minutos');
+      } catch (ex) {
+        if (/401|403/.test(ex.message)) { token = null; ss.set('casa3d-token', ''); }
+        err.textContent = /403/.test(ex.message) ? 'A chave do GitHub não tem permissão de escrita.' : 'Erro ao guardar: ' + ex.message; b.disabled = false;
+      }
+    };
+  };
+
   // ---------------------------------------------------------------- pavimentos e revestimentos (texturas)
   // Fotografia do material (azulejo, soalho, pedra…) em repetição: indica-se a medida real que a imagem representa.
   // A imagem é reduzida a ≤ 2048 px (JPEG) no browser, enviada para <pasta>/textures/ e aplicada já; "Guardar" grava em layout.json.
@@ -3729,21 +4273,22 @@ function interiorPoint(poly) {
 }
 
 class RoomProbes {
-  constructor({ renderer, scene, H, baseZ, groups, res = 128 }) {
+  // rooms (opcional): só estes compartimentos (conjunto: a casa visitada) — as outras ficam com o ambiente genérico
+  constructor({ renderer, scene, H, baseZ, groups, res = 128, rooms = null }) {
     Object.assign(this, { renderer, scene, H, groups });
     this.pmrem = new THREE.PMREMGenerator(renderer);
-    this.rooms = H.rooms.filter((r) => !r.exterior && r.poly && r.poly.length > 2).map((r) => {
+    this.rooms = (rooms || H.rooms).filter((r) => !r.exterior && r.poly && r.poly.length > 2).map((r) => {
       const p = interiorPoint(r.poly);
       const rt = new THREE.WebGLCubeRenderTarget(res, { type: THREE.HalfFloatType });
       const cam = new THREE.CubeCamera(0.05, 300, rt);
-      cam.position.set(p[0], baseZ(p[0], p[1]) + 1.35, -p[1]);
+      cam.position.set(p[0], (r.z ?? baseZ(p[0], p[1])) + 1.35, -p[1]);
       return { r, p, rt, cam, env: null, mats: new Map() };
     });
     this.byId = new Map(this.rooms.map((q) => [String(q.r.id), q]));
     this.meshes = new Map();       // mesh → compartimento
     this.ready = false;
   }
-  roomAt(x, y) { return this.rooms.find((q) => pointInPoly(x, y, q.r.poly)) || null; }
+  roomAt(x, y, yw) { return this.rooms.find((q) => (yw === undefined || q.r.z === undefined || (yw > q.r.z - 0.6 && yw < (q.r.ceil ?? q.r.z + 3) + 0.1)) && pointInPoly(x, y, q.r.poly)) || null; }
   // atribui cada malha interior a um compartimento (chave @f<id>/@w<id> das faces de compartimento; senão o centro da peça)
   classify() {
     const box = new THREE.Box3(), c = new THREE.Vector3();
@@ -3751,14 +4296,15 @@ class RoomProbes {
       if (!o.isMesh || this.meshes.has(o)) return;
       const ms = [].concat(o.material);
       if (!ms.every((m) => m && m.isMeshStandardMaterial && !m.transparent)) return;
-      const k = o.userData.matKey, m = k && k.match(/@[fw](\d+)$/);
+      const k = o.userData.matKey, m = k && k.match(/@[fwc](\d+)$/);   // f pavimento, w parede, c tecto
       let q = m ? this.byId.get(m[1]) : o.userData.room != null ? this.byId.get(String(o.userData.room)) : null;
       if (!q && !m && o.userData.room == null) {
         // peças sem chave de compartimento: só se a caixa inteira (em planta) estiver dentro de um compartimento —
         // paredes, palas e faces exteriores ficam com o céu
         box.setFromObject(o); box.getCenter(c);
-        if (c.y < -0.6 || box.max.y > 3.05) return;
-        q = this.roomAt(c.x, -c.z);
+        q = this.roomAt(c.x, -c.z, c.y);
+        const z0 = q && q.r.z !== undefined ? q.r.z : 0, z1 = q && q.r.ceil !== undefined ? q.r.ceil + 0.45 : 3.05;
+        if (!q || c.y < z0 - 0.6 || box.max.y > z1) return;
         const e = 0.02;
         if (q && ![[box.min.x + e, box.min.z + e], [box.max.x - e, box.min.z + e], [box.min.x + e, box.max.z - e], [box.max.x - e, box.max.z - e]]
           .every(([x, z]) => pointInPoly(x, -z, q.r.poly))) q = null;
@@ -3821,18 +4367,24 @@ const OUT = /p[aá]tio|terra[cç]|varand|garag|alpend|logradour|alpendre|churras
 
 function buildSkirting(H, M, baseZ, { h = 0.07, t = 0.012, mat = 'doorWhite', furniture = null, walls = null } = {}) {
   const g = new THREE.Group(); g.name = 'rodape';
-  const solids = [...H.walls.map((w) => w.pts), ...(H.pieces || []).filter((p) => p.z0 <= 0.02 && p.z1 > 0.3).map((p) => p.pts)];
+  // conjunto/pisos: paredes e peitoris do nível do compartimento (zr)
+  let solids = [];
+  const solidsAt = (zr) => [...H.walls.filter((w) => !H.meta.multi || (w.z0 <= zr + 0.03 && w.z1 > zr + 0.3)).map((w) => w.pts),
+    ...(H.pieces || []).filter((p) => p.z0 <= zr + 0.02 && p.z1 > zr + 0.3).map((p) => p.pts)];
   const wallAt = (x, y) => solids.some((p) => pointInPoly(x, y, p));
   // móveis assentes no chão encostados à parede (cozinha, roupeiros, estantes): sem rodapé por trás
   const boxes = [];
   if (furniture) { const b = new THREE.Box3(); furniture.updateMatrixWorld(true);
-    for (const c of furniture.children) { b.setFromObject(c); if (!b.isEmpty() && b.min.y < 0.15 && b.max.y - b.min.y > 0.3) boxes.push([b.min.x, b.max.x, -b.max.z, -b.min.z]); } }
+    for (const c of furniture.children) { b.setFromObject(c); if (!b.isEmpty() && b.max.y - b.min.y > 0.3) boxes.push([b.min.x, b.max.x, -b.max.z, -b.min.z, b.min.y]); } }
   const rc = new THREE.Raycaster();
   if (walls) for (const w of walls) w.updateMatrixWorld(true);
-  const furnAt = (x, y) => boxes.some(([x0, x1, y0, y1]) => x > x0 && x < x1 && y > y0 && y < y1);
+  let zRoom = 0;
+  const furnAt = (x, y) => boxes.some(([x0, x1, y0, y1, zb]) => zb < zRoom + 0.15 && zb > zRoom - 0.3 && x > x0 && x < x1 && y > y0 && y < y1);
   for (const r of H.rooms) {
     const geos = [];
     if (r.exterior || !r.poly || WET.test(r.name) || OUT.test(r.name) || !DRY.includes(r.floor) || r.wet) continue;
+    zRoom = r.z ?? 0; solids = solidsAt(zRoom);
+    const fz = (x, y) => (r.z !== undefined ? r.z : baseZ(x, y));
     const P = r.poly; let A = 0;
     for (let i = 0; i < P.length; i++) { const [x0, y0] = P[i], [x1, y1] = P[(i + 1) % P.length]; A += x0 * y1 - x1 * y0; }
     const sgn = A > 0 ? 1 : -1;                                 // anti-horário: o exterior fica à direita do sentido do contorno
@@ -3850,13 +4402,13 @@ function buildSkirting(H, M, baseZ, { h = 0.07, t = 0.012, mat = 'doorWhite', fu
           const mx = ax + ux * (a + (b - a) / 2), my = ay + uy * (a + (b - a) / 2);
           let wf = 0; for (let k = -0.03; k <= 0.06; k += 0.002) if (wallAt(mx + nx * k, my + ny * k)) { wf = k; break; }
           if (walls) {   // a face desenhada manda (revestimentos podem estar afastados do contorno da parede)
-            const z0 = baseZ(mx - nx * 0.2, my - ny * 0.2);
+            const z0 = fz(mx - nx * 0.2, my - ny * 0.2);
             rc.set(new THREE.Vector3(mx - nx * 0.15, z0 + 0.035, -(my - ny * 0.15)), new THREE.Vector3(nx, 0, -ny)); rc.far = 0.4;
             const hit = rc.intersectObjects(walls, true)[0];
             if (hit) wf = hit.distance - 0.15;
           }
           const len = b - a, off = wf - (t / 2 - 0.001), cx = ax + ux * (a + len / 2) + nx * off, cy = ay + uy * (a + len / 2) + ny * off;
-          const z = baseZ(cx - nx * 0.2, cy - ny * 0.2);
+          const z = fz(cx - nx * 0.2, cy - ny * 0.2);
           const geo = new THREE.BoxGeometry(len, h, t);
           geo.rotateY(Math.atan2(uy, ux));                     // x local ao longo da parede (planta: y → −z no three)
           geo.translate(cx, z + 0.001 + h / 2, -cy);
@@ -3905,6 +4457,8 @@ const { Walker } = __m_walk;
 const { roomLabels, findRoom, Measure, fmt } = __m_tools;
 const { pointInPoly, v3, rectPts, rotFwd } = __m_geom;
 const { initEditor } = __m_editor;
+const { initSales } = __m_sales;
+const { initPlans } = __m_plans;
 const { RoomProbes } = __m_probes;
 const { buildSkirting } = __m_details;
 // Casa de Valadares — visualizador 3D. Liga dados (house-data.js) → construtores → interface.
@@ -3912,8 +4466,11 @@ const { buildSkirting } = __m_details;
 const H = HOUSE;
 const RENDERS = H.renders || [];
 // enquadramento geral: caixa da cobertura + piscina + pavimentos (planta), com margem
+const MULTI = !!H.meta.multi;   // conjunto de moradias / vários pisos (lib_conjunto)
+const UNITS = H.units || [];
 const BB = (() => {
-  const pts = [...H.roof.outline, ...H.pavings.flatMap((p) => p.poly)];
+  const pts = [...H.roof.outline, ...H.pavings.flatMap((p) => p.poly), ...(MULTI ? (H.extraRoofs || []).flatMap((r) => r.outline) : [])];
+  if (!pts.length) pts.push(...H.site.outline);
   if (H.pool) pts.push([H.pool.water[0], H.pool.water[1]], [H.pool.water[2], H.pool.water[3]]);
   const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
   const b = { x0: Math.min(...xs) - 1, x1: Math.max(...xs) + 1, y0: Math.min(...ys) - 1, y1: Math.max(...ys) + 1 };
@@ -4059,7 +4616,15 @@ function updateSun() {
 const ground = makeGround(H);
 const house = buildHouse(H, M);
 const site = buildSite(H, M, ground);
-const baseZ = (x, y) => {
+// cota do pavimento em (x, y); conjunto/pisos: o compartimento cujo pavimento está mais perto de zHint (omissão: o mais alto)
+const baseZ = (x, y, zHint) => {
+  if (MULTI) {
+    let best = null;
+    for (const r of H.rooms) if (r.z !== undefined && pointInPoly(x, y, r.poly)) {
+      const k = zHint === undefined ? -r.z : Math.abs(r.z - zHint); if (!best || k < best[0]) best = [k, r.z];
+    }
+    if (best) return best[1];
+  }
   for (const p of H.pavings) if (p.z !== null && pointInPoly(x, y, p.poly)) return p.z;
   if (pointInPoly(x, y, H.roof.outline)) return 0;
   return ground(x, y);
@@ -4072,13 +4637,19 @@ const skirting = buildSkirting(H, M, baseZ, { furniture, walls: [house.walls] })
 const labels = roomLabels(H);
 for (const g of [...Object.values(house), ...Object.values(site), furniture, vegetation, labels.group]) scene.add(g);
 const roofParts = [house.roof, house.ceilings];
+// conjunto: casa seleccionada (null = todas), nível de corte (planta / corte 3D)
+let unitSel = null, levelSel = null, unitBadges = [];
 // texturas fotográficas: só as dos materiais usados nesta casa (as procedimentais ficam enquanto carregam)
 const usedMats = new Set(); scene.traverse((o) => { for (const m of [].concat(o.material || [])) if (m && m.name) usedMats.add(m.name); });
 // luz interior por compartimento (depois das texturas, céus e modelos): ver probes.js
 let probes = null, probeTimer = 0;
 function updateProbes() {
   if (!LOOK.probes || photo?.active) return;
-  if (!probes) probes = new RoomProbes({ renderer, scene, H, baseZ, groups: [...Object.values(house), furniture], res: mobile ? 64 : 128 });
+  if (MULTI && !unitSel) return;    // conjunto: a luz interior calcula-se para a casa visitada
+  if (MULTI && TEST && !/[?&]probes\b/.test(location.search)) return;   // headless: luz interior do conjunto só com ?test&probes (lenta no swiftshader)
+  if (MULTI && probes && probes.unit !== unitSel.id) probes = null;
+  if (!probes) { probes = new RoomProbes({ renderer, scene, H, baseZ, groups: [...Object.values(house), furniture], res: mobile ? 64 : 128,
+    rooms: MULTI ? H.rooms.filter((r) => r.unit === unitSel.id) : null }); if (MULTI) probes.unit = unitSel.id; }
   const vis = roofParts.map((g) => g.visible), furn = furniture.visible, lab = labels.group.visible, mk = markers.visible, hl = highlight.visible;
   probes.update({
     passes: mobile ? 1 : 2,
@@ -4101,7 +4672,7 @@ const measure = new Measure(scene, H, M);
 function showHighlight(r) {
   highlight.clear();
   if (!r) return;
-  const z = baseZ(...centroidOf(r.poly)) + 0.03;
+  const z = (r.z ?? baseZ(...centroidOf(r.poly))) + 0.03;
   const shape = new THREE.Shape(r.poly.map(([x, y]) => new THREE.Vector2(x, y)));
   const g = new THREE.ShapeGeometry(shape); g.rotateX(-Math.PI / 2); g.scale(1, 1, 1);
   // ShapeGeometry em XY → rodado para XZ com z = -Y
@@ -4183,21 +4754,29 @@ orbit2d.touches = { ONE: THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_PAN };
 
 // passeio: obstáculos 2D (paredes, peitoris, palheta, portão, vidros com peitoril, muros, bordo da piscina)
 const blockers = [];
-const ring = (pts) => { for (let i = 0; i < pts.length; i++) { const a = pts[i], b = pts[(i + 1) % pts.length]; blockers.push([a[0], a[1], b[0], b[1]]); } };
-for (const w of H.walls) ring(w.pts);
-for (const p of H.pieces) if (p.z0 < 1.0) ring(p.pts);
+const ring = (pts, z0, z1) => { for (let i = 0; i < pts.length; i++) { const a = pts[i], b = pts[(i + 1) % pts.length]; blockers.push(MULTI && z0 !== undefined ? [a[0], a[1], b[0], b[1], z0, z1] : [a[0], a[1], b[0], b[1]]); } };
+for (const w of H.walls) ring(w.pts, w.z0, w.z1);
+for (const p of H.pieces) if (MULTI || p.z0 < 1.0) ring(p.pts, p.z0, p.z1);
+for (const w of H.walls2 || []) ring(w.pts, w.z0, w.z1);
+for (const g of H.gates || []) ring(g.pts, g.z0, g.z1);
+for (const r of H.railings || []) for (let i = 0; i < r.pts.length - 1; i++) { const a = r.pts[i], b = r.pts[i + 1]; blockers.push([a[0], a[1], b[0], b[1], (a[2] ?? r.z) - 0.2, (a[2] ?? r.z) + (r.h || 1)]); }
 if (H.fin) ring(H.fin.pts);
 if (H.entrance) { const en = H.entrance; blockers.push([en.x, en.y0, en.x, en.door[0]], [en.x, en.door[1], en.x, en.y1]); }
-for (const gd of [].concat(H.garageDoor || [])) blockers.push(gd.o === 'h' ? [gd.x0, gd.y, gd.x1, gd.y] : [gd.x, gd.y0, gd.x, gd.y1]);
-for (const g of H.glass) if (g.sill > 0.3) blockers.push(g.rot ? [...rotFwd(g.rot, g.a, g.c), ...rotFwd(g.rot, g.b, g.c)] : g.o === 'h' ? [g.a, g.c, g.b, g.c] : [g.c, g.a, g.c, g.b]);
+for (const gd of [].concat(H.garageDoor || [])) blockers.push([...(gd.o === 'h' ? [gd.x0, gd.y, gd.x1, gd.y] : [gd.x, gd.y0, gd.x, gd.y1]), ...(MULTI && gd.zb !== undefined ? [gd.zb - 0.1, gd.zb + (gd.z1 || 2.4)] : [])]);
+for (const g of H.glass) if (g.sill - (g.zb || 0) > 0.3 || MULTI) { const sg = g.rot ? [...rotFwd(g.rot, g.a, g.c), ...rotFwd(g.rot, g.b, g.c)] : g.o === 'h' ? [g.a, g.c, g.b, g.c] : [g.c, g.a, g.c, g.b];
+  if (g.sill - (g.zb || 0) > 0.3) blockers.push(MULTI ? [...sg, Math.min(g.sill, (g.zb ?? 0) + 1.2), g.head] : sg);   // conjunto: o vidro bloqueia a partir do peitoril (janelas altas por cima de portas não fecham a passagem)
+  // envidraçados até ao chão: painéis fixos em house.glass.userData.block; folhas de correr são portas (abrem ao chegar perto)
+}
+for (const b of house.glass.userData.block || []) blockers.push(MULTI ? b : b.slice(0, 4));
 if (H.pool) ring(rectPts(H.pool.water));
 { const s = H.site.outline; for (let i = 0; i < s.length; i++) { const a = s[i], b = s[(i + 1) % s.length]; blockers.push([a[0], a[1], b[0], b[1]]); } }
-const walkables = [house.floors, site.terrain, site.site];
+const walkables = [house.floors, house.stairs, site.terrain, site.site];
 // portas interiores: obstáculo só quando paradas — aberta (folha encostada; as de correr ficam dentro da parede) ou fechada
 const doors = house.doors.children.map((g) => g.userData.door);
 const doorSegs = (D) => {
   const pts = D.k > 0.5 ? (D.d.type === 'slide' ? null : D.d.pts) : D.d.closed, out = [];
-  if (pts) for (let i = 0; i < pts.length; i++) { const a = pts[i], b = pts[(i + 1) % pts.length]; out.push([a[0], a[1], b[0], b[1]]); }
+  const z = MULTI && D.d.zb !== undefined ? [D.d.zb - 0.1, D.d.zb + 2.1] : [];   // conjunto: a folha só bloqueia no seu piso
+  if (pts) for (let i = 0; i < pts.length; i++) { const a = pts[i], b = pts[(i + 1) % pts.length]; out.push([a[0], a[1], b[0], b[1], ...z]); }
   return out;
 };
 const walker = new Walker(persp, renderer.domElement, { blockers, walkables, dynamic: () => doors.filter((D) => D.k === D.target).flatMap(doorSegs) });
@@ -4229,30 +4808,48 @@ function setMode(m) {
   if (m === mode) return;
   stopPhoto();
   if (mode === '3d') { savedOrbit.pos.copy(persp.position); savedOrbit.target.copy(orbit.target); }
+  if (MULTI) {   // planta: nível principal da casa escolhida; ao sair da planta, sem corte
+    if (m === 'plan' && unitSel && !levelSel) levelSel = unitSel.levels.find((l) => l.main) || unitSel.levels[unitSel.levels.length - 1];
+    if (mode === 'plan' && m !== 'plan') levelSel = null;
+    setTimeout(renderUnitsUI, 0);
+  }
   mode = m;
   document.body.dataset.mode = m;
   for (const b of document.querySelectorAll('[data-setmode]')) b.setAttribute('aria-pressed', b.dataset.setmode === m);
   orbit.enabled = m === '3d'; orbit2d.enabled = m === 'plan'; walker.enabled = m === 'walk';
   camera = m === 'plan' ? ortho : persp;
   house.plan.visible = m === 'plan';
-  renderer.clippingPlanes = m === 'plan' ? [new THREE.Plane(new THREE.Vector3(0, -1, 0), 1.25)] : [];
+  applyCut();
   sky.visible = m !== 'plan';
   scene.background = m === 'plan' ? new THREE.Color(getComputedStyle(document.documentElement).getPropertyValue('--plan-bg').trim() || '#f3f2ee') : null;
   applySkyBackground();
   if (m === '3d') { persp.fov = 55; persp.position.copy(savedOrbit.pos); orbit.target.copy(savedOrbit.target); orbit.update(); }
-  if (m === 'walk') { persp.fov = walkFov(); const ws = H.walkStart || [BB.cx, BB.cy, 0]; walker.place(ws[0], ws[1], ws[2]); } // [X, Y, rumo em graus: 0 = norte, 90 = poente]
+  if (m === 'walk') { persp.fov = walkFov(); const ws = (unitSel && unitSel.walk) || H.walkStart || [BB.cx, BB.cy, 0]; if (ws.length > 3) walker.groundY = ws[3]; walker.place(ws[0], ws[1], ws[2]); } // [X, Y, rumo em graus: 0 = norte, 90 = poente, cota]
   persp.updateProjectionMatrix();
   applyLayers(); resize();
   if (m === 'plan') fitPlan();
 }
 
+// corte horizontal: planta (sempre, à cota do nível) ou 3D com um piso escolhido (conjunto)
+function cutHeight() {
+  if (!MULTI) return mode === 'plan' ? 1.25 : null;
+  if (mode === 'plan') return levelSel ? levelSel.z + 1.25 : null;
+  return mode === '3d' && levelSel ? levelSel.z + 1.25 : null;
+}
+function applyCut() {
+  const c = cutHeight();
+  renderer.clippingPlanes = c === null ? [] : [new THREE.Plane(new THREE.Vector3(0, -1, 0), c)];
+  for (const lv of house.plan.children) lv.visible = !MULTI ? true : !!levelSel && Math.abs(lv.userData.cut - (levelSel.z + 1.2)) < 0.03;
+}
 function applyLayers() {
-  const roofOn = $('#t-roof').checked && mode !== 'plan';
+  const roofOn = $('#t-roof').checked && mode !== 'plan' && !(MULTI && levelSel && mode === '3d');
   for (const g of roofParts) g.visible = roofOn;
   house.lights.visible = roofOn;
   furniture.visible = $('#t-furn').checked;
   labels.group.visible = $('#t-labels').checked && mode !== 'walk';
   labels.setHeight(roofOn && mode === '3d' ? 3.55 : 1.3);
+  if (MULTI) labels.filter((r) => (!unitSel || r.unit === unitSel.id) && (!levelSel || Math.abs(r.z - levelSel.z) < 0.05 || (mode === '3d' && r.z < levelSel.z)));
+  if (MULTI) for (const b of unitBadges) b.visible = !unitSel && mode === '3d' && $('#t-units').checked;
   const ext = $('#t-site').checked;
   site.terrain.visible = site.site.visible = site.pool.visible = ext;
   site.context.visible = $('#t-context').checked && mode !== 'plan';
@@ -4271,25 +4868,27 @@ function pick(ev) {
   const r = renderer.domElement.getBoundingClientRect();
   const ndc = new THREE.Vector2(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
   raycaster.setFromCamera(ndc, camera);
-  const roots = [house.walls, house.doors, house.floors, house.glass, house.roof, house.ceilings, site.terrain, site.site, site.pool, furniture].filter((g) => g.visible);
+  const roots = [house.walls, house.doors, house.floors, house.stairs, house.glass, house.roof, house.ceilings, site.terrain, site.site, site.pool, furniture].filter((g) => g.visible);
   let hits = raycaster.intersectObjects(roots, true).filter((h) => h.object.visible);
-  if (mode === 'plan') hits = hits.filter((h) => h.point.y <= 1.26);
+  const ch = cutHeight();
+  if (ch !== null) hits = hits.filter((h) => h.point.y <= ch + 0.01);
   return hits[0] || null;
 }
 let down = null;
 renderer.domElement.addEventListener('pointerdown', (e) => { down = { x: e.clientX, y: e.clientY, t: performance.now() }; });
 renderer.domElement.addEventListener('pointerup', (e) => {
   if (!down || Math.hypot(e.clientX - down.x, e.clientY - down.y) > 6 || performance.now() - down.t > 600) return;
+  if (sales && mode === '3d' && !unitSel && !measuring) { const u = sales.unitAt(e.clientX, e.clientY); if (u) { sales.hide(); selectUnit(u.id); const v = unitView(u); flyTo(v.pos, v.target, v.fov); return; } }
   const hit = pick(e); if (!hit) return;
   const D = hit.object.userData.door; // clicar numa porta abre-a ou fecha-a
-  if (D && !measuring && mode !== 'plan') { setDoor(D, D.target < 0.5); $('#t-doors').checked = doors.some((x) => !x.d.ext && x.target === 1); return; }
+  if (D && !measuring && mode !== 'plan') { setDoor(D, D.target < 0.5); $('#t-doors').checked = doors.some((x) => !x.d.ext && !x.d.glass && x.target === 1); return; }
   if (mode === 'walk' && e.pointerType === 'touch') return;
   if (measuring) {
     const res = measure.add(hit.point);
     renderMeasure(res);
   } else {
     const X = hit.point.x, Y = -hit.point.z;
-    const room = findRoom(H, X, Y);
+    const room = findRoom(H, X, Y, MULTI ? hit.point.y - 0.05 : undefined);
     showRoom(room, X, Y, hit.point.y);
   }
 });
@@ -4313,7 +4912,8 @@ function showRoom(r, X, Y, z) {
   const diff = r.official ? r.area - r.official : null;
   const tone = diff === null ? '' : Math.abs(diff) <= 0.1 ? 'ok' : Math.abs(diff) <= 1 ? 'warn' : 'bad';
   card.hidden = false;
-  card.innerHTML = `<div class="rc-head"><span class="eyebrow">${r.exterior ? 'Espaço exterior' : 'Compartimento'} ${r.official !== null ? 'nº ' + r.id : ''}</span>
+  const un = MULTI && r.unit ? UNITS.find((u) => u.id === r.unit) : null;
+  card.innerHTML = `<div class="rc-head"><span class="eyebrow">${un ? un.name + ' · ' : ''}${r.exterior ? 'Espaço exterior' : 'Compartimento'} ${r.official !== null && !un ? 'nº ' + r.id : ''}${MULTI && r.z !== undefined ? ' · cota ' + fmt(H.meta.cotaZero + r.z) : ''}</span>
     <button class="x" aria-label="Fechar" data-close>×</button></div>
     <h3>${r.name}</h3>
     <dl class="rc-grid">
@@ -4388,7 +4988,7 @@ document.addEventListener('click', (e) => { if (e.target.closest('[data-close]')
 for (const b of document.querySelectorAll('[data-setmode]')) b.addEventListener('click', () => setMode(b.dataset.setmode));
 for (const id of ['#t-roof', '#t-furn', '#t-labels', '#t-site', '#t-context', '#t-renders']) $(id).addEventListener('change', applyLayers);
 if (!doors.length) $('#t-doors').closest('label').hidden = true;
-$('#t-doors').addEventListener('change', (e) => { for (const D of doors) if (!D.d.ext) setDoor(D, e.target.checked); });   // a porta de entrada abre-se à parte (clique, E, aproximação)
+$('#t-doors').addEventListener('change', (e) => { for (const D of doors) if (!D.d.ext && !D.d.glass) setDoor(D, e.target.checked); });   // portas de vidro de correr também à parte   // a porta de entrada abre-se à parte (clique, E, aproximação)
 addEventListener('keydown', (e) => { if (mode === 'walk' && e.code === 'KeyE' && !['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) toggleNearestDoor(); });
 $('#t-shadows').addEventListener('change', (e) => { state.shadows = e.target.checked; applyLayers(); });
 $('#hour').addEventListener('input', (e) => { state.hour = +e.target.value; $('#hourval').textContent = hourText(state.hour); updateSun(); });
@@ -4408,12 +5008,16 @@ $('#measure').addEventListener('click', () => {
 $('#measure-clear').addEventListener('click', () => { measure.clear(); if (measuring) $('#measure-out').innerHTML = '<span class="muted">Clique em dois pontos.</span>'; });
 if (!(H.views || []).length) $('#view-chips').closest('section').hidden = true;
 $('#view-chips').innerHTML = (H.views || []).map((v) => `<button class="chip" data-view="${v.id}">${v.label}</button>`).join('');
-for (const b of document.querySelectorAll('[data-view]')) b.addEventListener('click', () => {
+// vista guardada; no conjunto, v.unit escolhe a moradia (luz interior e cortes dessa casa)
+function goView(id) {
+  const v = typeof id === 'string' ? VIEWS[id] : id; if (!v) return;
   if (mode !== '3d') setMode('3d');
-  const v = VIEWS[b.dataset.view];
+  if (MULTI && v.unit && (!unitSel || unitSel.id !== v.unit)) selectUnit(v.unit);
   persp.position.copy(v3(...v.pos)); orbit.target.copy(v3(...v.target));
   persp.fov = v.fov || 55; persp.updateProjectionMatrix(); orbit.update();
-});
+  if (TEST) frame();
+}
+for (const b of document.querySelectorAll('[data-view]')) b.addEventListener('click', () => goView(b.dataset.view));
 // identificação (H.meta)
 document.title = H.meta.name;
 $('#t-name').textContent = H.meta.name; $('#t-place').textContent = H.meta.place || '';
@@ -4423,9 +5027,14 @@ $('#t-meta').textContent = H.meta.client
 if (!RENDERS.length) { $('#render-sec').hidden = true; $('#t-renders').closest('label').hidden = true; }
 $('#notes-open').addEventListener('click', () => { $('#notes').hidden = false; });
 $('#notes-close').addEventListener('click', () => { $('#notes').hidden = true; });
-$('#panel-toggle').addEventListener('click', () => {
-  const p = $('#panel'); const open = p.dataset.open !== 'true'; p.dataset.open = open; $('#panel-toggle').setAttribute('aria-expanded', open);
-});
+// botão sempre visível: esconder / mostrar os controlos (preferência guardada neste browser; no telemóvel começa fechado)
+function setPanelOpen(open, save) {
+  $('#panel').dataset.open = open; const t = $('#panel-toggle'); t.setAttribute('aria-expanded', open);
+  t.querySelector('span').textContent = open ? (mobile ? 'Esconder' : 'Esconder controlos') : 'Controlos';
+  if (save) { try { localStorage.setItem('casa3d-panel', open ? '1' : '0'); } catch { /* sem armazenamento */ } }
+  if (typeof resize === 'function' && renderer) { resize(); if (mode === 'plan') fitPlan(); if (TEST) frame(); }
+}
+$('#panel-toggle').addEventListener('click', () => setPanelOpen($('#panel').dataset.open === 'false', true));
 
 // ---------------------------------------------------------------- modo fotografia (path tracing)
 // céu HDRI para o path tracer: textura float linear, já rodada para o sol actual e multiplicada pela intensidade do ambiente
@@ -4463,11 +5072,14 @@ const photo = new PhotoMode({
     $('#photo-save').disabled = !(st.phase === 'rendering' && st.samples > 30) && st.phase !== 'done';
   },
 });
-photo.insideRoof = (X, Y) => pointInPoly(X, Y, H.roof.outline);
+photo.insideRoof = (X, Y) => (MULTI ? !!findRoom(H, X, Y, persp.position.y - 1.0) : pointInPoly(X, Y, H.roof.outline));
 photo.portalSpecs = () => {
-  const inside = (X, Y) => H.rooms.some((r) => !r.exterior && pointInPoly(X, Y, r.poly));
+  let zg = 0;
+  const inside = (X, Y) => H.rooms.some((r) => !r.exterior && (r.z === undefined || Math.abs(r.z - zg) < 0.05) && pointInPoly(X, Y, r.poly));
   const out = [];
   for (const g of H.glass) {
+    zg = g.zb ?? 0;
+    if (MULTI && unitSel && !H.rooms.some((r) => r.unit === unitSel.id && Math.abs(r.z - zg) < 0.05)) continue;
     const len = g.b - g.a, h = g.head - g.sill, mid = (g.a + g.b) / 2, zc = (g.sill + g.head) / 2;
     // lado interior: o que cai dentro de um compartimento
     let nA = g.o === 'h' ? [0, 1] : [1, 0];
@@ -4583,10 +5195,11 @@ function resize() {
   persp.aspect = w / h; if (mode === 'walk') persp.fov = walkFov(); persp.updateProjectionMatrix();
   // planta: enquadra a casa (X −2…41, Y −20…1) na área livre à esquerda do painel
   const panel = $('#panel'); const pw = !mobile && panel.offsetParent ? panel.offsetWidth + 32 : 0;
-  const freeW = Math.max(200, w - pw), needW = BB.w + 2, needH = BB.h + 2;
+  const FB = MULTI && unitSel ? (() => { const [x0, y0, x1, y1] = unitSel.bbox; return { w: x1 - x0 + 4, h: y1 - y0 + 4, cx: (x0 + x1) / 2, cy: (y0 + y1) / 2 }; })() : BB;
+  const freeW = Math.max(200, w - pw), needW = FB.w + 2, needH = FB.h + 2;
   const mpp = Math.max(needW / freeW, needH / (h - (mobile ? 140 : 90))); // metros por pixel
   const halfW = (w * mpp) / 2, halfH = (h * mpp) / 2;
-  const cx = BB.cx + (pw * mpp) / 2, cz = -BB.cy;
+  const cx = FB.cx + (pw * mpp) / 2, cz = -FB.cy;
   Object.assign(ortho, { left: -halfW, right: halfW, top: halfH, bottom: -halfH, zoom: 1 }); ortho.updateProjectionMatrix();
   planCenter = [cx, cz];
 }
@@ -4595,7 +5208,8 @@ const clock = new THREE.Clock();
 // exposição automática: dentro de casa abre ~1 EV (como um fotógrafo), com transição suave ao entrar/sair
 let expK = 0;
 function autoExposure(dt) {
-  const p = persp.position, inside = camera === persp && p.y < 3.0 && pointInPoly(p.x, -p.z, H.roof.outline) && !!findRoom(H, p.x, -p.z);
+  const p = persp.position, inside = camera === persp && (MULTI ? (() => { const r = findRoom(H, p.x, -p.z, p.y - 1.0); return !!r && !r.exterior && p.y < (r.ceil ?? 99); })()
+    : p.y < 3.0 && pointInPoly(p.x, -p.z, H.roof.outline) && !!findRoom(H, p.x, -p.z));
   const target = inside ? 1 : 0;
   expK = TEST ? target : expK + (target - expK) * Math.min(1, dt * 3);
   renderer.toneMappingExposure = LOOK.exposure * Math.pow(2, LOOK.interiorEV * expK);
@@ -4619,17 +5233,101 @@ function frame() {
   if (!TEST) requestAnimationFrame(frame);
 }
 
-if (mobile) { $('#panel').dataset.open = 'false'; $('#panel-toggle').setAttribute('aria-expanded', 'false'); }
+{ let pref = null; try { pref = localStorage.getItem('casa3d-panel'); } catch { /* */ } setPanelOpen(mobile ? false : pref !== '0', false); }
 $('#hour').value = state.hour; $('#hourval').textContent = hourText(state.hour);
 document.body.dataset.mode = mode;
 resize(); updateSun(); applyLayers();
 $('#loading').hidden = true;
 frame();
 // editor de mobiliário (layout.json para todos; #editar + palavra-passe para mover, rodar e alterar larguras)
-initEditor({ H, M, scene, renderer, furniture, baseZ, test: TEST, getCamera: () => camera, getMode: () => mode, setMode,
+// plantas para descarregar (plantas.json, enviadas no editor): geral no cartão do título, por moradia no cartão da moradia
+const plans = initPlans({ H, UNITS, test: TEST });   // só em conjuntos (mais de uma moradia); casa isolada → null
+const renderPlanTitle = () => { if (plans) $('#t-dl').innerHTML = plans.link(plans.general(), 'Descarregar planta', `Planta - ${H.meta.name}`); };
+renderPlanTitle();
+if (plans) plans.onChange(() => { renderPlanTitle(); renderUnitsUI(); });
+// conjunto: preço e estado de venda de cada moradia (vendas.json) + cartão ao passar o rato na vista 3D
+const sales = MULTI ? initSales({ H, UNITS, renderer, test: TEST, getCamera: () => camera,
+  active: () => mode === '3d' && !unitSel && !photo.active && !measuring, canClick: () => true }) : null;
+if (sales && plans) sales.hasPlan = (u) => !!plans.unit(u.id);
+if (sales) sales.onChange(() => { if (unitBadges.length) paintSales(); renderUnitsUI(); });
+initEditor({ H, M, scene, renderer, furniture, baseZ, test: TEST, sales, plans, getCamera: () => camera, getMode: () => mode, setMode,
   redraw: () => { if (TEST) frame(); }, showCredits, applyFinish, finishSlots, showFurniture: () => { $('#t-furn').checked = true; $('#t-renders').checked = false; applyLayers(); } });
 const allReady = Promise.allSettled([modelsReady(), texReady, skyReady, vegReady]).then(() => updateProbes());
-window.__app = { modelsReady: () => allReady, updateProbes, getProbes: () => probes, skyHDR, LOOK, applyFinish, finishSlots, doors, setDoor, updateDoors, V3: THREE.Vector3, RC: THREE.Raycaster, Box3: THREE.Box3, Quat: THREE.Quaternion, M4: THREE.Matrix4, ortho, frame, photo, startPhoto, stopPhoto, RENDERS, goToRender, markers, vegetation, scene, renderer, H, setMode, VIEWS, persp, orbit, walker, state, updateSun, measure };
+if (MULTI) initUnits();
+window.__app = { cutV: (X, look = 'W') => {   // corte vertical (depuração/vistas de corte): plano X = const, vista de nascente
+    const n = look === 'W' ? new THREE.Vector3(-1, 0, 0) : new THREE.Vector3(1, 0, 0);
+    renderer.clippingPlanes = [new THREE.Plane(n, look === 'W' ? X : -X)]; if (TEST) frame(); },
+  cutY: (Y, look = 'N') => {   // plano Y = const (three: z = −Y), vista de sul
+    const n = look === 'N' ? new THREE.Vector3(0, 0, 1) : new THREE.Vector3(0, 0, -1);
+    renderer.clippingPlanes = [new THREE.Plane(n, look === 'N' ? Y : -Y)]; if (TEST) frame(); },
+  selectUnit: (id, lv) => selectUnit(id, lv), goView, get unit() { return unitSel; }, get level() { return levelSel; }, UNITS, modelsReady: () => allReady, updateProbes, getProbes: () => probes, skyHDR, LOOK, applyFinish, finishSlots, doors, setDoor, updateDoors, V3: THREE.Vector3, RC: THREE.Raycaster, Box3: THREE.Box3, Quat: THREE.Quaternion, M4: THREE.Matrix4, ortho, frame, photo, startPhoto, stopPhoto, RENDERS, goToRender, markers, vegetation, scene, renderer, H, setMode, VIEWS, persp, orbit, walker, state, updateSun, measure };
+
+// ---------------------------------------------------------------- conjunto de moradias: escolher a casa, ver de fora, visitar, pisos
+function flyTo(pos, target, fov = 55) {
+  if (mode !== '3d') setMode('3d');
+  persp.position.copy(v3(...pos)); orbit.target.copy(v3(...target)); persp.fov = fov; persp.updateProjectionMatrix(); orbit.update();
+  if (TEST) frame();
+}
+function unitView(u) {
+  if (u.view) return u.view;
+  const [x0, y0, x1, y1] = u.bbox, cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, z = (u.levels[0]?.z ?? 0) + 1.5, d = Math.max(x1 - x0, y1 - y0);
+  return { pos: [cx - 0.35 * d, y0 - 1.25 * d, z + 0.8 * d], target: [cx, cy, z] };
+}
+function selectUnit(id, lvId) {
+  unitSel = id ? UNITS.find((u) => u.id === id) || null : null;
+  levelSel = unitSel && lvId ? unitSel.levels.find((l) => l.id === lvId) || null : null;
+  if (mode === 'plan' && unitSel && !levelSel) levelSel = unitSel.levels.find((l) => l.main) || unitSel.levels[unitSel.levels.length - 1];
+  renderUnitsUI();
+  applyCut(); applyLayers(); resize();
+  if (mode === 'plan') fitPlan();
+  if (unitSel) scheduleProbesUnit();
+}
+function scheduleProbesUnit() { clearTimeout(probeTimer); probeTimer = setTimeout(updateProbes, TEST ? 0 : 400); }
+function renderUnitsUI() {
+  const sec = $('#units-sec'); if (!sec) return;
+  for (const b of sec.querySelectorAll('[data-unit]')) b.setAttribute('aria-pressed', unitSel ? b.dataset.unit === unitSel.id : b.dataset.unit === '');
+  const card = $('#unit-card');
+  if (!unitSel) { card.innerHTML = '<p class="small muted" style="margin:0">Escolha uma moradia para a ver de perto, entrar e percorrer os pisos.</p>'; $('#level-chips').innerHTML = ''; return; }
+  const u = unitSel, rooms = H.rooms.filter((r) => r.unit === u.id && !r.exterior);
+  const area = rooms.reduce((a, r) => a + (r.official || r.area), 0);
+  card.innerHTML = `<div class="u-name">${u.name}</div>${sales ? sales.lineHTML(u) : ''}<div class="small muted">${u.summary || ''}${u.summary ? ' · ' : ''}${sales ? `${fmt(sales.facts(u).area, 0)} m² úteis (sem garagem nem arrumos)` : `${fmt(area, 0)} m² úteis (soma dos compartimentos)`}</div>
+    <div class="row"><button class="btn" data-uact="view">Ver de fora</button><button class="btn primary" data-uact="walk">Visitar por dentro</button></div>${plans ? plans.link(plans.unit(u.id), 'Descarregar planta', `Planta - ${H.meta.name} - ${u.name}`) : ''}`;
+  $('#level-chips').innerHTML = (u.levels || []).map((l) => `<button class="chip" data-level="${l.id}" aria-pressed="${levelSel && levelSel.id === l.id}">${l.name}</button>`).join('');
+}
+// estado de venda nas letras do 3D e nos botões das moradias
+function paintSales() {
+  for (const o of unitBadges) {
+    const el = o.element, s = sales.get(el.dataset.unit).status || 'disponivel';
+    el.classList.remove('vendida', 'reservada'); if (s !== 'disponivel') el.classList.add(s);
+    el.innerHTML = `<b>${(UNITS.find((x) => x.id === el.dataset.unit) || {}).short || el.dataset.unit}</b>` + (s === 'vendida' ? '<span class="st">Vendida</span>' : s === 'reservada' ? '<span class="st">Reservada</span>' : '');
+  }
+  for (const b of document.querySelectorAll('#unit-chips [data-unit]')) if (b.dataset.unit) b.dataset.st = sales.get(b.dataset.unit).status || 'disponivel';
+}
+function initUnits() {
+  const sec = $('#units-sec'); if (!sec || !UNITS.length) return;
+  sec.hidden = false; $('#t-units').closest('label').hidden = false;
+  $('#unit-chips').innerHTML = `<button class="chip" data-unit="" aria-pressed="true">Todas</button>` + UNITS.map((u) => `<button class="chip" data-unit="${u.id}">${u.short || u.id}</button>`).join('');
+  sec.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-unit]'); if (b) { selectUnit(b.dataset.unit || null); if (unitSel) { const v = unitView(unitSel); flyTo(v.pos, v.target, v.fov); } else { const v = VIEWS[(H.views || [])[0]?.id]; if (v) flyTo(v.pos, v.target, v.fov); } return; }
+    const a = e.target.closest('[data-uact]');
+    if (a && unitSel) { if (a.dataset.uact === 'view') { const v = unitView(unitSel); flyTo(v.pos, v.target, v.fov); } else { setMode('walk'); updateProbes(); } return; }
+    const l = e.target.closest('[data-level]');
+    if (l && unitSel) { const same = levelSel && levelSel.id === l.dataset.level; selectUnit(unitSel.id, same && mode !== 'plan' ? null : l.dataset.level); }
+  });
+  // etiquetas das moradias no 3D (vista geral): clique escolhe a casa
+  for (const u of UNITS) {
+    const el = document.createElement('button'); el.type = 'button'; el.className = 'ubadge'; el.innerHTML = `<b>${u.short || u.id}</b>`;
+    el.dataset.unit = u.id;
+    if (sales) { el.addEventListener('pointerenter', () => { const r = el.getBoundingClientRect(); sales.showAt(u, r.right, r.bottom); }); el.addEventListener('pointerleave', () => sales.hide()); }
+    else el.title = u.name;
+    el.addEventListener('click', (e) => { e.stopPropagation(); selectUnit(u.id); const v = unitView(u); flyTo(v.pos, v.target, v.fov); });
+    const [x0, y0, x1, y1] = u.bbox, top = Math.max(...H.extraRoofs.filter((r) => { const [cx, cy] = centroidOf(r.outline); return cx > x0 && cx < x1 && cy > y0 && cy < y1; }).map((r) => r.z1 + (r.parapet || 0)), (u.levels[0]?.z ?? 0) + 3.5);
+    const o = new CSS2DObject(el); o.position.copy(v3(u.badge ? u.badge[0] : (x0 + x1) / 2, u.badge ? u.badge[1] : (y0 + y1) / 2, top + 1.6)); scene.add(o); unitBadges.push(o);
+  }
+  $('#t-units').addEventListener('change', applyLayers);
+  if (sales) paintSales();
+  renderUnitsUI(); applyLayers();
+}
 return {  };
 })();
 </script>
