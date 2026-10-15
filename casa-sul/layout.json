@@ -1,20 +1,28 @@
 {
  "version": 2,
  "house": "casa-sul",
- "saved": "2026-10-15T12:33:50.890Z",
+ "saved": "2026-10-15T12:37:35.606Z",
  "items": {
   "Carro 1#1": {
    "x": 34.7,
    "y": -6.1,
    "rot": 0,
    "w": 1.35,
-   "d": 2,
+   "d": 1.95,
    "glb": "models/nissan-gtr-r35-2.glb"
   },
   "Roupeiro do hall#1": {
    "x": 34.39,
    "y": -2.69,
    "rot": 0
+  },
+  "Carro 2#1": {
+   "x": 34.6,
+   "y": -9,
+   "rot": -1.5708,
+   "w": 1.85,
+   "d": 3.6,
+   "glb": "models/2014-abarth-500.glb"
   }
  }
 }
