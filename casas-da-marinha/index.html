@@ -5454,64 +5454,6 @@ async function initEnvReal({ H, base = '', texlib = 'textures/lib/', texenv = 't
 return { ENV_QUALITY, initEnvReal };
 })();
 
-// ===== src/pano.js =====
-const __m_pano = (() => {
-
-// Fotografia 360° (equiretangular 2:1) a partir de um ponto: cubo HDR (6 vistas) → projecção equiretangular com a mesma
-// exposição e tone mapping da página → JPEG. Usado por app/pano360.py (uma por divisão) e pelo botão «360°» se existir.
-
-const FRAG = `
-  uniform samplerCube cube; varying vec2 vUv;
-  void main() {
-    float lon = (vUv.x - 0.5) * 6.28318530718;     // −π … π  (centro da imagem = rumo inicial)
-    float lat = (vUv.y - 0.5) * 3.14159265359;     // −π/2 … π/2
-    vec3 d = vec3(sin(lon) * cos(lat), sin(lat), -cos(lon) * cos(lat));
-    gl_FragColor = vec4(textureCube(cube, d).rgb, 1.0);
-    #include <tonemapping_fragment>
-    #include <colorspace_fragment>
-  }`;
-const VERT = `varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`;
-
-/** pos = THREE.Vector3 (coordenadas three), yaw = rumo do centro da imagem (radianos, 0 = −z = norte do modelo).
- *  Devolve a dataURL JPEG (w × w/2). hide = objectos a esconder durante a captura (marcadores, etiquetas 3D). */
-function equirect(renderer, scene, pos, { w = 4096, yaw = 0, quality = 0.92, hide = [], cubeSize = null } = {}) {
-  const cs = cubeSize || Math.min(2048, Math.max(512, Math.round(w / 3.2)));
-  const rt = new THREE.WebGLCubeRenderTarget(cs, { type: THREE.HalfFloatType, generateMipmaps: false });
-  const cam = new THREE.CubeCamera(0.05, 2000, rt);
-  cam.position.copy(pos);
-  cam.rotation.y = -yaw;
-  const vis = hide.map((o) => o.visible); hide.forEach((o) => (o.visible = false));
-  cam.update(renderer, scene);
-  hide.forEach((o, i) => (o.visible = vis[i]));
-  const mat = new THREE.ShaderMaterial({ uniforms: { cube: { value: rt.texture } }, vertexShader: VERT, fragmentShader: FRAG, depthTest: false, depthWrite: false });
-  mat.toneMapped = true;
-  const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), mat);
-  const sc = new THREE.Scene(); sc.add(quad);
-  const ortho = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-  const old = new THREE.Vector2(); renderer.getSize(old); const opr = renderer.getPixelRatio();
-  renderer.setPixelRatio(1); renderer.setSize(w, w / 2, false);
-  renderer.render(sc, ortho);
-  const url = renderer.domElement.toDataURL('image/jpeg', quality);
-  renderer.setPixelRatio(opr); renderer.setSize(old.x, old.y, false);
-  rt.dispose(); mat.dispose(); quad.geometry.dispose();
-  return url;
-}
-
-/** JPEG (dataURL) → Blob com os metadados XMP GPano (Facebook, Google Fotos, portais reconhecem como 360°). */
-function jpegWith360Meta(url, w, h) {
-  const b = atob(url.split(',')[1]); const src = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) src[i] = b.charCodeAt(i);
-  const x = '<?xpacket begin="﻿" id="W5M0MpCehiHzreSzNTczkc9d"?><x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">'
-    + '<rdf:Description rdf:about="" xmlns:GPano="http://ns.google.com/photos/1.0/panorama/"><GPano:ProjectionType>equirectangular</GPano:ProjectionType>'
-    + `<GPano:UsePanoramaViewer>True</GPano:UsePanoramaViewer><GPano:FullPanoWidthPixels>${w}</GPano:FullPanoWidthPixels><GPano:FullPanoHeightPixels>${h}</GPano:FullPanoHeightPixels>`
-    + `<GPano:CroppedAreaImageWidthPixels>${w}</GPano:CroppedAreaImageWidthPixels><GPano:CroppedAreaImageHeightPixels>${h}</GPano:CroppedAreaImageHeightPixels>`
-    + '<GPano:CroppedAreaLeftPixels>0</GPano:CroppedAreaLeftPixels><GPano:CroppedAreaTopPixels>0</GPano:CroppedAreaTopPixels></rdf:Description></rdf:RDF></x:xmpmeta><?xpacket end="w"?>';
-  const payload = new TextEncoder().encode('http://ns.adobe.com/xap/1.0/\0' + x);
-  const seg = new Uint8Array(4 + payload.length); seg.set([0xff, 0xe1, (payload.length + 2) >> 8, (payload.length + 2) & 255]); seg.set(payload, 4);
-  return new Blob([src.slice(0, 2), seg, src.slice(2)], { type: 'image/jpeg' });
-}
-return { equirect, jpegWith360Meta };
-})();
-
 // ===== src/main.js =====
 const __m_main = (() => {
 const { HOUSE } = __m_house_data;
@@ -5534,7 +5476,6 @@ const { RoomProbes } = __m_probes;
 const { buildSkirting } = __m_details;
 const { initGeoTiles, geoKey } = __m_geotiles;
 const { initEnvReal } = __m_envreal;
-const { equirect, jpegWith360Meta } = __m_pano;
 // Casa de Valadares — visualizador 3D. Liga dados (house-data.js) → construtores → interface.
 
 const H = HOUSE;
@@ -5913,17 +5854,7 @@ function setWalkZoom(z) {
 {
   const wz = document.createElement('div'); wz.id = 'walkzoom'; wz.setAttribute('role', 'group'); wz.setAttribute('aria-label', 'Zoom');
   wz.innerHTML = WALK_ZOOMS.map((z) => `<button data-zoom="${z}" aria-pressed="${z === 1}" title="${z < 1 ? 'Grande angular' : z > 1 ? 'Aproximar' : 'Normal'}">${String(z).replace('.', ',')}×</button>`).join('');
-  wz.insertAdjacentHTML('beforeend', '<button data-pano="1" title="Fotografia 360° deste ponto (para portais e redes sociais)">360°</button>');
-  wz.addEventListener('click', (e) => { const b = e.target.closest('[data-zoom]'); if (b) { e.stopPropagation(); setWalkZoom(+b.dataset.zoom); }
-    if (e.target.closest('[data-pano]')) {        // descarrega uma equiretangular 4096 × 2048 com metadados 360°, virada para onde se está a olhar
-      e.stopPropagation();
-      const d = new THREE.Vector3(); persp.getWorldDirection(d);
-      const url = equirect(renderer, scene, persp.position, { w: 4096, yaw: Math.atan2(d.x, -d.z), hide: [markers] });
-      const r = findRoom(H, persp.position.x, -persp.position.z, persp.position.y - 1.0);
-      const a = document.createElement('a'); a.href = URL.createObjectURL(jpegWith360Meta(url, 4096, 2048));
-      a.download = `360 - ${(r && r.name) || H.meta.name}.jpg`.replace(/[\\/:*?"<>|]/g, '-'); document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(() => URL.revokeObjectURL(a.href), 5000);
-    } });
+  wz.addEventListener('click', (e) => { const b = e.target.closest('[data-zoom]'); if (b) { e.stopPropagation(); setWalkZoom(+b.dataset.zoom); } });
   wz.addEventListener('pointerdown', (e) => e.stopPropagation());
   host.parentElement.appendChild(wz);
   // teclado: + / − ; roda do rato no passeio: um passo de cada vez
@@ -6419,8 +6350,7 @@ window.__app = { setWalkZoom, get walkZoom() { return walkZoom; }, cutV: (X, loo
   cutY: (Y, look = 'N') => {   // plano Y = const (three: z = −Y), vista de sul
     const n = look === 'N' ? new THREE.Vector3(0, 0, 1) : new THREE.Vector3(0, 0, -1);
     renderer.clippingPlanes = [new THREE.Plane(n, look === 'N' ? Y : -Y)]; if (TEST) frame(); },
-  selectUnit: (id, lv) => selectUnit(id, lv), goView, get unit() { return unitSel; }, get level() { return levelSel; }, UNITS, modelsReady: () => allReady, get geo() { return geo; }, get envR() { return envR; }, updateProbes, getProbes: () => probes, skyHDR, LOOK, applyFinish, finishSlots, doors, setDoor, updateDoors, V3: THREE.Vector3, RC: THREE.Raycaster, Box3: THREE.Box3, Quat: THREE.Quaternion, M4: THREE.Matrix4, ortho, frame, photo, startPhoto, stopPhoto, RENDERS, goToRender, markers, vegetation, scene, renderer, H, setMode, VIEWS, persp, orbit, walker, state, updateSun, measure,
-  pano: (o = {}) => { frame(); return equirect(renderer, scene, persp.position, { hide: [markers], ...o }); } };
+  selectUnit: (id, lv) => selectUnit(id, lv), goView, get unit() { return unitSel; }, get level() { return levelSel; }, UNITS, modelsReady: () => allReady, get geo() { return geo; }, get envR() { return envR; }, updateProbes, getProbes: () => probes, skyHDR, LOOK, applyFinish, finishSlots, doors, setDoor, updateDoors, V3: THREE.Vector3, RC: THREE.Raycaster, Box3: THREE.Box3, Quat: THREE.Quaternion, M4: THREE.Matrix4, ortho, frame, photo, startPhoto, stopPhoto, RENDERS, goToRender, markers, vegetation, scene, renderer, H, setMode, VIEWS, persp, orbit, walker, state, updateSun, measure };
 
 // ---------------------------------------------------------------- conjunto de moradias: escolher a casa, ver de fora, visitar, pisos
 function flyTo(pos, target, fov = 55) {
