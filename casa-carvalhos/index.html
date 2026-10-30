@@ -2274,18 +2274,28 @@ const K = {
     // painéis canelados nas duas faces longas (r03)
     const n = Math.floor((d - 0.1) / 0.035);
     for (const sx of [-1, 1]) for (let i = 0; i < n; i++) cyl(g, M.fluted, 0.014, h - t - 0.02, sx * (w / 2 - 0.03), 0.01, -d / 2 + 0.06 + i * 0.035, 10);
-    let [cx, cz] = o.cooktop || [0.1, -0.2];
-    { const mx = Math.max(0, w / 2 - 0.29), mz = Math.max(0, d / 2 - 0.44);       // a placa (0,52 × 0,81) fica sempre dentro do tampo
+    // placa (0,52 × 0,81) com o lado comprido ao longo do lado comprido do tampo e sempre dentro dele (v5.7.3)
+    const alongX = w > d, hx = alongX ? 0.81 : 0.52, hz = alongX ? 0.52 : 0.81;
+    let [cx, cz] = o.cooktop || (alongX ? [-0.2, 0.1] : [0.1, -0.2]);
+    { const mx = Math.max(0, w / 2 - hx / 2 - 0.03), mz = Math.max(0, d / 2 - hz / 2 - 0.03);
       cx = Math.max(-mx, Math.min(mx, cx)); cz = Math.max(-mz, Math.min(mz, cz)); }
+    const hg = new THREE.Group(); hg.position.set(cx, 0, cz); if (alongX) hg.rotation.y = Math.PI / 2; g.add(hg);
     if (o.hob === 'vent') {         // placa de indução com exaustor integrado (tipo AEG ComboHob TH84CB03FB, 810 × 520 mm): grelha ao centro
-      box(g, M.blackGlass, 0.52, 0.006, 0.81, cx, h, cz);
-      box(g, M.blackMetal, 0.5, 0.004, 0.11, cx, h + 0.006, cz);
-      for (let i = 0; i < 9; i++) box(g, M.steel, 0.46, 0.002, 0.004, cx, h + 0.01, cz - 0.045 + i * 0.011);
+      box(hg, M.blackGlass, 0.52, 0.006, 0.81, 0, h, 0);
+      box(hg, M.blackMetal, 0.5, 0.004, 0.11, 0, h + 0.006, 0);
+      for (let i = 0; i < 9; i++) box(hg, M.steel, 0.46, 0.002, 0.004, 0, h + 0.01, -0.045 + i * 0.011);
       for (const sz of [-1, 1]) for (const sx of [-1, 1]) {      // zonas de cozinhar serigrafadas
-        const ring = new THREE.Mesh(new THREE.RingGeometry(0.085, 0.09, 40).rotateX(-Math.PI / 2), M.hobMark); ring.position.set(cx + sx * 0.12, h + 0.0065, cz + sz * 0.25); g.add(ring);
+        const ring = new THREE.Mesh(new THREE.RingGeometry(0.085, 0.09, 40).rotateX(-Math.PI / 2), M.hobMark); ring.position.set(sx * 0.12, h + 0.0065, sz * 0.25); hg.add(ring);
       }
-    } else box(g, M.blackGlass, 0.52, 0.006, 0.8, cx, h, cz);              // placa de indução
-    bowl(g, M.ceramicDark, -cx * 0.6, h, d / 2 - 0.45, 0.16); vase(g, M, -cx * 0.6 + 0.05, h, -d / 2 + 0.4, 0.9, M.ceramicPot, 7);
+    } else box(hg, M.blackGlass, 0.52, 0.006, 0.8, 0, h, 0);              // placa de indução
+    // decoração (taça e vaso) na parte livre do tampo, nunca em cima da placa
+    if (alongX) {
+      const fx = cx <= 0 ? (cx + hx / 2 + w / 2) / 2 : (cx - hx / 2 - w / 2) / 2;
+      if (Math.abs(fx - cx) > hx / 2 + 0.2) { bowl(g, M.ceramicDark, fx - 0.12, h, -0.02, Math.min(0.16, d / 2 - 0.12)); vase(g, M, fx + 0.2, h, 0.04, 0.9, M.ceramicPot, 7); }
+    } else {
+      const fz = cz <= 0 ? (cz + hz / 2 + d / 2) / 2 : (cz - hz / 2 - d / 2) / 2;
+      if (Math.abs(fz - cz) > hz / 2 + 0.2) { bowl(g, M.ceramicDark, -0.02, h, fz - 0.12, Math.min(0.16, w / 2 - 0.12)); vase(g, M, 0.04, h, fz + 0.2, 0.9, M.ceramicPot, 7); }
+    }
   },
   stool(g, M) {
     for (const [sx, sz] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) bar(g, M.woodLight, [sx * 0.17, 0, sz * 0.17], [sx * 0.13, 0.66, sz * 0.13], 0.015);
