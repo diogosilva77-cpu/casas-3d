@@ -2274,7 +2274,9 @@ const K = {
     // painéis canelados nas duas faces longas (r03)
     const n = Math.floor((d - 0.1) / 0.035);
     for (const sx of [-1, 1]) for (let i = 0; i < n; i++) cyl(g, M.fluted, 0.014, h - t - 0.02, sx * (w / 2 - 0.03), 0.01, -d / 2 + 0.06 + i * 0.035, 10);
-    const [cx, cz] = o.cooktop || [0.1, -0.2];
+    let [cx, cz] = o.cooktop || [0.1, -0.2];
+    { const mx = Math.max(0, w / 2 - 0.29), mz = Math.max(0, d / 2 - 0.44);       // a placa (0,52 × 0,81) fica sempre dentro do tampo
+      cx = Math.max(-mx, Math.min(mx, cx)); cz = Math.max(-mz, Math.min(mz, cz)); }
     if (o.hob === 'vent') {         // placa de indução com exaustor integrado (tipo AEG ComboHob TH84CB03FB, 810 × 520 mm): grelha ao centro
       box(g, M.blackGlass, 0.52, 0.006, 0.81, cx, h, cz);
       box(g, M.blackMetal, 0.5, 0.004, 0.11, cx, h + 0.006, cz);
